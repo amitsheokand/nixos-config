@@ -2,33 +2,24 @@ _:
 
 [
   # Development Tools
-  "claude"
-  "insomnia"
-  "tableplus"
-  "ngrok"
-  "postico"
   "visual-studio-code"
-  "wireshark-app"
+  "cursor"              # AI-powered code editor
+  "ghostty"             # GPU-accelerated terminal
+  "zed"                 # Modern code editor
 
-  # Communication Tools
-  "discord"
-  "loom"
-  "slack"
-  "telegram"
-  "zoom"
+  # Display & Media
+  "betterdisplay"
+  "spotify"
+  "vlc"
 
   # Utility Tools
   "appcleaner"
-  "syncthing-app"
 
-  # Entertainment Tools
-  "steam"
-  "vlc"
+  # Virtualization
+  "utm"
 
   # Productivity Tools
-  "raycast"
-  "asana"
 
   # Browsers
-  "google-chrome"
+  "firefox"
 ]

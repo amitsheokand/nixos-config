@@ -1,9 +1,5 @@
 { config, lib, pkgs, modulesPath, user, inputs, ... }:
 
-let
-  myEmacs = import ../../../modules/shared/emacs.nix { inherit pkgs; };
-in
-
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
@@ -11,20 +7,6 @@ in
 
     # Import shared configuration (tmux, zsh, home-manager, etc.)
     ../../../modules/shared
-
-    # Import garfield-specific packages
-    {
-      environment.systemPackages = import ../../../modules/nixos/garfield-packages.nix { inherit pkgs; };
-    }
-
-    # GitHub Runner module for lab CI
-    ../../../modules/nixos/github-runner.nix
-
-    # Home Assistant for camera monitoring and automation
-    ../../../modules/nixos/home-assistant.nix
-
-    # Note: systemd.nix module excluded for this host
-    # Note: agenix disabled for this host
   ];
 
   # Hardware Configuration - use dedicated hardware-configuration.nix
@@ -104,18 +86,6 @@ in
 
   # Services configuration
   services = {
-    # GitHub Runners Configuration
-    github-runners-lab = {
-      enable = true;
-      runnerCount = 4;
-      organization = "conductly";
-    };
-
-    emacs = {
-      enable = true;
-      package = myEmacs;
-    };
-
     # X11 configuration - Nvidia graphics
     xserver = {
      enable = true;
@@ -127,14 +97,14 @@ in
     };
 
     displayManager = {
-      sddm.enable = true;
+      gdm.enable = true;
       autoLogin = {
         enable = true;
-        user = "dustin";
+        user = "amitsheokand";
       };
     };
 
-    desktopManager.plasma6.enable = true;
+    desktopManager.gnome.enable = true;
 
     # Enable CUPS to print documents.
     printing.enable = true;
@@ -161,7 +131,7 @@ in
   # Define a user account
   users.users.${user} = {
     isNormalUser = true;
-    description  = "Dustin Lyons";
+    description  = "Amit Sheokand";
     extraGroups  = [ "networkmanager" "wheel" ];
     shell = pkgs.zsh;
   };
@@ -187,7 +157,6 @@ in
   environment.systemPackages = with pkgs; [
     vim
     git
-    myEmacs
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors

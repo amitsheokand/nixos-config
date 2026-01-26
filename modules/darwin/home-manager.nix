@@ -1,11 +1,7 @@
 { config, pkgs, lib, home-manager, ... }:
 
 let
-  user           = "dustin";
-  myEmacsLauncher = pkgs.writeScript "emacs-launcher.command" ''
-    #!/bin/sh
-    emacsclient -c -n &
-  '';
+  user           = "amitsheokand";
   sharedFiles     = import ../shared/files.nix { inherit config pkgs; };
   additionalFiles = import ./files.nix { inherit user config pkgs; };
 in
@@ -24,20 +20,31 @@ in
   homebrew = {
     # This is a module from nix-darwin
     # Homebrew is *installed* via the flake input nix-homebrew
-
-    # These app IDs are from using the mas CLI app
-    # mas = mac app store
-    # https://github.com/mas-cli/mas
-    #
+    # Docs: https://github.com/zhaofengli/nix-homebrew
+    enable = true;
+    
+    # Homebrew taps (must match nix-homebrew.taps in flake.nix)
+    taps = [
+      "gcenx/wine"  # Wine for macOS: https://gitlab.winehq.org/wine/wine/-/wikis/MacOS
+    ];
+    
+    # Homebrew casks (GUI apps)
+    casks = (pkgs.callPackage ./casks.nix {}) ++ [
+      # Wine - choose one:
+      "wine-stable"     # Stable release
+      # "wine-devel"    # Development release  
+      # "wine-staging"  # Staging with experimental patches
+    ];
+    
+    # Homebrew formulae (CLI tools)
+    # brews = [];
+    
+    # Mac App Store apps (requires mas CLI)
     # $ nix shell nixpkgs#mas
     # $ mas search <app name>
-    #
-    enable = true;
-    casks  = pkgs.callPackage ./casks.nix {};
-    #masApps = {
-    #  "hidden-bar"   = 1452453066;
-    #  "wireguard"    = 1451685025;
-    #};
+    # masApps = {
+    #   "hidden-bar" = 1452453066;
+    # };
   };
 
   home-manager = {
@@ -50,7 +57,6 @@ in
           file = lib.mkMerge [
             sharedFiles
             additionalFiles
-            { "emacs-launcher.command".source = myEmacsLauncher; }
           ];
           stateVersion = "23.11";
         };
@@ -59,37 +65,32 @@ in
       };
   };
 
-  # Fully declarative dock using the latest from Nix Stor
+  # Fully declarative dock using the latest from Nix Store
   local.dock = {
     enable   = true;
     username = user;
     entries  = [
-      { path = "/Applications/Slack.app/"; }
-      { path = "/System/Applications/Messages.app/"; }
-      { path = "${pkgs.alacritty}/Applications/Alacritty.app/"; }
-      { path = "/System/Applications/Music.app/"; }
-      { path = "/System/Applications/Photos.app/"; }
-      { path = "/System/Applications/Photo Booth.app/"; }
-      { path = "/System/Applications/TV.app/"; }
-      { path = "${pkgs.jetbrains.phpstorm}/Applications/PhpStorm.app/"; }
-      { path = "/Applications/TablePlus.app/"; }
-      { path = "/Applications/Claude.app/"; }
-      { path = "/Applications/Discord.app/"; }
-      { path = "/Applications/TickTick.app/"; }
-      { path = "/System/Applications/Home.app/"; }
+      # System Apps
+      { path = "/System/Applications/Apps.app/"; }
+      { path = "/System/Applications/Mission Control.app/"; }
+
+
+      # Browsers
+      { path = "/Applications/Firefox.app/"; }
+      
+      # Terminal & Dev Tools
+      { path = "/Applications/Cursor.app/"; }
+      { path = "/Applications/Zed.app/"; }
+      { path = "/Applications/Fork.app/"; }
+      { path = "/Applications/UTM.app/"; }
+      { path = "/System/Applications/System Settings.app/"; }
+      
+      
+      # Folders
       {
-        path    = toString myEmacsLauncher;
+        path    = "${config.users.users.${user}.home}/Downloads";
         section = "others";
-      }
-      {
-        path    = "${config.users.users.${user}.home}/.local/share/";
-        section = "others";
-        options = "--sort name --view grid --display folder";
-      }
-      {
-        path    = "${config.users.users.${user}.home}/.local/share/downloads";
-        section = "others";
-        options = "--sort name --view grid --display stack";
+        options = "--sort dateadded --view grid --display stack";
       }
     ];
   };

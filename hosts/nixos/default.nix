@@ -1,9 +1,5 @@
 { config, lib, pkgs, modulesPath, user, ... }:
 
-let
-  myEmacs = import ../../modules/shared/emacs.nix { inherit pkgs; };
-in
-
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
@@ -146,12 +142,6 @@ in
 
   # Services configuration
   services = {
-    emacs = {
-      enable = true;
-      package = myEmacs;
-    };
-
-
     xserver = {
      enable = true;
      videoDrivers = ["amdgpu"];
@@ -162,8 +152,9 @@ in
     };
     
 
-    displayManager.sddm.enable = true;
-    desktopManager.plasma6.enable = true;
+    # GNOME Desktop Environment
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
 
     # Enable CUPS to print documents.
     printing.enable = true;
@@ -199,13 +190,13 @@ in
   # Define a user account. Don't forget to set a password with 'passwd'.
   users.users.${user} = {
     isNormalUser = true;
-    description  = "Dustin Lyons";
+    description  = "Amit Sheokand";
     extraGroups  = [ "networkmanager" "wheel" "docker" ];
     shell = pkgs.zsh;
   };
 
   services.displayManager.autoLogin.enable = true;
-  services.displayManager.autoLogin.user = "dustin";
+  services.displayManager.autoLogin.user = "amitsheokand";
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -218,7 +209,6 @@ in
   environment.systemPackages = with pkgs; [
     vim
     git
-    myEmacs
     wl-clipboard     # Wayland clipboard utilities (replaces xclip)
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
@@ -281,7 +271,7 @@ in
 
   # Create symlink for easier Windows partition access
   systemd.tmpfiles.rules = [
-    "L+ /home/dustin/windows - - - - /mnt/windows"
+    "L+ /home/amitsheokand/windows - - - - /mnt/windows"
   ];
 
   # This value determines the NixOS release from which default

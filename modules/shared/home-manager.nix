@@ -1,8 +1,8 @@
 { config, pkgs, lib, ... }:
 
-let name = "Dustin Lyons";
-    user = "dustin";
-    email = "dustin@dlyons.dev"; in
+let name = "Amit Sheokand";
+    user = "amitsheokand";
+    email = "amix.sheokand@gmail.com"; in
 {
 
   direnv = {
@@ -52,139 +52,29 @@ let name = "Dustin Lyons";
       export TERM=xterm-256color
 
       # Define PATH variables
-      export PATH=$HOME/.pnpm-packages/bin:$HOME/.pnpm-packages:$PATH
-      export PATH=$HOME/.npm-packages/bin:$HOME/bin:$PATH
-      export PATH=$HOME/.composer/vendor/bin:$PATH
-      export PATH=$HOME/.local/share/bin:$PATH
-      export PATH=$HOME/.local/share/src/conductly/bin:$PATH
-      export PATH=$HOME/.local/share/src/conductly/utils:$PATH
-      export PYTHONPATH="$HOME/.local-pip/packages:$PYTHONPATH"
+      export PATH=$HOME/.local/bin:$PATH
+      export PATH=$HOME/.cargo/bin:$PATH
 
       # Remove history data we don't want to see
       export HISTIGNORE="pwd:ls:cd"
 
       # Ripgrep alias
-      alias search='rg -p --glob "!node_modules/*" --glob "!vendor/*" "$@"'
+      alias search='rg -p --glob "!target/*" "$@"'
 
-      # Emacs is my editor
-      export ALTERNATE_EDITOR=""
-      export EDITOR="emacsclient -t"
-      export VISUAL="emacsclient -c -a emacs"
-      e() {
-          emacsclient -t "$@"
-      }
-      
-      # Laravel Artisan
-      alias art='php artisan'
+      # Editor setup
+      export EDITOR="vim"
+      export VISUAL="zed"
 
       # Use difftastic, syntax-aware diffing
       alias diff=difft
 
       # Always color ls and group directories
       alias ls='ls --color=auto'
-      
-      # SSH wrapper functions with terminal color changes
-      ssh-production() {
-          # Change terminal background to dark red
-          printf '\033]11;#3d1515\007'
-          command ssh production "$@"
-          # Reset terminal background
-          printf '\033]11;#1f2528\007'
-      }
-      
-      ssh-staging() {
-          # Change terminal background to dark orange
-          printf '\033]11;#3d2915\007'
-          command ssh staging "$@"
-          # Reset terminal background
-          printf '\033]11;#1f2528\007'
-      }
-      
-      ssh-droplet() {
-          # Change terminal background to dark green
-          printf '\033]11;#153d15\007'
-          command ssh droplet "$@"
-          # Reset terminal background
-          printf '\033]11;#1f2528\007'
-      }
-      
-      # Override ssh command to detect known hosts
-      ssh() {
-          case "$1" in
-              production|209.97.152.81)
-                  # Change terminal background to dark red
-                  printf '\033]11;#3d1515\007'
-                  command ssh "$@"
-                  # Reset terminal background
-                  printf '\033]11;#1f2528\007'
-                  ;;
-              staging|174.138.88.191)
-                  # Change terminal background to dark orange
-                  printf '\033]11;#3d2915\007'
-                  command ssh "$@"
-                  # Reset terminal background
-                  printf '\033]11;#1f2528\007'
-                  ;;
-              droplet|165.227.66.119)
-                  # Change terminal background to dark green
-                  printf '\033]11;#153d15\007'
-                  command ssh "$@"
-                  # Reset terminal background
-                  printf '\033]11;#1f2528\007'
-                  ;;
-              *)
-                  command ssh "$@"
-                  ;;
-          esac
-      }
-      
-      # Tmux alias for conductly devenv session
-      alias conductly='tmux -S /run/user/1000/tmux-conductly attach -t conductly'
-      
-      # Tmux alias for river devenv session
-      alias river='tmux -S /run/user/1000/tmux-river attach -t river'
 
-      # macOS-style open command using Nautilus
+      # macOS-style open command
       ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
         alias open="xdg-open"
-        alias rxp="/home/dustin/.local/share/src/restxp/restxp"
-
-        # Reboot to Windows partition (Linux only)
-        alias windows='sudo systemctl reboot --boot-loader-entry=auto-windows'
       ''}
-      
-      # Screenshot function with path selection
-      screenshot() {
-          local project_path
-          case "$1" in
-              conductly|c)
-                  project_path="/home/dustin/.local/share/src/conductly"
-                  ;;
-              bitcoin-noobs|b)
-                  project_path="/home/dustin/.local/share/src/bitcoin-noobs"
-                  ;;
-              *)
-                  echo "Usage: screenshot [conductly|c|bitcoin-noobs|b]"
-                  echo "  conductly (c) - Save to conductly project"
-                  echo "  bitcoin-noobs (b) - Save to bitcoin-noobs project"
-                  return 1
-                  ;;
-          esac
-          
-          # Prompt user for filename
-          echo -n "Enter screenshot filename (without .png extension): "
-          read -r user_filename
-          
-          # Use user input or fallback to timestamp if empty
-          if [[ -n "$user_filename" ]]; then
-              local filename="$user_filename.png"
-          else
-              local filename="screenshot-$(date +'%Y%m%d-%H%M%S').png"
-          fi
-          
-          spectacle -r -b -o "$project_path/$filename"
-          echo "Screenshot saved to: $project_path/$filename"
-      }
     '';
   };
 
@@ -432,7 +322,7 @@ let name = "Dustin Lyons";
         # Use XDG data directory
         # https://github.com/tmux-plugins/tmux-resurrect/issues/348
         extraConfig = ''
-          set -g @resurrect-dir '/Users/dustin/.cache/tmux/resurrect'
+          set -g @resurrect-dir '/Users/amitsheokand/.cache/tmux/resurrect'
           set -g @resurrect-capture-pane-contents 'on'
           set -g @resurrect-pane-contents-area 'visible'
         '';

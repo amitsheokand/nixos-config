@@ -12,11 +12,6 @@
         flake-utils.follows = "flake-utils";
       };
     };
-    plasma-manager = {
-      url = "github:nix-community/plasma-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-    };
     darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -36,12 +31,18 @@
       url = "github:homebrew/homebrew-cask";
       flake = false;
     };
+    # WineHQ tap for Wine on macOS
+    # https://gitlab.winehq.org/wine/wine/-/wikis/MacOS
+    homebrew-wine = {
+      url = "github:Gcenx/homebrew-wine";
+      flake = false;
+    };
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     secrets = {
-      url = "git+ssh://git@github.com/dustinlyons/nix-secrets.git";
+      url = "git+ssh://git@github.com/amitsheokand/nix-secrets.git?ref=main";
       flake = false;
     };
     chaotic = {
@@ -49,9 +50,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-desktop, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, plasma-manager, nixpkgs, flake-utils, disko, agenix, secrets, chaotic } @inputs:
+  outputs = { self, darwin, claude-desktop, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, secrets, chaotic } @inputs:
     let
-      user = "dustin";
+      user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
       darwinSystems = [ "aarch64-darwin" "x86_64-darwin" ];
       forAllSystems = f: nixpkgs.lib.genAttrs (linuxSystems ++ darwinSystems) f;
@@ -75,7 +76,6 @@
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
-        "build-switch-emacs" = mkApp "build-switch-emacs" system;
         "clean" = mkApp "clean" system;
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
@@ -122,6 +122,8 @@
                   "homebrew/homebrew-core" = homebrew-core;
                   "homebrew/homebrew-cask" = homebrew-cask;
                   "homebrew/homebrew-bundle" = homebrew-bundle;
+                  # Wine tap: https://gitlab.winehq.org/wine/wine/-/wikis/MacOS
+                  "gcenx/homebrew-wine" = homebrew-wine;
                 };
                 mutableTaps = false;
                 autoMigrate = true;
@@ -142,7 +144,6 @@
               chaotic.nixosModules.default
               home-manager.nixosModules.home-manager {
                 home-manager = {
-                  sharedModules = [ plasma-manager.homeModules.plasma-manager ]; 
                   useGlobalPkgs = true;
                   useUserPackages = true;
                   users.${user} = { config, pkgs, lib, ... }:
@@ -165,7 +166,6 @@
               chaotic.nixosModules.default
               home-manager.nixosModules.home-manager {
                 home-manager = {
-                  sharedModules = [ plasma-manager.homeModules.plasma-manager ]; 
                   useGlobalPkgs = true;
                   useUserPackages = true;
                   users.${user} = { config, pkgs, lib, ... }:
