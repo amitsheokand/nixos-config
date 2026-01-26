@@ -51,27 +51,50 @@ let name = "Amit Sheokand";
 
       export TERM=xterm-256color
 
-      # Define PATH variables
-      export PATH=$HOME/.local/bin:$PATH
-      export PATH=$HOME/.cargo/bin:$PATH
+      # === Rust/Cargo Setup ===
+      export RUSTUP_HOME="$HOME/.rustup"
+      export CARGO_HOME="$HOME/.cargo"
+      export PATH="$CARGO_HOME/bin:$PATH"
+      
+      # Initialize rustup if not already done (set default toolchain)
+      if command -v rustup &> /dev/null; then
+        if [[ ! -f "$RUSTUP_HOME/settings.toml" ]] || ! grep -q "default_toolchain" "$RUSTUP_HOME/settings.toml" 2>/dev/null; then
+          rustup default stable &>/dev/null
+        fi
+      fi
+
+      # === PATH Setup ===
+      export PATH="$HOME/.local/bin:$PATH"
 
       # Remove history data we don't want to see
       export HISTIGNORE="pwd:ls:cd"
 
-      # Ripgrep alias
+      # === Aliases ===
       alias search='rg -p --glob "!target/*" "$@"'
+      alias diff=difft
+      alias ls='ls --color=auto'
 
-      # Editor setup
+      # === Editor Setup ===
       export EDITOR="vim"
       export VISUAL="zed"
 
-      # Use difftastic, syntax-aware diffing
-      alias diff=difft
+      # === Wine Configuration ===
+      # Suppress Wine debug noise
+      export WINEDEBUG="-all"
+      
+      # Function to run Windows executables (works on both macOS and Linux)
+      run-exe() {
+        if [[ $# -eq 0 ]]; then
+          echo "Usage: run-exe <path-to-exe> [args...]"
+          return 1
+        fi
+        wine "$@"
+      }
+      
+      # Alias for quick exe execution
+      alias exe='run-exe'
 
-      # Always color ls and group directories
-      alias ls='ls --color=auto'
-
-      # macOS-style open command
+      # === Platform-specific ===
       ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
         alias open="xdg-open"
       ''}

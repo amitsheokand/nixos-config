@@ -177,6 +177,14 @@
     # Bluetooth
     blueman.enable = true;
 
+    # Wine binfmt - run .exe files directly
+    # Usage: ./myprogram.exe (no need for wine prefix)
+    binfmt.registrations.wine = {
+      recognitionType = "extension";
+      magicOrExtension = "exe";
+      interpreter = "${pkgs.wine}/bin/wine";
+    };
+
     # Key remapping service
     keyd = {
       enable = true;

@@ -13,6 +13,7 @@ with pkgs; [
   cargo-outdated      # Check for outdated dependencies
   cargo-flamegraph    # CPU profiling flamegraphs
   cargo-deny          # Lint dependencies
+  cargo-xwin          # Cross compile to Windows MSVC target
   sccache             # Shared compilation cache
 
   # === Core CLI Tools ===
