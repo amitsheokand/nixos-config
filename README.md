@@ -15,8 +15,8 @@ This fork has been customized with:
 - **Rust-focused tooling** instead of PHP/Go/Node.js
 - **GNOME desktop** instead of KDE Plasma for NixOS
 - **Removed Emacs** - uses Zed/Cursor/VS Code instead
-- **Cleaned up packages** - removed unused apps and overlays
-- **Simplified shell config** - clean zsh setup without project-specific aliases
+- **Cleaned up packages** - minimal, focused package set
+- **Simplified shell config** - clean zsh setup with Powerlevel10k
 
 ## Features
 
@@ -26,7 +26,7 @@ This fork has been customized with:
 - **Managed Homebrew**: Zero maintenance via `nix-darwin` and `nix-homebrew`
 - **Secrets Management**: Declarative secrets with `agenix`
 - **Home Manager**: User-level configuration without extra CLI steps
-- **GNOME Desktop**: Clean GNOME setup for NixOS
+- **GNOME Desktop**: Clean GNOME setup for NixOS with extensions
 - **Auto-loading Overlays**: Drop a `.nix` file in `/overlays` and it runs
 
 ## Packages
@@ -34,27 +34,29 @@ This fork has been customized with:
 ### Shared (macOS + NixOS)
 
 - **Rust**: `rustup` (includes rustc, cargo, rustfmt, clippy, rust-analyzer)
-- **Cargo tools**: cargo-watch, cargo-edit, cargo-nextest, cargo-expand, cargo-audit, cargo-deny, etc.
+- **Cargo tools**: cargo-watch, cargo-edit, cargo-nextest, cargo-expand, cargo-audit, cargo-deny, cargo-xwin, etc.
 - **CLI**: bat, btop, fd, fzf, gh, git, ripgrep, tmux, jq, difftastic, etc.
 - **Build tools**: cmake, pkg-config, openssl, lldb
 
 ### macOS (Homebrew Casks)
 
-- Cursor, Ghostty, Zed, VS Code
+- Cursor, Ghostty, Zed
 - Firefox, VLC, Spotify
 - UTM (virtualization), BetterDisplay
 
 ### NixOS
 
-- GNOME desktop with extensions
-- Firefox, Chromium, VLC, GIMP
-- Wine + Winetricks
+- GNOME desktop with extensions (Dash to Dock, ArcMenu, Blur My Shell, etc.)
+- Firefox, Brave, Chromium, VLC, GIMP
+- Ghostty, Zed Editor, Rust Rover
+- Wine + Winetricks for Windows compatibility
+- Steam for gaming
 
 ## Quick Start
 
 ### Prerequisites
 
-1. Install Xcode CLI tools: `xcode-select --install`
+1. Install Xcode CLI tools (macOS): `xcode-select --install`
 2. Install Nix: `sh <(curl -L https://nixos.org/nix/install)`
 3. Enable flakes in `~/.config/nix/nix.conf`:
    ```
@@ -87,7 +89,7 @@ nix run .#build-switch
 │   ├── darwin   # macOS-specific (casks, dock, system settings)
 │   ├── nixos    # NixOS-specific (GNOME, packages)
 │   └── shared   # Shared across platforms (packages, shell, git)
-├── overlays     # Custom package overlays
+├── overlays     # Custom package overlays (auto-loaded)
 └── flake.nix    # Main entry point
 ```
 
@@ -102,13 +104,21 @@ nix run .#build-switch
 | `modules/nixos/packages.nix` | NixOS-specific packages |
 | `modules/shared/home-manager.nix` | Shell config (zsh, git, tmux) |
 
-## Secrets
+## SSH Keys
 
-This configuration uses [agenix](https://github.com/ryantm/agenix) for secrets management with a private `nix-secrets` repository.
+Required SSH key:
+- `~/.ssh/id_ed25519` - Used for GitHub access and general SSH
 
-Required SSH keys:
-- `~/.ssh/id_ed25519` - GitHub access
-- `~/.ssh/id_ed25519_agenix` - Secrets decryption
+### Secrets (Optional)
+
+This configuration supports [agenix](https://github.com/ryantm/agenix) for secrets management with a private `nix-secrets` repository. Currently disabled - enable in `flake.nix` and `hosts/nixos/default.nix` after setting up encrypted `.age` files.
+
+## User
+
+- **Username**: `amitsheokand`
+- **Email**: `amix.sheokand@gmail.com`
+- **Desktop**: GNOME (NixOS), macOS native (Darwin)
+- **Focus**: Rust development
 
 ## Credits
 

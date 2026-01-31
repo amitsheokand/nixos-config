@@ -12,6 +12,10 @@
         flake-utils.follows = "flake-utils";
       };
     };
+    cursor = {
+      url = "github:amitsheokand/cursor-nixos-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -41,19 +45,15 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    secrets = {
-      url = "git+ssh://git@github.com/amitsheokand/nix-secrets.git?ref=main";
-      flake = false;
-    };
     chaotic = {
       url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-desktop, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, secrets, chaotic } @inputs:
+  outputs = { self, darwin, claude-desktop, cursor, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
     let
       user = "amitsheokand";
-      linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
+      linuxSystems = [ "x86_64-linux" ];
       darwinSystems = [ "aarch64-darwin" "x86_64-darwin" ];
       forAllSystems = f: nixpkgs.lib.genAttrs (linuxSystems ++ darwinSystems) f;
       devShell = system: let pkgs = nixpkgs.legacyPackages.${system}; in {
@@ -95,16 +95,6 @@
       };
     in
     {
-      templates = {
-        starter = {
-          path = ./templates/starter;
-          description = "Starter configuration without secrets";
-        };
-        starter-with-secrets = {
-          path = ./templates/starter-with-secrets;
-          description = "Starter configuration with secrets";
-        };
-      };
       devShells = forAllSystems devShell;
       apps = nixpkgs.lib.genAttrs linuxSystems mkLinuxApps // nixpkgs.lib.genAttrs darwinSystems mkDarwinApps;
       darwinConfigurations = nixpkgs.lib.genAttrs darwinSystems (system:
@@ -142,6 +132,7 @@
             modules = [
               disko.nixosModules.disko
               chaotic.nixosModules.default
+              agenix.nixosModules.default
               home-manager.nixosModules.home-manager {
                 home-manager = {
                   useGlobalPkgs = true;
@@ -150,6 +141,10 @@
                     import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
                 };
               }
+              # Add Cursor IDE from flake
+              ({ pkgs, ... }: {
+                environment.systemPackages = [ cursor.packages.${system}.default ];
+              })
               ./hosts/nixos
             ];
           }
@@ -164,6 +159,7 @@
             modules = [
               disko.nixosModules.disko
               chaotic.nixosModules.default
+              agenix.nixosModules.default
               home-manager.nixosModules.home-manager {
                 home-manager = {
                   useGlobalPkgs = true;
@@ -172,6 +168,10 @@
                     import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
                 };
               }
+              # Add Cursor IDE from flake
+              ({ pkgs, ... }: {
+                environment.systemPackages = [ cursor.packages.x86_64-linux.default ];
+              })
               ./hosts/nixos/garfield
             ];
           };

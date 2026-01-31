@@ -97,6 +97,9 @@ let name = "Amit Sheokand";
       # === Platform-specific ===
       ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
         alias open="xdg-open"
+        
+        # === ROCm for RX 6700 XT (gfx1031 → compatible with gfx1030) ===
+        export HSA_OVERRIDE_GFX_VERSION=10.3.0
       ''}
     '';
   };
@@ -109,13 +112,21 @@ let name = "Amit Sheokand";
     lfs = {
       enable = true;
     };
-    extraConfig = {
+    settings = {
       init.defaultBranch = "main";
       core = {
-	    editor = "vim";
+        editor = "vim";
         autocrlf = "input";
       };
+      # Use SSH instead of HTTPS for GitHub (avoids password auth issues)
+      url = {
+        "git@github.com:" = {
+          insteadOf = "https://github.com/";
+        };
+      };
+      # GPG commit signing
       commit.gpgsign = true;
+      user.signingkey = "49D7A75D71371965";
       pull.rebase = true;
       rebase.autoStash = true;
     };
@@ -144,8 +155,6 @@ let name = "Amit Sheokand";
       set ruler
       set backspace=indent,eol,start
       set laststatus=2
-      " Don't use clipboard=unnamedplus, use macOS pbcopy/pbpaste instead
-
       " Dir stuff
       set nobackup
       set nowritebackup
@@ -187,10 +196,6 @@ let name = "Amit Sheokand";
       filetype plugin on
       filetype indent on
 
-      "" macOS clipboard integration
-      vnoremap <Leader>. :w !pbcopy<CR><CR>
-      nnoremap <Leader>, :r !pbpaste<CR>
-
       "" Move cursor by display lines when wrapping
       nnoremap j gj
       nnoremap k gk
@@ -223,9 +228,6 @@ let name = "Amit Sheokand";
       let g:startify_bookmarks = [
         \ '~/.local/share/src',
         \ ]
-
-      let g:airline_theme='bubblegum'
-      let g:airline_powerline_fonts = 1
       '';
      };
 
@@ -306,21 +308,9 @@ let name = "Amit Sheokand";
     ];
     matchBlocks = {
       "*" = {
-        # Set the default values we want to keep
         sendEnv = [ "LANG" "LC_*" ];
         hashKnownHosts = true;
       };
-      #"github.com" = {
-      #  identitiesOnly = true;
-      #  identityFile = [
-      #    (lib.mkIf pkgs.stdenv.hostPlatform.isLinux
-      #      "/home/${user}/.ssh/id_github"
-      #    )
-      #    (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin
-      #      "/Users/${user}/.ssh/id_github"
-      #    )
-      #  ];
-      #};
     };
   };
 
@@ -344,8 +334,10 @@ let name = "Amit Sheokand";
 
         # Use XDG data directory
         # https://github.com/tmux-plugins/tmux-resurrect/issues/348
-        extraConfig = ''
-          set -g @resurrect-dir '/Users/amitsheokand/.cache/tmux/resurrect'
+        extraConfig = let
+          homeDir = if pkgs.stdenv.hostPlatform.isDarwin then "/Users/${user}" else "/home/${user}";
+        in ''
+          set -g @resurrect-dir '${homeDir}/.cache/tmux/resurrect'
           set -g @resurrect-capture-pane-contents 'on'
           set -g @resurrect-pane-contents-area 'visible'
         '';

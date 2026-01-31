@@ -1,11 +1,6 @@
 { pkgs, config, ... }:
 
-let
-  githubPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKmFX/3oHUu5hbgQXWZHqL/MIpA0Fonnikunmy9+8ckM amix.sheokand@gmail.com";
-in
-
 {
-  ".ssh/id_github.pub" = {
-    text = githubPublicKey;
-  };
+  # SSH keys are managed manually (not by Home Manager)
+  # Your key: ~/.ssh/id_ed25519 and ~/.ssh/id_ed25519.pub
 }

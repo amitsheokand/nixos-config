@@ -6,17 +6,22 @@ in
 shared-packages ++ [
   # === Desktop Apps ===
   firefox           # Web browser
+  brave             # Privacy-focused browser
   chromium          # Alternative browser
+  spotify           # Music streaming
   vlc               # Media player
   gimp              # Image editor
+  localsend         # File transfer
+  code-cursor
 
   # === Development Tools (GUI) ===
   ghostty             # GPU-accelerated terminal
   zed-editor          # Modern code editor
+  jetbrains.rust-rover # Rust IDE
 
   # === Wine for Windows apps ===
-  wine              # Windows compatibility layer
-  winetricks        # Wine configuration helper
+  wineWowPackages.stable  # Wine with WoW64 (32-bit and 64-bit support)
+  winetricks              # Wine configuration helper
 
   # === System Tools ===
   bluez             # Bluetooth
@@ -29,7 +34,12 @@ shared-packages ++ [
 
   # === GNOME Extensions & Tools ===
   gnome-tweaks      # GNOME customization
-  gnomeExtensions.appindicator  # System tray icons
+  gnomeExtensions.appindicator      # System tray icons
+  gnomeExtensions.dash-to-dock      # Dock customization
+  gnomeExtensions.dash-to-panel     # Panel mode for dock
+  gnomeExtensions.arcmenu           # Application menu
+  gnomeExtensions.blur-my-shell     # Blur effects
+  gnomeExtensions.just-perfection   # GNOME UI tweaks
   
   # === Utilities ===
   libnotify         # Desktop notifications
@@ -40,4 +50,9 @@ shared-packages ++ [
   pciutils          # lspci for hardware info
   mesa-demos        # OpenGL utilities
   vulkan-tools      # Vulkan utilities
+  
+  # === ROCm for AMD GPU compute (RX 6700 XT / gfx1031) ===
+  rocmPackages.rocm-smi       # GPU monitoring
+  rocmPackages.rocminfo       # ROCm device info
+  rocmPackages.clr            # ROCm runtime (includes HIP)
 ]

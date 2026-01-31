@@ -8,17 +8,12 @@ Files in this directory are automatically loaded as Nix overlays during each bui
 
 **Important:** All overlay files must be added to git before building (`git add <file>.nix`) since Nix flakes only see tracked files.
 
-## Current Overlays
+## How to Add an Overlay
 
-### AppImage Packages
-- **`cider-appimage.nix`** - Apple Music client with Wayland support
-- **`tableplus-appimage.nix`** - Database GUI tool, fetched from latest release
-- **`wowup-appimage.nix`** - World of Warcraft addon manager
-
-### Development Tools
-- **`linear-cli.nix`** - Linear CLI wrapper using npx and Node.js 20
-- **`playwright.nix`** - Playwright with browser dependencies and wrapper script
-- **`phpstorm.nix`** - JetBrains PhpStorm with custom JDK override
+1. Create a `.nix` file in this directory
+2. Use the standard overlay format: `self: super: { ... }` or `final: prev: { ... }`
+3. Run `git add overlays/<your-file>.nix`
+4. Rebuild with `nix run .#build-switch`
 
 ## Common Patterns
 

@@ -86,6 +86,26 @@
         "type": "github"
       }
     },
+    "cursor": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1765543621,
+        "narHash": "sha256-9ReqtQ9pLk1YXow2Ub9S9Jb5BvKQ3hY1Sk0LdmwGdUo=",
+        "owner": "amitsheokand",
+        "repo": "cursor-nixos-flake",
+        "rev": "f053f87b043127005d19011efbf1c584d03a6099",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amitsheokand",
+        "repo": "cursor-nixos-flake",
+        "type": "github"
+      }
+    },
     "darwin": {
       "inputs": {
         "nixpkgs": [
@@ -421,6 +441,7 @@
         "agenix": "agenix",
         "chaotic": "chaotic",
         "claude-desktop": "claude-desktop",
+        "cursor": "cursor",
         "darwin": "darwin_2",
         "disko": "disko",
         "flake-utils": "flake-utils",
@@ -430,8 +451,7 @@
         "homebrew-core": "homebrew-core",
         "homebrew-wine": "homebrew-wine",
         "nix-homebrew": "nix-homebrew",
-        "nixpkgs": "nixpkgs_3",
-        "secrets": "secrets"
+        "nixpkgs": "nixpkgs_3"
       }
     },
     "rust-overlay": {
@@ -453,23 +473,6 @@
         "owner": "oxalica",
         "repo": "rust-overlay",
         "type": "github"
-      }
-    },
-    "secrets": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1769354043,
-        "narHash": "sha256-wa+al0KOBNJqiG3pc5y7ZjJqQL8+Pp8OiA/tp/zjbsE=",
-        "ref": "main",
-        "rev": "01056b17d2dfa773a3b4075b912268251755a49b",
-        "revCount": 2,
-        "type": "git",
-        "url": "ssh://git@github.com/amitsheokand/nix-secrets.git"
-      },
-      "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "ssh://git@github.com/amitsheokand/nix-secrets.git"
       }
     },
     "systems": {
