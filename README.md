@@ -79,6 +79,23 @@ nix run .#build-switch
 2. Run `git add .`
 3. Run `nix run .#build-switch`
 
+### Updating Packages
+
+Packages are pinned via `flake.lock`. To update:
+
+```sh
+# Update all inputs (nixpkgs, home-manager, etc.)
+nix flake update
+
+# Update a specific input only
+nix flake update nixpkgs
+
+# Apply the updates
+nix run .#build-switch
+```
+
+**Tip**: Run `nix flake update` periodically (e.g., weekly) to get security patches and new package versions.
+
 ## Layout
 
 ```

@@ -208,7 +208,7 @@
   boot = {
     loader.systemd-boot = {
       enable             = true;
-      configurationLimit = 42;
+      configurationLimit = 5;
     };
     loader.efi.canTouchEfiVariables = true;
     kernelPackages = pkgs.linuxPackages_latest;

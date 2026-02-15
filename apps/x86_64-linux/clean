@@ -7,9 +7,9 @@ NC='\033[0m'
 
 echo -e "${YELLOW}Cleaning up old system generations and boot files...${NC}"
 
-# Clean up old generations (older than 7 days)
+# Remove generations older than 1 day (reclaim space; boot keeps 5 via configurationLimit)
 echo -e "${YELLOW}Removing old system generations...${NC}"
-sudo nix-collect-garbage --delete-older-than 7d
+sudo nix-collect-garbage --delete-older-than 1d
 
 # Clean up boot partition by reinstalling bootloader
 echo -e "${YELLOW}Cleaning up boot partition...${NC}"

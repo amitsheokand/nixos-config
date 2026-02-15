@@ -80,6 +80,7 @@
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
+        "disk-usage" = mkApp "disk-usage" system;
         "install" = mkApp "install" system;
         "install-with-secrets" = mkApp "install-with-secrets" system;
       };
@@ -91,6 +92,7 @@
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
+        "disk-usage" = mkApp "disk-usage" system;
         "rollback" = mkApp "rollback" system;
       };
     in

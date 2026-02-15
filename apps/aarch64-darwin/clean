@@ -7,7 +7,7 @@ NC='\033[0m'
 
 echo -e "${YELLOW}Cleaning up old system generations...${NC}"
 
-# Clean up old generations (older than 7 days)
-sudo nix-collect-garbage --delete-older-than 7d
+# Remove generations older than 1 day (reclaim space)
+sudo nix-collect-garbage --delete-older-than 1d
 
 echo -e "${GREEN}Cleanup complete!${NC}"
