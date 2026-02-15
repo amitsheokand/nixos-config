@@ -1,0 +1,37 @@
+#!/bin/sh -e
+
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+echo -e "${CYAN}=== Nix store & disk usage ===${NC}"
+echo ""
+echo -e "${YELLOW}Nix store size:${NC}"
+du -sh /nix/store 2>/dev/null || echo "  (cannot read)"
+echo ""
+echo -e "${YELLOW}Disk usage (relevant mounts):${NC}"
+df -h /nix / 2>/dev/null | sed 's/^/  /'
+if [ -d /boot ]; then
+  df -h /boot 2>/dev/null | sed 's/^/  /'
+fi
+echo ""
+
+echo -e "${YELLOW}System generations (kept in profile):${NC}"
+sudo nix-env -p /nix/var/nix/profiles/system --list-generations 2>/dev/null | tail -20
+GEN_COUNT=$(sudo nix-env -p /nix/var/nix/profiles/system --list-generations 2>/dev/null | wc -l)
+echo "  Total: $GEN_COUNT generations"
+echo ""
+
+echo -e "${YELLOW}If you ran clean (delete-older-than 1d), would remove:${NC}"
+sudo nix-collect-garbage --delete-older-than 1d --dry-run 2>/dev/null || echo "  (run with sudo to see)"
+echo ""
+
+echo -e "${YELLOW}Temp & cache (approximate):${NC}"
+for d in /tmp "$HOME/.cache" "$HOME/.local/share/nix"; do
+  [ -d "$d" ] && echo "  $d: $(du -sh "$d" 2>/dev/null | cut -f1)"
+done
+echo ""
+
+echo -e "${GREEN}To reclaim space: nix run .#clean${NC}"
