@@ -22,7 +22,7 @@ flake.nix (entry point)
     ├── Darwin (macOS)
     │   ├── hosts/darwin/default.nix      (system config)
     │   └── modules/darwin/
-    │       ├── home-manager.nix          (user config, dock, homebrew)
+    │       ├── home-manager.nix          (user config, homebrew)
     │       ├── casks.nix                 (GUI apps via Homebrew)
     │       ├── packages.nix              (darwin-specific nix packages)
     │       └── secrets.nix               (agenix secrets)
@@ -144,19 +144,6 @@ git = {
   userName = "Your Name";
   userEmail = "your@email.com";
   # ...
-};
-```
-
-### Modify macOS dock
-
-Edit `modules/darwin/home-manager.nix`, find `local.dock.entries`:
-
-```nix
-local.dock = {
-  entries = [
-    { path = "/Applications/AppName.app/"; }
-    # ...
-  ];
 };
 ```
 

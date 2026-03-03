@@ -126,6 +126,9 @@
 
     # Bluetooth
     blueman.enable = true;
+
+    # Ollama: local LLM server (API at http://localhost:11434)
+    ollama.enable = true;
   };
 
   # Define a user account

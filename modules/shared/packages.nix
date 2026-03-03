@@ -53,4 +53,7 @@ with pkgs; [
   cmake               # Cross-platform build system
   pkg-config          # Helper tool for compiling
   openssl             # TLS/SSL library (needed by many Rust crates)
+
+  # === Local LLM ===
+  ollama              # Run LLMs locally (e.g. Strand-Rust-Coder, llama)
 ] ++ myFonts

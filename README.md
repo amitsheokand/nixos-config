@@ -133,7 +133,6 @@ This configuration supports [agenix](https://github.com/ryantm/agenix) for secre
 ## User
 
 - **Username**: `amitsheokand`
-- **Email**: `amix.sheokand@gmail.com`
 - **Desktop**: GNOME (NixOS), macOS native (Darwin)
 - **Focus**: Rust development
 

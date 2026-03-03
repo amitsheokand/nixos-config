@@ -6,10 +6,6 @@ let
   additionalFiles = import ./files.nix { inherit user config pkgs; };
 in
 {
-  imports = [
-    ./dock
-  ];
-
   users.users.${user} = {
     name     = "${user}";
     home     = "/Users/${user}";
@@ -63,35 +59,5 @@ in
         programs = {} // import ../shared/home-manager.nix { inherit config pkgs lib; };
         manual.manpages.enable = false;
       };
-  };
-
-  # Fully declarative dock using the latest from Nix Store
-  local.dock = {
-    enable   = true;
-    username = user;
-    entries  = [
-      # System Apps
-      { path = "/System/Applications/Apps.app/"; }
-      { path = "/System/Applications/Mission Control.app/"; }
-
-
-      # Browsers
-      { path = "/Applications/Firefox.app/"; }
-      
-      # Terminal & Dev Tools
-      { path = "/Applications/Cursor.app/"; }
-      { path = "/Applications/Zed.app/"; }
-      { path = "/Applications/Fork.app/"; }
-      { path = "/Applications/UTM.app/"; }
-      { path = "/System/Applications/System Settings.app/"; }
-      
-      
-      # Folders
-      {
-        path    = "${config.users.users.${user}.home}/Downloads";
-        section = "others";
-        options = "--sort dateadded --view grid --display stack";
-      }
-    ];
   };
 }

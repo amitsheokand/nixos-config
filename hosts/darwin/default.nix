@@ -23,6 +23,18 @@ in
 
   environment.systemPackages = import ../../modules/shared/packages.nix { inherit pkgs; };
 
+  # Ollama: run "ollama serve" as user Launch Agent so ollama list/run work without a terminal
+  # Ref: https://www.danielcorin.com/til/nix-darwin/launch-agents/
+  launchd.user.agents.ollama-serve = {
+    command = "${pkgs.ollama}/bin/ollama serve";
+    serviceConfig = {
+      KeepAlive = true;
+      RunAtLoad = true;
+      StandardOutPath = "/tmp/ollama_${user}.out.log";
+      StandardErrorPath = "/tmp/ollama_${user}.err.log";
+    };
+  };
+
   system = {
     # Turn off NIX_PATH warnings now that we're using flakes
     checks.verifyNixPath = false;

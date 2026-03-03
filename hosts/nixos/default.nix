@@ -149,6 +149,10 @@
 
     # Bluetooth
     blueman.enable = true;
+
+    # Ollama: local LLM server (API at http://localhost:11434)
+    # Ref: https://wiki.nixos.org/wiki/Ollama
+    ollama.enable = true;
   };
 
   # Define a user account
