@@ -78,22 +78,6 @@ let name = "Amit Sheokand";
       export EDITOR="vim"
       export VISUAL="zed"
 
-      # === Wine Configuration ===
-      # Suppress Wine debug noise
-      export WINEDEBUG="-all"
-      
-      # Function to run Windows executables (works on both macOS and Linux)
-      run-exe() {
-        if [[ $# -eq 0 ]]; then
-          echo "Usage: run-exe <path-to-exe> [args...]"
-          return 1
-        fi
-        wine "$@"
-      }
-      
-      # Alias for quick exe execution
-      alias exe='run-exe'
-
       # === Platform-specific ===
       ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
         alias open="xdg-open"

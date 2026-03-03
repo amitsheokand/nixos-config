@@ -19,14 +19,16 @@ shared-packages ++ [
   zed-editor          # Modern code editor
   jetbrains.rust-rover # Rust IDE
 
-  # === Wine for Windows apps ===
-  wineWowPackages.stable  # Wine with WoW64 (32-bit and 64-bit support)
-  winetricks              # Wine configuration helper
-
   # === System Tools ===
   bluez             # Bluetooth
   pavucontrol       # Audio controls
   playerctl         # Media player control
+  rustdesk          # Remote desktop (client; server runs via rustdesk-server module)
+
+  # === Windows VM (GNOME Boxes / libvirt) ===
+  gnome-boxes        # VM management (libvirt wrapper)
+  dnsmasq            # VM networking
+  phodav             # Share files with guest VMs
 
   # === CLI Tools ===
   glow              # Terminal markdown viewer

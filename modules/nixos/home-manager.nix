@@ -29,11 +29,16 @@ in
 
   # GNOME-specific settings via dconf
   dconf.settings = {
-    # Dark theme
+    # Enable fractional scaling (125%, 150%, 175% in Displays)
+    "org/gnome/mutter" = {
+      experimental-features = [ "scale-monitor-framebuffer" "xwayland-native-scaling" ];
+    };
+    # Dark theme + 150% fractional scaling (Wayland)
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita";
       icon-theme = "Adwaita";
+      scaling-factor = 1.5;  # 150%
     };
     
     # Keyboard settings

@@ -16,6 +16,10 @@
       url = "github:amitsheokand/cursor-nixos-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -50,7 +54,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-desktop, cursor, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
+  outputs = { self, darwin, claude-desktop, cursor, antigravity-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
@@ -147,11 +151,15 @@
               ({ pkgs, ... }: {
                 environment.systemPackages = [ cursor.packages.${system}.default ];
               })
+              # Add Antigravity from flake
+              ({ pkgs, ... }: {
+                environment.systemPackages = [ antigravity-nix.packages.${system}.default ];
+              })
               ./hosts/nixos
             ];
           }
         )
-        
+
         // # Named host configurations
         
         {
@@ -173,6 +181,10 @@
               # Add Cursor IDE from flake
               ({ pkgs, ... }: {
                 environment.systemPackages = [ cursor.packages.x86_64-linux.default ];
+              })
+              # Add Antigravity from flake
+              ({ pkgs, ... }: {
+                environment.systemPackages = [ antigravity-nix.packages.x86_64-linux.default ];
               })
               ./hosts/nixos/garfield
             ];

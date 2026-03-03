@@ -10,6 +10,8 @@
     
     # Systemd services and timers
     ../../modules/nixos/systemd.nix
+    # RustDesk self-hosted server (ID + relay for local network)
+    ../../modules/nixos/rustdesk-server.nix
 
   ];
 
@@ -25,12 +27,6 @@
     initrd.kernelModules        = [];
     kernelModules               = [ "kvm-amd" ];
     
-    # Wine binfmt - run .exe files directly (uses WoW64 for 32/64-bit support)
-    binfmt.registrations.wine = {
-      recognitionType = "extension";
-      magicOrExtension = "exe";
-      interpreter = "${pkgs.wineWowPackages.stable}/bin/wine";
-    };
   };
 
   # Filesystems
@@ -63,7 +59,7 @@
 
     graphics = {
       enable = true;
-      enable32Bit = true;  # 32-bit support for Steam/Wine
+      enable32Bit = true;  # 32-bit support for Steam
       # ROCm OpenCL support for RX 6700 XT
       extraPackages = with pkgs; [
         rocmPackages.clr.icd  # OpenCL ICD for ROCm
@@ -74,6 +70,15 @@
   # Add user to video/render groups for GPU access
   users.groups.render = {};
   users.groups.video = {};
+
+  # Windows VM (GNOME Boxes / libvirt) - TPM for Win11, USB redirection
+  # See: https://crescentro.se/posts/windows-vm-nixos/
+  # OVMF is included with QEMU by default (ovmf submodule was removed in nixpkgs)
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu.swtpm.enable = true;
+  };
+  virtualisation.spiceUSBRedirection.enable = true;
 
   # Networking
   networking = {
@@ -125,9 +130,16 @@
     };
     
 
-    # GNOME Desktop Environment
+    # GNOME Desktop Environment (fractional scaling: https://discourse.nixos.org/t/how-to-set-fractional-scaling-via-nix-configuration-for-gnome-wayland/56774)
     displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
+    desktopManager.gnome = {
+      enable = true;
+      extraGSettingsOverridePackages = [ pkgs.mutter ];
+      extraGSettingsOverrides = ''
+        [org.gnome.mutter]
+        experimental-features=['scale-monitor-framebuffer', 'xwayland-native-scaling']
+      '';
+    };
 
     # Enable CUPS to print documents.
     printing.enable = true;
@@ -155,7 +167,7 @@
   users.users.${user} = {
     isNormalUser = true;
     description  = "Amit Sheokand";
-    extraGroups  = [ "networkmanager" "wheel" "video" "render" ];
+    extraGroups  = [ "networkmanager" "wheel" "video" "render" "libvirtd" "kvm" ];
     shell = pkgs.zsh;
   };
 
@@ -173,6 +185,7 @@
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
     btop             # Modern resource monitor with temp display
+    swtpm            # TPM emulator for libvirt (Windows 11 VMs)
   ];
 
   # Don't require password for users in `wheel` group for these commands
