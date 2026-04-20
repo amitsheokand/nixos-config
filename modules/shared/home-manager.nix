@@ -91,8 +91,10 @@ let name = "Amit Sheokand";
   git = {
     enable = true;
     ignores = [ "*.swp" ];
-    userName = name;
-    userEmail = email;
+    settings.user = {
+      name = name;
+      email = email;
+    };
     lfs = {
       enable = true;
     };

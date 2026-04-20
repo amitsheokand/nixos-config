@@ -12,12 +12,11 @@ shared-packages ++ [
   vlc               # Media player
   gimp              # Image editor
   localsend         # File transfer
-  code-cursor
 
   # === Development Tools (GUI) ===
   ghostty             # GPU-accelerated terminal
   zed-editor          # Modern code editor
-  jetbrains.rust-rover # Rust IDE
+  vscodium            # VS Code without telemetry
 
   # === System Tools ===
   bluez             # Bluetooth
@@ -33,6 +32,7 @@ shared-packages ++ [
   # === CLI Tools ===
   glow              # Terminal markdown viewer
   glances           # System monitoring
+  bubblewrap        # Sandboxing (required by Codex CLI)
 
   # === GNOME Extensions & Tools ===
   gnome-tweaks      # GNOME customization
