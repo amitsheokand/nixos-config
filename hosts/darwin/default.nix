@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, codex-cli-nix, ... }:
 let 
   user = "amitsheokand";
 in
@@ -21,7 +21,12 @@ in
     '';
   };
 
-  environment.systemPackages = import ../../modules/shared/packages.nix { inherit pkgs; };
+  environment.systemPackages =
+    (import ../../modules/shared/packages.nix { inherit pkgs; })
+    ++ [
+      pkgs."claude-code"
+      codex-cli-nix.packages.${pkgs.system}.default
+    ];
 
   system = {
     # Turn off NIX_PATH warnings now that we're using flakes

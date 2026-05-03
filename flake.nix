@@ -5,14 +5,6 @@
     flake-utils.url = "github:numtide/flake-utils";
     home-manager.url = "github:nix-community/home-manager";
     agenix.url = "github:ryantm/agenix";
-    claude-desktop = {
-      url = "github:k3d3/claude-desktop-linux-flake";
-      # NOTE: Do NOT override nixpkgs here. The k3d3 flake uses
-      # `nodePackages.napi-rs-cli` which was removed from nixpkgs-unstable
-      # in early 2026. Letting it use its own pinned nixpkgs keeps it
-      # buildable. Only `flake-utils` is safe to follow.
-      inputs.flake-utils.follows = "flake-utils";
-    };
     cursor = {
       url = "github:amitsheokand/cursor-nixos-flake";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,6 +12,9 @@
     antigravity-nix = {
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+    claude-code-nix = {
+      url = "github:sadjow/claude-code-nix";
     };
     codex-cli-nix = {
       url = "github:sadjow/codex-cli-nix";
@@ -59,7 +54,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-desktop, cursor, antigravity-nix, codex-cli-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
+  outputs = { self, darwin, claude-code-nix, cursor, antigravity-nix, codex-cli-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
@@ -86,6 +81,7 @@
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
         "clean" = mkApp "clean" system;
+        "cleanup-space" = mkApp "cleanup-space" system;
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
@@ -98,6 +94,7 @@
         "build" = mkApp "build" system;
         "build-switch" = mkApp "build-switch" system;
         "clean" = mkApp "clean" system;
+        "cleanup-space" = mkApp "cleanup-space" system;
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
@@ -160,14 +157,6 @@
               ({ pkgs, ... }: {
                 environment.systemPackages = [ antigravity-nix.packages.${system}.default ];
               })
-              # Add Claude Desktop from flake
-              ({ pkgs, ... }: {
-                environment.systemPackages = [ claude-desktop.packages.${system}.claude-desktop-with-fhs ];
-              })
-              # Add Codex CLI from flake
-              ({ pkgs, ... }: {
-                environment.systemPackages = [ codex-cli-nix.packages.${system}.default ];
-              })
               ./hosts/nixos
             ];
           }
@@ -198,14 +187,6 @@
               # Add Antigravity from flake
               ({ pkgs, ... }: {
                 environment.systemPackages = [ antigravity-nix.packages.x86_64-linux.default ];
-              })
-              # Add Claude Desktop from flake
-              ({ pkgs, ... }: {
-                environment.systemPackages = [ claude-desktop.packages.x86_64-linux.claude-desktop-with-fhs ];
-              })
-              # Add Codex CLI from flake
-              ({ pkgs, ... }: {
-                environment.systemPackages = [ codex-cli-nix.packages.x86_64-linux.default ];
               })
               ./hosts/nixos/garfield
             ];

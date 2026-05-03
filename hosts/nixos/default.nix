@@ -1,4 +1,4 @@
-{ config, lib, pkgs, modulesPath, user, ... }:
+{ config, lib, pkgs, modulesPath, user, claude-code-nix, codex-cli-nix, ... }:
 
 {
   imports = [
@@ -29,6 +29,10 @@
     # doesn't compose with nixpkgs-unstable when nixpkgs.follows is set,
     # and removing follows breaks the overlay interface entirely.)
     kernelPackages = pkgs.linuxPackages_zen;
+
+    # Headless dGPU (RX 6700 XT, Navi 22): pin at D0, BACO runtime-PM
+    # wedges the chip and takes the display path down with it.
+    kernelParams = [ "amdgpu.runpm=0" ];
 
     initrd.availableKernelModules = [ "nvme" "xhci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" ];
     initrd.kernelModules        = [];
@@ -188,6 +192,8 @@
   environment.systemPackages = with pkgs; [
     vim
     git
+    claude-code-nix.packages.${pkgs.system}.default
+    codex-cli-nix.packages.${pkgs.system}.default
     wl-clipboard     # Wayland clipboard utilities (replaces xclip)
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors

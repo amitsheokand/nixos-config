@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+RED='\033[1;31m'
+NC='\033[0m'
+
+AGGRESSIVE=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --aggressive)
+      AGGRESSIVE=1
+      shift
+      ;;
+    *)
+      echo -e "${RED}Unknown argument: $1${NC}"
+      echo "Usage: nix run .#cleanup-space [-- --aggressive]"
+      exit 1
+      ;;
+  esac
+done
+
+echo -e "${YELLOW}Disk usage before cleanup:${NC}"
+df -h /
+
+echo -e "${YELLOW}Pruning old system/user generations (older than 7d)...${NC}"
+sudo nix-collect-garbage --delete-older-than 7d
+
+echo -e "${YELLOW}Running Nix store GC...${NC}"
+sudo nix-store --gc
+
+echo -e "${YELLOW}Optimizing Nix store hardlinks...${NC}"
+sudo nix store optimise
+
+if [ "$AGGRESSIVE" -eq 1 ]; then
+  echo -e "${YELLOW}Aggressive mode: cleaning user cache and temp directories...${NC}"
+  rm -rf "$HOME/.cache/"*
+  sudo find /tmp -mindepth 1 -xdev -delete
+  sudo find /var/tmp -mindepth 1 -xdev -delete
+fi
+
+echo -e "${GREEN}Cleanup complete.${NC}"
+echo -e "${YELLOW}Disk usage after cleanup:${NC}"
+df -h /
