@@ -1,4 +1,4 @@
-{ config, lib, pkgs, modulesPath, user, inputs, ... }:
+{ config, lib, pkgs, modulesPath, user, inputs, claude-code-nix, codex-cli-nix, ... }:
 
 {
   imports = [
@@ -160,6 +160,8 @@
   environment.systemPackages = with pkgs; [
     vim
     git
+    claude-code-nix.packages.${pkgs.system}.default
+    codex-cli-nix.packages.${pkgs.system}.default
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors

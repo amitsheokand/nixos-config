@@ -96,6 +96,16 @@ nix run .#build-switch
 
 **Tip**: Run `nix flake update` periodically (e.g., weekly) to get security patches and new package versions.
 
+### Reclaim Disk Space
+
+```sh
+# Safe cleanup: old generations + Nix GC + store optimization
+nix run .#cleanup-space
+
+# Aggressive cleanup: also clears user cache and temp directories
+nix run .#cleanup-space -- --aggressive
+```
+
 ## Layout
 
 ```

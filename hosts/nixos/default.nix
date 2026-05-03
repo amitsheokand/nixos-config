@@ -1,4 +1,4 @@
-{ config, lib, pkgs, modulesPath, user, ... }:
+{ config, lib, pkgs, modulesPath, user, claude-code-nix, codex-cli-nix, ... }:
 
 {
   imports = [
@@ -23,10 +23,21 @@
     };
     loader.efi.canTouchEfiVariables = true;
 
+    # Zen kernel: gaming/Wine/DXVK tuned, includes futex_waitv + ntsync,
+    # in nixpkgs binary cache so no local kernel build required.
+    # (CachyOS via chaotic-nyx was tried but its overlay's replaceStdenv
+    # doesn't compose with nixpkgs-unstable when nixpkgs.follows is set,
+    # and removing follows breaks the overlay interface entirely.)
+    kernelPackages = pkgs.linuxPackages_zen;
+
+    # Headless dGPU (RX 6700 XT, Navi 22): pin at D0, BACO runtime-PM
+    # wedges the chip and takes the display path down with it.
+    kernelParams = [ "amdgpu.runpm=0" ];
+
     initrd.availableKernelModules = [ "nvme" "xhci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" ];
     initrd.kernelModules        = [];
     kernelModules               = [ "kvm-amd" ];
-    
+
   };
 
   # Filesystems
@@ -185,6 +196,8 @@
   environment.systemPackages = with pkgs; [
     vim
     git
+    claude-code-nix.packages.${pkgs.system}.default
+    codex-cli-nix.packages.${pkgs.system}.default
     wl-clipboard     # Wayland clipboard utilities (replaces xclip)
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
@@ -226,9 +239,13 @@
       substituters        = [
         "https://nix-community.cachix.org"
         "https://cache.nixos.org"
+        # Chaotic-nyx cache: prebuilt CachyOS kernel & friends
+        "https://chaotic-nyx.cachix.org"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "chaotic-nyx.cachix.org-1:HfnXSw4pj95iI/n17rIDy40agHj12WfF+Gqk6SonIT8="
       ];
       experimental-features = [ "nix-command" "flakes" ];
     };

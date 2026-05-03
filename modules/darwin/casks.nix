@@ -14,6 +14,7 @@ _:
 
   # Utility Tools
   "appcleaner"
+  "rustdesk"        # Remote desktop (open-source alternative to TeamViewer)
 
   # Virtualization
   "utm"

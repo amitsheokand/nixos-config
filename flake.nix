@@ -5,19 +5,19 @@
     flake-utils.url = "github:numtide/flake-utils";
     home-manager.url = "github:nix-community/home-manager";
     agenix.url = "github:ryantm/agenix";
-    claude-desktop = {
-      url = "github:k3d3/claude-desktop-linux-flake";
-      inputs = { 
-        nixpkgs.follows = "nixpkgs";
-        flake-utils.follows = "flake-utils";
-      };
-    };
     cursor = {
       url = "github:amitsheokand/cursor-nixos-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     antigravity-nix = {
       url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    claude-code-nix = {
+      url = "github:sadjow/claude-code-nix";
+    };
+    codex-cli-nix = {
+      url = "github:sadjow/codex-cli-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     darwin = {
@@ -54,7 +54,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-desktop, cursor, antigravity-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
+  outputs = { self, darwin, claude-code-nix, cursor, antigravity-nix, codex-cli-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
@@ -81,6 +81,7 @@
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
         "clean" = mkApp "clean" system;
+        "cleanup-space" = mkApp "cleanup-space" system;
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
@@ -93,6 +94,7 @@
         "build" = mkApp "build" system;
         "build-switch" = mkApp "build-switch" system;
         "clean" = mkApp "clean" system;
+        "cleanup-space" = mkApp "cleanup-space" system;
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
