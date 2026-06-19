@@ -5,14 +5,6 @@
     flake-utils.url = "github:numtide/flake-utils";
     home-manager.url = "github:nix-community/home-manager";
     agenix.url = "github:ryantm/agenix";
-    cursor = {
-      url = "github:amitsheokand/cursor-nixos-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    antigravity-nix = {
-      url = "github:jacopone/antigravity-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     claude-code-nix = {
       url = "github:sadjow/claude-code-nix";
     };
@@ -54,7 +46,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-code-nix, cursor, antigravity-nix, codex-cli-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
+  outputs = { self, darwin, claude-code-nix, codex-cli-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
@@ -149,13 +141,9 @@
                     import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
                 };
               }
-              # Add Cursor IDE from flake
+              # Cursor IDE from nixpkgs
               ({ pkgs, ... }: {
-                environment.systemPackages = [ cursor.packages.${system}.default ];
-              })
-              # Add Antigravity from flake
-              ({ pkgs, ... }: {
-                environment.systemPackages = [ antigravity-nix.packages.${system}.default ];
+                environment.systemPackages = [ pkgs.code-cursor ];
               })
               ./hosts/nixos
             ];
@@ -180,13 +168,9 @@
                     import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
                 };
               }
-              # Add Cursor IDE from flake
+              # Cursor IDE from nixpkgs
               ({ pkgs, ... }: {
-                environment.systemPackages = [ cursor.packages.x86_64-linux.default ];
-              })
-              # Add Antigravity from flake
-              ({ pkgs, ... }: {
-                environment.systemPackages = [ antigravity-nix.packages.x86_64-linux.default ];
+                environment.systemPackages = [ pkgs.code-cursor ];
               })
               ./hosts/nixos/garfield
             ];

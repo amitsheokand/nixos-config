@@ -1,10 +1,14 @@
-# RustDesk self-hosted server (ID + relay) for local network.
+# RustDesk self-hosted server (ID + relay) for LAN and optional WAN access.
 # See: https://wiki.nixos.org/wiki/RustDesk
 #
-# On Mac (and this NixOS machine): install RustDesk, then in the client:
+# In the RustDesk client:
 #   Burger menu → Network →
-#   ID/Relay Server: <this host> (e.g. nixos, nixos.local, or this machine's IP)
+#   ID/Relay Server: use the LAN hostname/IP at home, or the public DNS/DDNS name off-site
 #   Key: paste contents of /var/lib/private/rustdesk/id_ed25519.pub (on this NixOS host)
+#
+# For WAN access, also forward RustDesk ports on the router to this host:
+#   TCP 21115-21119
+#   UDP 21116
 #
 { config, lib, ... }:
 
@@ -12,7 +16,11 @@
   services.rustdesk-server = {
     enable = true;
     openFirewall = true;
-    # This host is the server; clients use this hostname (or IP) as ID/Relay server.
-    signal.relayHosts = [ config.networking.hostName ];
+    # Advertise the LAN hostname for home use and the current public IP for off-site use.
+    # Replace the public IP with a DDNS name later if the ISP address changes.
+    signal.relayHosts = [
+      config.networking.hostName
+      "106.219.123.220"
+    ];
   };
 }

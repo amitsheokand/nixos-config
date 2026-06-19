@@ -38,7 +38,6 @@ shared-packages ++ [
   gnome-tweaks      # GNOME customization
   gnomeExtensions.appindicator      # System tray icons
   gnomeExtensions.dash-to-dock      # Dock customization
-  gnomeExtensions.dash-to-panel     # Panel mode for dock
   gnomeExtensions.arcmenu           # Application menu
   gnomeExtensions.blur-my-shell     # Blur effects
   gnomeExtensions.just-perfection   # GNOME UI tweaks

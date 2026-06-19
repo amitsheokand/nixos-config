@@ -12,6 +12,8 @@
     ../../modules/nixos/systemd.nix
     # RustDesk self-hosted server (ID + relay for local network)
     ../../modules/nixos/rustdesk-server.nix
+    # Sunshine game-stream host (stream this desktop to Moonlight clients)
+    ../../modules/nixos/sunshine.nix
 
   ];
 
@@ -38,6 +40,15 @@
     initrd.kernelModules        = [];
     kernelModules               = [ "kvm-amd" ];
 
+    # Realtek RTL8852BE (rtw89) Wi-Fi stability: PCIe ASPM L1/L1SS lets the card
+    # sleep deep enough that firmware misses the periodic scan command, which
+    # times out (`rtw89_hw_scan_offload failed ret -110`) and stalls the link,
+    # tearing down Sunshine streams every ~3 min. Disable ASPM + the radio's
+    # low-power mode to keep the firmware responsive. Takes effect on reboot.
+    extraModprobeConfig = ''
+      options rtw89_pci disable_aspm_l1=y disable_aspm_l1ss=y
+      options rtw89_core disable_ps_mode=y
+    '';
   };
 
   # Filesystems
@@ -70,7 +81,7 @@
 
     graphics = {
       enable = true;
-      enable32Bit = true;  # 32-bit support for Steam
+      enable32Bit = true;  # 32-bit graphics for Wine/DXVK (32-bit games)
       # ROCm OpenCL support for RX 6700 XT
       extraPackages = with pkgs; [
         rocmPackages.clr.icd  # OpenCL ICD for ROCm
@@ -96,6 +107,9 @@
     hostName        = "nixos";
     useDHCP         = lib.mkDefault true;
     networkmanager.enable = true;
+    # Disable Wi-Fi power saving: the Realtek RTL8852BE (rtw89) adapter stalls
+    # the link during power-save/scan cycles, which tears down Sunshine streams.
+    networkmanager.wifi.powersave = false;
     firewall.enable       = false;
   };
 
@@ -119,11 +133,6 @@
   # Programs configuration
   programs = {
     zsh.enable = true;
-    steam = {
-      enable = true;
-      remotePlay.openFirewall = true;
-      dedicatedServer.openFirewall = true;
-    };
   };
 
   # Console configuration for virtual terminals
@@ -138,6 +147,18 @@
        layout = "us";
        options = "ctrl:nocaps";
      };
+    };
+
+    # Advertise the machine name on the home LAN so RustDesk clients can use nixos.local.
+    avahi = {
+      enable = true;
+      nssmdns4 = true;
+      openFirewall = true;
+      publish = {
+        enable = true;
+        addresses = true;
+        workstation = true;
+      };
     };
     
 
@@ -182,7 +203,7 @@
   users.users.${user} = {
     isNormalUser = true;
     description  = "Amit Sheokand";
-    extraGroups  = [ "networkmanager" "wheel" "video" "render" "libvirtd" "kvm" ];
+    extraGroups  = [ "networkmanager" "wheel" "video" "render" "uinput" "libvirtd" "kvm" ];
     shell = pkgs.zsh;
   };
 
@@ -196,12 +217,11 @@
   environment.systemPackages = with pkgs; [
     vim
     git
-    claude-code-nix.packages.${pkgs.system}.default
-    codex-cli-nix.packages.${pkgs.system}.default
+    claude-code-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
+    codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
     wl-clipboard     # Wayland clipboard utilities (replaces xclip)
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
-    btop             # Modern resource monitor with temp display
     swtpm            # TPM emulator for libvirt (Windows 11 VMs)
   ];
 
@@ -253,6 +273,13 @@
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
+
+    gc = {
+      automatic = true;
+      dates     = "weekly";
+      options   = "--delete-older-than 7d";
+    };
+    optimise.automatic = true;
   };
 
   # Increase inotify watch limit to prevent warnings

@@ -292,11 +292,9 @@ let name = "Amit Sheokand";
         "/Users/${user}/.ssh/config_external"
       )
     ];
-    matchBlocks = {
-      "*" = {
-        sendEnv = [ "LANG" "LC_*" ];
-        hashKnownHosts = true;
-      };
+    settings."*" = {
+      SendEnv = [ "LANG" "LC_*" ];
+      HashKnownHosts = true;
     };
   };
 

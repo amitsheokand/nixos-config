@@ -20,7 +20,6 @@ with pkgs; [
   age                 # File encryption tool
   age-plugin-yubikey  # YubiKey plugin for age encryption
   bat                 # Cat clone with syntax highlighting
-  btop                # System monitor and process viewer
   coreutils           # Basic file/text/shell utilities
   curl                # URL transfer tool
   direnv              # Environment variable management per directory
@@ -31,7 +30,6 @@ with pkgs; [
   gh                  # GitHub CLI
   git                 # Version control
   gnupg               # GNU Privacy Guard
-  htop                # Interactive process viewer
   jq                  # JSON processor
   killall             # Kill processes by name
   openssh             # SSH client and server
@@ -54,6 +52,4 @@ with pkgs; [
   pkg-config          # Helper tool for compiling
   openssl             # TLS/SSL library (needed by many Rust crates)
 
-  # === Local LLM ===
-  ollama              # Run LLMs locally (e.g. Strand-Rust-Coder, llama)
 ] ++ myFonts

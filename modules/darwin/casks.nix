@@ -3,7 +3,6 @@ _:
 [
   # Development Tools
   "visual-studio-code"
-  "cursor"              # AI-powered code editor
   "ghostty"             # GPU-accelerated terminal
   "zed"                 # Modern code editor
 
@@ -15,6 +14,7 @@ _:
   # Utility Tools
   "appcleaner"
   "rustdesk"        # Remote desktop (open-source alternative to TeamViewer)
+  "moonlight"       # Game-stream client (view the NixOS host's Sunshine stream)
 
   # Virtualization
   "utm"

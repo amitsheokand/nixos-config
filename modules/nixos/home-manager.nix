@@ -64,7 +64,6 @@ in
       enabled-extensions = [
         "appindicatorsupport@rgcjonas.gmail.com"
         "dash-to-dock@micxgx.gmail.com"
-        "dash-to-panel@jderose9.github.com"
         "arcmenu@arcmenu.com"
         "blur-my-shell@aunetx"
         "just-perfection-desktop@just-perfection"

@@ -160,13 +160,12 @@
   environment.systemPackages = with pkgs; [
     vim
     git
-    claude-code-nix.packages.${pkgs.system}.default
-    codex-cli-nix.packages.${pkgs.system}.default
+    claude-code-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
+    codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
-    btop             # Modern resource monitor
-    
+
     # Nvidia utilities
     nvidia-container-toolkit  # For containerized GPU workloads
   ];
