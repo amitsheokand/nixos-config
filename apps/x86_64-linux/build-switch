@@ -26,27 +26,40 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# If host is specified, use it directly
-if [ -n "$HOST" ]; then
-  FLAKE_TARGET="$HOST"
-  echo -e "${YELLOW}Building for named host: $HOST${NC}"
-else
-  # Default behavior: detect system architecture
+# Map the machine architecture to its platform-generic flake target.
+arch_target() {
   SYSTEM=$(uname -m)
-  
   case "$SYSTEM" in
-    x86_64)
-      FLAKE_TARGET="x86_64-linux"
-      ;;
-    aarch64)
-      FLAKE_TARGET="aarch64-linux"
-      ;;
+    x86_64)  echo "x86_64-linux" ;;
+    aarch64) echo "aarch64-linux" ;;
     *)
-      echo -e "${RED}Unsupported architecture: $SYSTEM${NC}"
+      echo -e "${RED}Unsupported architecture: $SYSTEM${NC}" >&2
       exit 1
       ;;
   esac
-  echo -e "${YELLOW}Building for platform: $FLAKE_TARGET${NC}"
+}
+
+if [ -n "$HOST" ]; then
+  # Explicit override always wins.
+  FLAKE_TARGET="$HOST"
+  echo -e "${YELLOW}Building for named host: $HOST${NC}"
+else
+  # No override: prefer a named config matching this machine's hostname
+  # (e.g. garfield, odie), otherwise fall back to the platform-generic config.
+  HOSTNAME=$(hostname -s 2>/dev/null || hostname)
+  CONFIGS=$(nix eval --raw .#nixosConfigurations \
+    --apply 'cfgs: builtins.concatStringsSep " " (builtins.attrNames cfgs)' 2>/dev/null)
+
+  case " $CONFIGS " in
+    *" $HOSTNAME "*)
+      FLAKE_TARGET="$HOSTNAME"
+      echo -e "${YELLOW}Building for named host: $HOSTNAME${NC}"
+      ;;
+    *)
+      FLAKE_TARGET=$(arch_target)
+      echo -e "${YELLOW}Building for platform: $FLAKE_TARGET${NC}"
+      ;;
+  esac
 fi
 
 echo -e "${YELLOW}Starting...${NC}"

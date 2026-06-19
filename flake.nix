@@ -175,6 +175,29 @@
               ./hosts/nixos/garfield
             ];
           };
+
+          odie = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = inputs // { inherit user; };
+            modules = [
+              disko.nixosModules.disko
+              chaotic.nixosModules.default
+              agenix.nixosModules.default
+              home-manager.nixosModules.home-manager {
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.${user} = { config, pkgs, lib, ... }:
+                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
+                };
+              }
+              # Cursor IDE from nixpkgs
+              ({ pkgs, ... }: {
+                environment.systemPackages = [ pkgs.code-cursor ];
+              })
+              ./hosts/nixos/odie
+            ];
+          };
         };
     };
 }
