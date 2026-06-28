@@ -2,6 +2,14 @@
 with pkgs;
 let
   shared-packages = import ../shared/packages.nix { inherit pkgs; };
+  zed-xwayland = symlinkJoin {
+    name = "zed-editor-xwayland";
+    paths = [ zed-editor ];
+    buildInputs = [ makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/zeditor --set WAYLAND_DISPLAY ""
+    '';
+  };
 in
 shared-packages ++ [
   # === Desktop Apps ===
@@ -15,7 +23,7 @@ shared-packages ++ [
 
   # === Development Tools (GUI) ===
   ghostty             # GPU-accelerated terminal
-  zed-editor          # Modern code editor
+  zed-xwayland        # Modern code editor; XWayland avoids Zed Wayland clipboard bugs
   vscodium            # VS Code without telemetry
 
   # === System Tools ===

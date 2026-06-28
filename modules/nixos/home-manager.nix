@@ -40,6 +40,14 @@ in
       icon-theme = "Adwaita";
       scaling-factor = 1.5;  # 150%
     };
+
+    # Keep Ctrl+C/Ctrl+V independent from PRIMARY selection. If GPaste syncs
+    # PRIMARY into CLIPBOARD, selecting text in another app can overwrite the
+    # content you just copied before you paste it.
+    "org/gnome/GPaste" = {
+      primary-to-history = false;
+      synchronize-clipboards = false;
+    };
     
     # Keyboard settings
     "org/gnome/desktop/input-sources" = {
