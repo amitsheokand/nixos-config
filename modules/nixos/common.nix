@@ -2,7 +2,7 @@
 # Host files keep only what's genuinely host-specific: hostname/networking,
 # GPU drivers + kernel, hardware-configuration.nix, timezone, stateVersion,
 # and host-only packages/services. Everything identical across hosts lives here.
-{ config, lib, pkgs, user, claude-code-nix, codex-cli-nix, ... }:
+{ config, lib, pkgs, user, claude-code-nix, codex-cli-nix, llm-agents-nix, ... }:
 
 {
   # Hardware platform default (hosts may override).
@@ -137,6 +137,7 @@
     git
     claude-code-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
     codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
+    llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors

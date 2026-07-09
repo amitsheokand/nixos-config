@@ -1,4 +1,4 @@
-{ config, pkgs, codex-cli-nix, ... }:
+{ config, pkgs, codex-cli-nix, llm-agents-nix, ... }:
 let 
   user = "amitsheokand";
 in
@@ -26,6 +26,7 @@ in
     ++ [
       pkgs."claude-code"
       codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
+      llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok
     ];
 
   # Ollama: run "ollama serve" as user Launch Agent so ollama list/run work without a terminal
