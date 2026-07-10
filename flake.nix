@@ -141,6 +141,7 @@
                 home-manager = {
                   useGlobalPkgs = true;
                   useUserPackages = true;
+                  backupFileExtension = "hm-backup";
                   users.${user} = { config, pkgs, lib, ... }:
                     import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
                 };
@@ -168,6 +169,7 @@
                 home-manager = {
                   useGlobalPkgs = true;
                   useUserPackages = true;
+                  backupFileExtension = "hm-backup";
                   users.${user} = { config, pkgs, lib, ... }:
                     import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
                 };
@@ -191,6 +193,7 @@
                 home-manager = {
                   useGlobalPkgs = true;
                   useUserPackages = true;
+                  backupFileExtension = "hm-backup";
                   users.${user} = { config, pkgs, lib, ... }:
                     import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
                 };

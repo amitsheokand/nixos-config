@@ -205,6 +205,37 @@ Current user: `amitsheokand`
 - Desktop: GNOME (NixOS), macOS native (Darwin)
 - Focus: Rust development
 
+## Headroom (context compression)
+
+[Headroom](https://github.com/headroomlabs-ai/headroom) compresses tool
+outputs / logs before they hit the LLM. Wired for Claude Code, Codex, and
+Cursor.
+
+| Piece | Where |
+|-------|--------|
+| Module | `modules/shared/headroom.nix` |
+| Packages | `uv`, `python313` (+ NixOS-safe `headroom` wrapper) |
+| NixOS libs | `programs.nix-ld` in `modules/nixos/common.nix` |
+| Proxy | user systemd unit `headroom-proxy` (port `8787`) |
+| Cursor MCP | `~/.cursor/mcp.json` (HM-managed) |
+
+Install extras: `headroom-ai[proxy,mcp,code]` (skip `[memory]` — pulls torch).
+
+After `nix run .#build-switch`:
+
+```sh
+headroom doctor          # proxy + agent routing health
+headroom mcp status      # Claude / Codex MCP registration
+systemctl --user status headroom-proxy
+```
+
+**Cursor full proxy compression** (MCP alone is on-demand only):
+Settings → Models → OpenAI API Key → Advanced → Override Base URL →
+`http://127.0.0.1:8787/v1` (or run `headroom wrap cursor` for printed steps).
+
+**Claude / Codex** already route via `headroom init -g` (`ANTHROPIC_BASE_URL` /
+Codex `model_provider = "headroom"`). They need the proxy running.
+
 ## Cross-Compilation to Windows
 
 This config includes `cargo-xwin` for cross-compiling Rust to Windows MSVC target.

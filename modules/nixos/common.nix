@@ -24,6 +24,20 @@
 
   programs.zsh.enable = true;
 
+  # Allow uv/pipx-installed native wheels (onnxruntime, etc.) to find
+  # libstdc++ and friends — required for Headroom proxy on NixOS.
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc
+      zlib
+      openssl
+      curl
+      icu
+      libxml2
+    ];
+  };
+
   # Clipboard history manager (GNOME-native: daemon + Shell extension + CLI).
   # Recall past copies via the panel icon or Ctrl+Alt+H. Works on Wayland.
   # NOTE: tracks the CLIPBOARD (Ctrl+C / Ctrl+V), NOT the PRIMARY / middle-click

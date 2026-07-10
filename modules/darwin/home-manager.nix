@@ -46,14 +46,20 @@ in
   home-manager = {
     useGlobalPkgs = true;
     users.${user} = { pkgs, config, lib, ... }:
+      let
+        headroom = import ../shared/headroom.nix { inherit pkgs lib; };
+      in
       {
         home = {
           enableNixpkgsReleaseCheck = false;
-          packages = pkgs.callPackage ./packages.nix {};
+          packages = (pkgs.callPackage ./packages.nix {})
+            ++ (headroom.home.packages or []);
           file = lib.mkMerge [
             sharedFiles
             additionalFiles
+            (headroom.home.file or {})
           ];
+          activation = headroom.home.activation or {};
           stateVersion = "23.11";
         };
         programs = {} // import ../shared/home-manager.nix { inherit config pkgs lib; };

@@ -46,6 +46,8 @@ with pkgs; [
   # and via nixpkgs on NixOS (see platform-specific packages)
   sqlite              # SQL database engine
   lldb                # Debugger (useful for Rust)
+  uv                  # Python package/tool installer (Headroom CLI via `uv tool`)
+  python313           # Interpreter for Headroom / uv tool installs
 
   # === Build Tools ===
   cmake               # Cross-platform build system

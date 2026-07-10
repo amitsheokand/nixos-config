@@ -5,20 +5,27 @@ let
   xdg_configHome  = "/home/${user}/.config";
   shared-programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
   shared-files = import ../shared/files.nix { inherit config pkgs; };
+  headroom = import ../shared/headroom.nix { inherit pkgs lib; };
 in
 {
   home = {
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
-    packages = pkgs.callPackage ./packages.nix { inherit inputs config; };
-    file = shared-files // import ./files.nix { inherit user pkgs; };
+    packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
+      ++ (headroom.home.packages or []);
+    file = shared-files
+      // import ./files.nix { inherit user pkgs; }
+      // (headroom.home.file or {});
+    activation = headroom.home.activation or {};
     stateVersion = "25.11";
   };
 
   programs = shared-programs // { 
     gpg.enable = true;
   };
+
+  systemd.user.services = headroom.systemd.user.services or {};
 
   # GPG agent with pinentry for passphrase prompts
   services.gpg-agent = {
