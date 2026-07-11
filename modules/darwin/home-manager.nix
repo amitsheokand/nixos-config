@@ -18,19 +18,9 @@ in
     # Homebrew is *installed* via the flake input nix-homebrew
     # Docs: https://github.com/zhaofengli/nix-homebrew
     enable = true;
-    
-    # Homebrew taps (must match nix-homebrew.taps in flake.nix)
-    taps = [
-      "gcenx/wine"  # Wine for macOS: https://gitlab.winehq.org/wine/wine/-/wikis/MacOS
-    ];
-    
+
     # Homebrew casks (GUI apps)
-    casks = (pkgs.callPackage ./casks.nix {}) ++ [
-      # Wine - choose one:
-      "wine-stable"     # Stable release
-      # "wine-devel"    # Development release  
-      # "wine-staging"  # Staging with experimental patches
-    ];
+    casks = pkgs.callPackage ./casks.nix {};
     
     # Homebrew formulae (CLI tools)
     # brews = [];

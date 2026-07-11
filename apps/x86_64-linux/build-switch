@@ -64,7 +64,8 @@ fi
 
 echo -e "${YELLOW}Starting...${NC}"
 
-# We pass SSH from user to root so root can download secrets from our private Github
-sudo /run/current-system/sw/bin/nixos-rebuild switch --flake .#$FLAKE_TARGET $OTHER_ARGS
+# Build as the invoking user so Nix can read this user-owned Git checkout.
+# nixos-rebuild will use sudo only for the privileged activation steps.
+/run/current-system/sw/bin/nixos-rebuild switch --elevate=sudo --flake .#$FLAKE_TARGET $OTHER_ARGS
 
 echo -e "${GREEN}Switch to new generation complete!${NC}"

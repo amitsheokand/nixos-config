@@ -35,12 +35,6 @@
       url = "github:homebrew/homebrew-cask";
       flake = false;
     };
-    # WineHQ tap for Wine on macOS
-    # https://gitlab.winehq.org/wine/wine/-/wikis/MacOS
-    homebrew-wine = {
-      url = "github:Gcenx/homebrew-wine";
-      flake = false;
-    };
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -50,7 +44,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-code-nix, codex-cli-nix, llm-agents-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, homebrew-wine, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
+  outputs = { self, darwin, claude-code-nix, codex-cli-nix, llm-agents-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
@@ -116,8 +110,6 @@
                   "homebrew/homebrew-core" = homebrew-core;
                   "homebrew/homebrew-cask" = homebrew-cask;
                   "homebrew/homebrew-bundle" = homebrew-bundle;
-                  # Wine tap: https://gitlab.winehq.org/wine/wine/-/wikis/MacOS
-                  "gcenx/homebrew-wine" = homebrew-wine;
                 };
                 mutableTaps = false;
                 autoMigrate = true;
