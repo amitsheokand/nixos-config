@@ -15,6 +15,7 @@ let
     else "/home/${user}";
   headroomExtras = "headroom-ai[proxy,mcp,code]";
   uvHeadroom = "${homeDir}/.local/share/uv/tools/headroom-ai/bin/headroom";
+  uvToolBinDir = "${homeDir}/.local/share/uv/tool-bin";
   shimHeadroom = "${homeDir}/.local/bin/headroom";
   libPath = lib.makeLibraryPath [
     pkgs.stdenv.cc.cc
@@ -30,9 +31,33 @@ let
     if [[ -x "${uvHeadroom}" ]]; then
       exec "${uvHeadroom}" "$@"
     fi
-    echo "headroom: CLI not installed. It will be installed on the next home-manager activation," >&2
-    echo "  or run: uv tool install --python python3 '${headroomExtras}'" >&2
+    echo "headroom: CLI not installed. Start headroom-install.service to install it," >&2
+    echo "  or run: systemctl --user start headroom-install.service" >&2
     exit 127
+  '';
+
+  installHeadroom = pkgs.writeShellScript "install-headroom" ''
+    set -euo pipefail
+
+    export HOME="${homeDir}"
+    export PATH="${pkgs.uv}/bin:${pkgs.python313}/bin:${homeDir}/.local/bin:/run/current-system/sw/bin:$PATH"
+    export LD_LIBRARY_PATH="${libPath}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    export UV_TOOL_DIR="${homeDir}/.local/share/uv/tools"
+    export UV_TOOL_BIN_DIR="${uvToolBinDir}"
+    export UV_PYTHON_DOWNLOADS=never
+
+    mkdir -p "$UV_TOOL_BIN_DIR"
+
+    if [[ ! -x "${uvHeadroom}" ]]; then
+      echo "headroom: installing ${headroomExtras} via uv tool"
+      ${pkgs.uv}/bin/uv tool install --force \
+        --python ${pkgs.python313}/bin/python3 \
+        "${headroomExtras}"
+    fi
+
+    if [[ -x "${uvHeadroom}" ]]; then
+      ${headroomWrapped}/bin/headroom mcp install --force || true
+    fi
   '';
 
   cursorMcp = {
@@ -61,33 +86,33 @@ in
     force = true;
   };
 
-  home.activation.ensureHeadroom = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    export PATH="${pkgs.uv}/bin:${pkgs.python313}/bin:$HOME/.local/bin:$PATH"
-    export LD_LIBRARY_PATH="${libPath}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-
-    if [[ ! -x ${uvHeadroom} ]]; then
-      echo "headroom: installing ${headroomExtras} via uv tool…"
-      $DRY_RUN_CMD ${pkgs.uv}/bin/uv tool install --force \
-        --python ${pkgs.python313}/bin/python3 \
-        "${headroomExtras}"
-    fi
-
-    # Replace the uv PATH *symlink* with a NixOS-safe wrapper file.
-    # Never write through the symlink — that overwrites the uv tool binary.
-    if [[ -x ${uvHeadroom} ]]; then
-      $DRY_RUN_CMD mkdir -p "$HOME/.local/bin"
-      $DRY_RUN_CMD rm -f ${shimHeadroom}
-      $DRY_RUN_CMD cp -f ${headroomWrapped}/bin/headroom ${shimHeadroom}
-      $DRY_RUN_CMD chmod +x ${shimHeadroom}
-      $DRY_RUN_CMD ${shimHeadroom} mcp install --force || true
-    fi
-  '';
+  # Keep the public command path stable for Cursor/agent MCP config while uv
+  # keeps the real Python environment outside ~/.local/bin.
+  home.file.".local/bin/headroom" = {
+    source = "${headroomWrapped}/bin/headroom";
+    executable = true;
+    force = true;
+  };
 } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+  systemd.user.services.headroom-install = {
+    Unit = {
+      Description = "Install Headroom CLI";
+      After = [ "network.target" ];
+      Wants = [ "network.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${installHeadroom}";
+    };
+    Install.WantedBy = [ "default.target" ];
+  };
+
   # Claude Code + Codex are routed to http://127.0.0.1:8787 by `headroom init`.
   systemd.user.services.headroom-proxy = {
     Unit = {
       Description = "Headroom LLM context compression proxy";
-      After = [ "network.target" ];
+      After = [ "headroom-install.service" "network.target" ];
+      Wants = [ "headroom-install.service" ];
     };
     Service = {
       ExecStart = "${headroomWrapped}/bin/headroom proxy --host 127.0.0.1 --port 8787";
