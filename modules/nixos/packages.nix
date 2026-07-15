@@ -10,6 +10,7 @@ let
       wrapProgram $out/bin/zeditor --set WAYLAND_DISPLAY ""
     '';
   };
+  rustdesk-hwcodec = import ./rustdesk-package.nix { inherit pkgs; };
 in
 shared-packages ++ [
   # === Desktop Apps ===
@@ -30,7 +31,7 @@ shared-packages ++ [
   bluez             # Bluetooth
   pavucontrol       # Audio controls
   playerctl         # Media player control
-  rustdesk          # Remote desktop (client; server runs via rustdesk-server module)
+  rustdesk-hwcodec  # Official AppImage with VA-API hardware codecs
 
   # === Windows VM (GNOME Boxes / libvirt) ===
   gnome-boxes        # VM management (libvirt wrapper)
