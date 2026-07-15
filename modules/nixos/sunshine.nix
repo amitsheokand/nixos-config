@@ -9,10 +9,11 @@
 #   4. Back in the host web UI → "PIN" tab → enter that PIN to pair.
 #   5. In Moonlight, launch the "Desktop" app to mirror this whole screen.
 #
-# Notes for this host (GNOME on Wayland + AMD RX 6700 XT):
+# Notes for this host (GNOME on Wayland + AMD iGPU display):
 #   - capSysAdmin = true grants CAP_SYS_ADMIN, required for DRM/KMS screen
 #     capture under Wayland (GNOME doesn't expose wlroots capture).
-#   - AMD encoding goes through VAAPI (amdgpu) automatically.
+#   - VA-API encoding is pinned to the integrated GPU so the RX 6700 XT VRAM
+#     remains available for local AI workloads.
 #   - networking.firewall is disabled on this host, so openFirewall is a no-op
 #     but kept for correctness if the firewall is ever turned on.
 { ... }:
@@ -25,6 +26,11 @@
     openFirewall = true;   # TCP 47984/47989/47990/48010, UDP 47998-48000
 
     settings = {
+      # Use the stable PCI by-path link rather than renderD129: render-node
+      # numbering can change when the firmware primary GPU changes.
+      encoder = "vaapi";
+      adapter_name = "/dev/dri/by-path/pci-0000:0e:00.0-render";
+
       # Host-side ceiling: cap the negotiated bitrate regardless of what the
       # Moonlight client slider requests. Value is in kbps. This host streams
       # over a 2-hop Realtek (rtw89) Wi-Fi link, so keep desktop-sharing well
