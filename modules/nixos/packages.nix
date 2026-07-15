@@ -66,6 +66,7 @@ shared-packages ++ [
   pciutils          # lspci for hardware info
   mesa-demos        # OpenGL utilities
   vulkan-tools      # Vulkan utilities
+  amdgpu_top        # Per-process VRAM/GTT usage for AMD GPUs
   
   # === ROCm for AMD GPU compute (RX 6700 XT / gfx1031) ===
   rocmPackages.rocm-smi       # GPU monitoring

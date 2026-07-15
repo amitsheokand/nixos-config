@@ -31,6 +31,7 @@ in
       model_dir="''${BONSAI_MODEL_DIR:-${dataDir}}"
       model="$model_dir/${modelFile}"
       vision="$model_dir/${visionFile}"
+      kv_type="''${BONSAI_KV_TYPE:-q8_0}"
 
       if [[ ! -s "$model" || -e "$model.aria2" ]]; then
         echo "Bonsai model is missing or incomplete: $model" >&2
@@ -41,7 +42,9 @@ in
       args=(
         -m "$model"
         --device Vulkan0
-        -ngl 99
+        -ngl auto
+        -fit on
+        -fitt "''${BONSAI_VRAM_RESERVE:-2048}"
         -fa on
         -c "''${BONSAI_CONTEXT:-40960}"
         -np 1
@@ -53,7 +56,13 @@ in
         --min-p 0
         --jinja
         --reasoning-budget "''${BONSAI_REASONING_BUDGET:--1}"
+        --cache-type-k "$kv_type"
+        --cache-type-v "$kv_type"
       )
+
+      if [[ "''${BONSAI_KV_OFFLOAD:-gpu}" == "cpu" ]]; then
+        args+=(--no-kv-offload)
+      fi
 
       if [[ "''${BONSAI_VISION:-0}" == "1" && -s "$vision" ]]; then
         args+=(--mmproj "$vision" --image-max-tokens "''${BONSAI_IMAGE_MAX_TOKENS:-1024}")
