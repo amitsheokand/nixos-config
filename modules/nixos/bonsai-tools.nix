@@ -43,7 +43,7 @@ in
         --device Vulkan0
         -ngl 99
         -fa on
-        -c "''${BONSAI_CONTEXT:-8192}"
+        -c "''${BONSAI_CONTEXT:-40960}"
         -np 1
         --host "''${BONSAI_HOST:-127.0.0.1}"
         --port "''${BONSAI_PORT:-8080}"
@@ -55,7 +55,7 @@ in
         --reasoning-budget "''${BONSAI_REASONING_BUDGET:--1}"
       )
 
-      if [[ -s "$vision" ]]; then
+      if [[ "''${BONSAI_VISION:-0}" == "1" && -s "$vision" ]]; then
         args+=(--mmproj "$vision" --image-max-tokens "''${BONSAI_IMAGE_MAX_TOKENS:-1024}")
       fi
 
