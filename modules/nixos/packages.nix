@@ -11,6 +11,8 @@ let
     '';
   };
   rustdesk-hwcodec = import ./rustdesk-package.nix { inherit pkgs; };
+  bonsai-llama-vulkan = import ./bonsai-package.nix { inherit pkgs; };
+  bonsai-tools = import ./bonsai-tools.nix { inherit pkgs bonsai-llama-vulkan; };
 in
 shared-packages ++ [
   # === Desktop Apps ===
@@ -42,6 +44,10 @@ shared-packages ++ [
   glow              # Terminal markdown viewer
   glances           # System monitoring
   bubblewrap        # Sandboxing (required by Codex CLI)
+  bonsai-llama-vulkan # PrismML llama.cpp fork for Bonsai Q1_0/Q2_0 on AMD Vulkan
+  bonsai-tools.download # Resumable Ternary-Bonsai 27B model download
+  bonsai-tools.server   # Local OpenAI-compatible server and web UI
+  bonsai-tools.bench    # RX 6700 XT prompt/decode benchmark
 
   # === GNOME Extensions & Tools ===
   gnome-tweaks      # GNOME customization
