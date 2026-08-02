@@ -103,6 +103,7 @@ nix run .#build-switch
 nix run .#cleanup-space
 
 # Aggressive cleanup: also clears user cache and temp directories
+# (keeps ~/.cache/ibus so mid-session IBus sockets aren't wiped)
 nix run .#cleanup-space -- --aggressive
 ```
 

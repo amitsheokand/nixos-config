@@ -23,6 +23,7 @@ shared-packages ++ [
   vlc               # Media player
   gimp              # Image editor
   localsend         # File transfer
+  termius           # Cross-platform SSH client with cloud sync
 
   # === Development Tools (GUI) ===
   ghostty             # GPU-accelerated terminal

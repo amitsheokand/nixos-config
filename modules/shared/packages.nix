@@ -4,7 +4,10 @@ let
 in
 with pkgs; [
   # === Rust Development ===
-  rustup              # Rust toolchain installer (includes rustc, cargo, rustfmt, clippy, rust-analyzer)
+  # NOTE: rustc/cargo come from the advait flake's devShell (oxalica rust-overlay,
+  # pinned toolchain) via `nix develop -c`. No system-wide rustup — it only
+  # duplicated the flake toolchain and drifted ~8 G of ~/.rustup + ~/.cargo state.
+  # The cargo-* helpers below are invoked inside the devshell, where cargo is on PATH.
   cargo-watch         # Watch for changes and run cargo commands
   cargo-edit          # Cargo subcommands: add, rm, upgrade
   cargo-nextest       # Faster test runner

@@ -35,7 +35,12 @@ sudo nix store optimise
 
 if [ "$AGGRESSIVE" -eq 1 ]; then
   echo -e "${YELLOW}Aggressive mode: cleaning user cache and temp directories...${NC}"
-  rm -rf "$HOME/.cache/"*
+  # Keep ~/.cache/ibus: wiping it while ibus-daemon is still running leaves
+  # GTK_IM_MODULE=ibus apps (Firefox, Electron/Termius, etc.) unable to type
+  # until IBus is restarted or you re-login.
+  if [ -d "$HOME/.cache" ]; then
+    find "$HOME/.cache" -mindepth 1 -maxdepth 1 ! -name 'ibus' -exec rm -rf {} +
+  fi
   sudo find /tmp -mindepth 1 -xdev -delete
   sudo find /var/tmp -mindepth 1 -xdev -delete
 fi

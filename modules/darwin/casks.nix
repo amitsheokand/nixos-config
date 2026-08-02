@@ -15,6 +15,7 @@ _:
   "appcleaner"
   "rustdesk"        # Remote desktop (open-source alternative to TeamViewer)
   "moonlight"       # Game-stream client (view the NixOS host's Sunshine stream)
+  "termius"         # Cross-platform SSH client with cloud sync
 
   # Virtualization
   "utm"

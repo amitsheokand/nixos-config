@@ -35,7 +35,10 @@ sudo nix store optimise
 
 if [ "$AGGRESSIVE" -eq 1 ]; then
   echo -e "${YELLOW}Aggressive mode: cleaning user cache and temp directories...${NC}"
-  rm -rf "$HOME/.cache/"*
+  # Preserve runtime dirs that break input methods if deleted mid-session.
+  if [ -d "$HOME/.cache" ]; then
+    find "$HOME/.cache" -mindepth 1 -maxdepth 1 ! -name 'ibus' -exec rm -rf {} +
+  fi
   sudo find /tmp -mindepth 1 -xdev -delete
   sudo find /private/var/tmp -mindepth 1 -xdev -delete
 fi
