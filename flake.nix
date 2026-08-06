@@ -16,6 +16,9 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pi = {
+      url = "github:lukasl-dev/pi.nix";
+    };
     darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -44,7 +47,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, darwin, claude-code-nix, codex-cli-nix, llm-agents-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
+  outputs = { self, darwin, claude-code-nix, codex-cli-nix, llm-agents-nix, pi, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];

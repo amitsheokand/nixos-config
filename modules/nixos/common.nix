@@ -2,7 +2,7 @@
 # Host files keep only what's genuinely host-specific: hostname/networking,
 # GPU drivers + kernel, hardware-configuration.nix, timezone, stateVersion,
 # and host-only packages/services. Everything identical across hosts lives here.
-{ config, lib, pkgs, user, claude-code-nix, codex-cli-nix, llm-agents-nix, ... }:
+{ config, lib, pkgs, user, claude-code-nix, codex-cli-nix, llm-agents-nix, pi, ... }:
 
 {
   # Hardware platform default (hosts may override).
@@ -152,6 +152,7 @@
     claude-code-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
     codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
     llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok
+    pi.packages.${pkgs.stdenv.hostPlatform.system}.default  # pi terminal coding agent
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
@@ -170,10 +171,12 @@
       substituters        = [
         "https://nix-community.cachix.org"
         "https://cache.nixos.org"
+        "https://pi.cachix.org"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "pi.cachix.org-1:lGeoGJaZ5ZDabuRzkcD5EBTNnDM4HJ1vqeOxlWk1Flk="
       ];
       experimental-features = [ "nix-command" "flakes" ];
     };
