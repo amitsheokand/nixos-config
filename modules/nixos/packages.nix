@@ -13,6 +13,7 @@ let
   rustdesk-hwcodec = import ./rustdesk-package.nix { inherit pkgs; };
   bonsai-llama-vulkan = import ./bonsai-package.nix { inherit pkgs; };
   bonsai-tools = import ./bonsai-tools.nix { inherit pkgs bonsai-llama-vulkan; };
+  grok-bot = import ./grok-bot-package.nix { inherit pkgs; };
 in
 shared-packages ++ [
   # === Desktop Apps ===
@@ -24,6 +25,7 @@ shared-packages ++ [
   gimp              # Image editor
   localsend         # File transfer
   termius           # Cross-platform SSH client with cloud sync
+  grok-bot          # Grok Bot desktop agent (official .deb)
 
   # === Development Tools (GUI) ===
   ghostty             # GPU-accelerated terminal

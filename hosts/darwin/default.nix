@@ -32,6 +32,7 @@ in
       codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
       llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok
       pi.packages.${pkgs.stdenv.hostPlatform.system}.default  # pi terminal coding agent
+      (pkgs.callPackage ../../modules/shared/prime-agent/package.nix { })  # Prime Agent
     ];
 
   # Ollama: run "ollama serve" as user Launch Agent so ollama list/run work without a terminal

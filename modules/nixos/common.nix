@@ -153,6 +153,7 @@
     codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
     llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok
     pi.packages.${pkgs.stdenv.hostPlatform.system}.default  # pi terminal coding agent
+    (pkgs.callPackage ../shared/prime-agent/package.nix { })  # Prime Agent (no upstream flake)
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
