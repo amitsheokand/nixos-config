@@ -14,6 +14,8 @@
     ../../modules/nixos/rustdesk-server.nix
     # Sunshine game-stream host (stream this desktop to Moonlight clients)
     ../../modules/nixos/sunshine.nix
+    # Qwen3.8-27B helper (Vulkan llama-server on the 6700 XT)
+    ../../modules/nixos/qwen38.nix
   ];
 
   # Boot configuration (systemd-boot loader lives in common.nix).

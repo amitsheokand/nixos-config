@@ -236,6 +236,31 @@ Settings → Models → OpenAI API Key → Advanced → Override Base URL →
 **Claude / Codex** already route via `headroom init -g` (`ANTHROPIC_BASE_URL` /
 Codex `model_provider = "headroom"`). They need the proxy running.
 
+## Local Qwen3.8 helper (desktop 6700 XT)
+
+Hosted only on the PC (`192.168.1.15`, hostname `nixos`). Display/Sunshine
+stay on the iGPU so the dGPU has the full 12 GB.
+
+| Piece | Where |
+|-------|--------|
+| Module | `modules/nixos/qwen38.nix` (desktop host only) |
+| Engine | official llama.cpp Vulkan `b10488` |
+| Weights | `unsloth` `Qwen3.8-27B-UD-Q2_K_XL` (~10.7 GB) |
+| API | `http://192.168.1.15:8080/v1` (`model` = `qwen38`) |
+| Grok | `[model.qwen38]` + `explore` / `local-helper` subagent |
+
+After `nix run .#build-switch` on the PC:
+
+```sh
+qwen38-download
+systemctl --user restart qwen38-server
+systemctl --user status qwen38-server
+curl -s http://127.0.0.1:8080/v1/models
+```
+
+Main Grok session stays `grok-composer` / `grok-4.6`. The local model is a
+helper: apply a written spec, cargo/rustc loop, no architecture.
+
 ## Cross-Compilation to Windows
 
 This config includes `cargo-xwin` for cross-compiling Rust to Windows MSVC target.
