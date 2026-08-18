@@ -30,6 +30,8 @@ in
       VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
       LD_LIBRARY_PATH = "/run/opengl-driver/lib";
       QWEN38_DEVICE = "Vulkan1";
+      QWEN38_CONTEXT = "32768";
+      QWEN38_CACHE_TYPE = "q5_0";
     };
     serviceConfig = {
       ExecStart = "${qwen38-tools.server}/bin/qwen38-server";

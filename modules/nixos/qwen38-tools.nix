@@ -45,10 +45,10 @@ in
         -fa on
         -fit on
         -fitt "''${QWEN38_VRAM_RESERVE:-512}"
-        -c "''${QWEN38_CONTEXT:-16384}"
+        -c "''${QWEN38_CONTEXT:-32768}"
         -np 1
-        --cache-type-k q8_0
-        --cache-type-v q8_0
+        --cache-type-k "''${QWEN38_CACHE_TYPE:-q5_0}"
+        --cache-type-v "''${QWEN38_CACHE_TYPE:-q5_0}"
         --host "''${QWEN38_HOST:-0.0.0.0}"
         --port "''${QWEN38_PORT:-8080}"
         --jinja
