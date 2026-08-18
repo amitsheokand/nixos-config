@@ -32,6 +32,8 @@ in
       QWEN38_DEVICE = "Vulkan1";
       QWEN38_CONTEXT = "32768";
       QWEN38_CACHE_TYPE = "q5_0";
+      QWEN38_UBATCH = "1024";
+      QWEN38_CACHE_REUSE = "256";
     };
     serviceConfig = {
       ExecStart = "${qwen38-tools.server}/bin/qwen38-server";

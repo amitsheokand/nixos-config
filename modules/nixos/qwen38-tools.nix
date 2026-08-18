@@ -47,8 +47,10 @@ in
         -fitt "''${QWEN38_VRAM_RESERVE:-512}"
         -c "''${QWEN38_CONTEXT:-32768}"
         -np 1
+        -ub "''${QWEN38_UBATCH:-1024}"
         --cache-type-k "''${QWEN38_CACHE_TYPE:-q5_0}"
         --cache-type-v "''${QWEN38_CACHE_TYPE:-q5_0}"
+        --cache-reuse "''${QWEN38_CACHE_REUSE:-256}"
         --host "''${QWEN38_HOST:-0.0.0.0}"
         --port "''${QWEN38_PORT:-8080}"
         --jinja
