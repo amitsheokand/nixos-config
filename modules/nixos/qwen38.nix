@@ -2,8 +2,10 @@
 # Import only from hosts/nixos/default.nix (the PC), not odie/garfield.
 #
 # After switch:
-#   qwen38-download
-#   systemctl --user restart qwen38-server
+#   qwen38-download default   # stock Unsloth Q2
+#   qwen38-download unc       # 0bserverx Heretic Q2+MTP (~11.2 GB)
+#   # flip active weights (one at a time — 12 GB VRAM):
+#   #   QWEN38_VARIANT=unc|default  then: systemctl --user restart qwen38-server
 #   curl -s http://127.0.0.1:8080/v1/models
 { pkgs, user, ... }:
 
@@ -30,6 +32,8 @@ in
       VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
       LD_LIBRARY_PATH = "/run/opengl-driver/lib";
       QWEN38_DEVICE = "Vulkan1";
+      # A/B: "unc" = Heretic Q2+MTP; "default" = stock Unsloth Q2.
+      QWEN38_VARIANT = "unc";
       QWEN38_CONTEXT = "32768";
       QWEN38_CACHE_TYPE = "q5_0";
       QWEN38_UBATCH = "1024";

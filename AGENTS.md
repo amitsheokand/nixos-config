@@ -245,14 +245,16 @@ stay on the iGPU so the dGPU has the full 12 GB.
 |-------|--------|
 | Module | `modules/nixos/qwen38.nix` (desktop host only) |
 | Engine | official llama.cpp Vulkan `b10488` |
-| Weights | `unsloth` `Qwen3.8-27B-UD-Q2_K_XL` (~10.7 GB) |
+| Weights | `default`: Unsloth `UD-Q2_K_XL` (~10.7 GB); `unc`: 0bserverx `RVN-Q2_K-mtp` (~11.2 GB) |
 | API | `http://192.168.1.15:8080/v1` (`model` = `qwen38`) |
 | Grok | `[model.qwen38]` + `explore` / `local-helper` subagent |
 
 After `nix run .#build-switch` on the PC:
 
 ```sh
-qwen38-download
+qwen38-download default
+qwen38-download unc
+# active variant is QWEN38_VARIANT in modules/nixos/qwen38.nix (unc for A/B)
 systemctl --user restart qwen38-server
 systemctl --user status qwen38-server
 curl -s http://127.0.0.1:8080/v1/models
