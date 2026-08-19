@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib ? pkgs.lib, ... }:
 let
   myFonts = import ./fonts.nix { inherit pkgs; };
 in
@@ -9,6 +9,8 @@ with pkgs; [
   # duplicated the flake toolchain and drifted ~8 G of ~/.rustup + ~/.cargo state.
   # The cargo-* helpers below are invoked inside the devshell, where cargo is on PATH.
   cargo-watch         # Watch for changes and run cargo commands
+
+] ++ (with pkgs; [
   cargo-edit          # Cargo subcommands: add, rm, upgrade
   cargo-nextest       # Faster test runner
   cargo-expand        # Expand macros
@@ -57,4 +59,4 @@ with pkgs; [
   pkg-config          # Helper tool for compiling
   openssl             # TLS/SSL library (needed by many Rust crates)
 
-] ++ myFonts
+]) ++ myFonts

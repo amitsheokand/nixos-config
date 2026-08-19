@@ -77,6 +77,69 @@ let name = "Amit Sheokand";
       # === Editor Setup ===
       export EDITOR="vim"
       export VISUAL="zed"
+      export AI_BASE_URL="''${AI_BASE_URL:-http://127.0.0.1:8080/v1}"
+      export AI_MODEL="''${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}"
+
+      ai-health() {
+        local endpoint
+        endpoint="$(ai-endpoint)"
+        curl -fsS "$endpoint/models" | jq .
+      }
+
+      ai() {
+        if [[ $# -eq 0 ]]; then
+          echo "usage: ai <prompt...>" >&2
+          return 1
+        fi
+
+        local endpoint
+        local payload
+        local max_tokens
+        endpoint="$(ai-endpoint)"
+        max_tokens="''${AI_MAX_TOKENS:-64}"
+        payload="$(jq -n \
+          --arg model "$AI_MODEL" \
+          --arg prompt "$*" \
+          --argjson max_tokens "$max_tokens" \
+          '{
+            model: $model,
+            messages: [{role: "user", content: $prompt}],
+            temperature: 0.2,
+            max_tokens: $max_tokens,
+            stream: true
+          }')"
+
+        curl -NfsS "$endpoint/chat/completions" \
+          -H 'Content-Type: application/json' \
+          -d "$payload" \
+          | while IFS= read -r line; do
+              case "$line" in
+                "data: [DONE]") break ;;
+                "data: "*)
+                  printf '%s' "$line" \
+                    | sed 's/^data: //' \
+                    | jq -r '.choices[0].delta.content // empty'
+                  ;;
+              esac
+            done
+
+        printf '\n'
+      }
+
+      ai-team() {
+        local session="''${1:-ai-team}"
+
+        if tmux has-session -t "$session" 2>/dev/null; then
+          tmux attach -t "$session"
+          return
+        fi
+
+        tmux new-session -d -s "$session" -n coord "ai-coordinator"
+        tmux split-window -h -t "$session:0" "ai-claude"
+        tmux split-window -v -t "$session:0.0" "ai-codex"
+        tmux select-pane -t "$session:0.0"
+        tmux attach -t "$session"
+      }
 
       # === Platform-specific ===
       ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''

@@ -6,22 +6,74 @@ let
   shared-programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
+  piModels = pkgs.writeText "pi-qwen38-models.json" (builtins.toJSON {
+    providers = {
+      "qwen38-local" = {
+        baseUrl = "http://127.0.0.1:8080/v1";
+        api = "openai-completions";
+        apiKey = "local";
+        compat = {
+          supportsDeveloperRole = false;
+          supportsReasoningEffort = false;
+        };
+        models = [ {
+          id = "qwen38";
+          name = "Qwen3.8 27B (RX 6700 XT)";
+          reasoning = false;
+          input = [ "text" ];
+          contextWindow = 32768;
+          maxTokens = 4096;
+          cost = { input = 0; output = 0; cacheRead = 0; cacheWrite = 0; };
+        } ];
+      };
+    };
+  });
 in
 {
+  imports = [ inputs.pi.homeModules.default ];
   home = {
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
+    sessionVariables = {
+      AI_BASE_URL = "http://127.0.0.1:8080/v1";
+      AI_MODEL = "qwen38";
+      AI_CONTEXT_WINDOW = "32768";
+      AI_MAX_TOKENS = "4096";
+      GROK_LOCAL_MODEL = "qwen38";
+      GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
+    };
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or []);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
-      // (headroom.home.file or {});
+      // (headroom.home.file or {})
+      // {
+        ".codex/mlx-local.config.toml" = {
+          text = ''
+            model = "qwen38"
+            model_provider = "qwen38-local"
+            model_context_window = 32768
+
+            [model_providers.qwen38-local]
+            name = "Qwen3.8 27B (RX 6700 XT)"
+            base_url = "http://127.0.0.1:8080/v1"
+            wire_api = "responses"
+            requires_openai_auth = false
+          '';
+        };
+      }
+      // import ../shared/ai-tools.nix { inherit pkgs lib user; };
     activation = headroom.home.activation or {};
     stateVersion = "25.11";
   };
 
-  programs = shared-programs // { 
+  programs = shared-programs // {
+    pi.coding-agent = {
+      enable = true;
+      models = piModels;
+      settings.model = "qwen38";
+    };
     gpg.enable = true;
   };
 

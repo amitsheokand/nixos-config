@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+base_url="${GROK_LOCAL_BASE_URL:-${AI_BASE_URL:-http://127.0.0.1:8080/v1}}"
+model="${GROK_LOCAL_MODEL:-${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}}"
+
+# Grok Build discovers custom OpenAI-compatible models from /v1/models and
+# requires a non-empty API-key variable even when the local server ignores it.
+GROK_MODELS_BASE_URL="$base_url" \
+XAI_API_KEY="${XAI_API_KEY:-local}" \
+  exec grok -m "$model" "$@"

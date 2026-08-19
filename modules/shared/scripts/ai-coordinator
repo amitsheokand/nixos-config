@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+watch=true
+if [[ "${1:-}" == "--once" ]]; then
+  watch=false
+fi
+
+root="${AI_QUEUE_ROOT:-$HOME/.local/share/ai/queue}"
+inbox="${root}/inbox"
+claude_queue="${root}/claude"
+codex_queue="${root}/codex"
+mkdir -p "$inbox" "$claude_queue" "$codex_queue"
+
+route_task() {
+  local file="$1"
+  local worker title body route endpoint
+
+  worker="$(sed -n 's/^worker: //p' "$file" | head -n1)"
+  title="$(sed -n 's/^title: //p' "$file" | head -n1)"
+  body="$(awk 'found { print } /^---$/ { found=1; next }' "$file")"
+
+  if [[ -z "$worker" || "$worker" == "auto" ]]; then
+    if endpoint="$(ai-endpoint 2>/dev/null)"; then
+      payload="$(jq -n \
+        --arg model "${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}" \
+        --arg task "${title}" \
+        --arg body "${body}" \
+        '{
+          model: $model,
+          messages: [
+            {
+              role: "system",
+              content: "Return exactly one word: claude or codex. Choose claude for analysis, writing, discussion, or rough planning. Choose codex for code edits, diffs, builds, tests, or repo changes."
+            },
+            {
+              role: "user",
+              content: ("Title: " + $task + "\n\nTask:\n" + $body)
+            }
+          ],
+          temperature: 0,
+          max_tokens: 8
+        }')"
+      route="$(
+        curl -fsS "$endpoint/chat/completions" \
+          -H 'Content-Type: application/json' \
+          -d "$payload" \
+          | jq -r '.choices[0].message.content // empty' \
+          | tr '[:upper:]' '[:lower:]' \
+          | tr -d '[:space:]'
+      )"
+      case "$route" in
+        claude|codex) worker="$route" ;;
+      esac
+    fi
+  fi
+
+  case "$worker" in
+    claude) dest="$claude_queue" ;;
+    codex) dest="$codex_queue" ;;
+    *)
+      if grep -Eqi '(patch|diff|build|test|fix|refactor|nix|rust|code|compile|review)' "$file"; then
+        dest="$codex_queue"
+      else
+        dest="$claude_queue"
+      fi
+      ;;
+  esac
+
+  mv "$file" "$dest/"
+  printf '%s -> %s\n' "$(basename "$file")" "$(basename "$dest")"
+}
+
+while true; do
+  pending="$(find "$inbox" -maxdepth 1 -type f -name '*.task' | sort | head -n1)"
+  if [[ -z "$pending" ]]; then
+    if [[ "$watch" == false ]]; then
+      exit 0
+    fi
+    sleep 2
+    continue
+  fi
+
+  route_task "$pending"
+
+  if [[ "$watch" == false ]]; then
+    exit 0
+  fi
+done

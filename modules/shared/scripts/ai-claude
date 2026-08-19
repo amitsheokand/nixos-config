@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec ai-worker claude "${1:---watch}"

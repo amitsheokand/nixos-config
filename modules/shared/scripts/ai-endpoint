@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+AI_BASE_URL="${AI_BASE_URL:-http://127.0.0.1:8080/v1}"
+AI_SSH_HOST="${AI_SSH_HOST:-}"
+AI_TUNNEL_PORT="${AI_TUNNEL_PORT:-18080}"
+AI_TUNNEL_URL="http://127.0.0.1:${AI_TUNNEL_PORT}/v1"
+
+have_models() {
+  curl -fsS --max-time 2 "${1%/}/models" >/dev/null
+}
+
+if have_models "${AI_BASE_URL}"; then
+  printf '%s\n' "${AI_BASE_URL%/}"
+  exit 0
+fi
+
+if have_models "${AI_TUNNEL_URL}"; then
+  printf '%s\n' "${AI_TUNNEL_URL%/}"
+  exit 0
+fi
+
+if [[ -z "${AI_SSH_HOST}" ]]; then
+  echo "AI server is unreachable and AI_SSH_HOST is not set" >&2
+  exit 1
+fi
+
+ssh -o ExitOnForwardFailure=yes \
+    -o ServerAliveInterval=30 \
+    -o ServerAliveCountMax=3 \
+    -fNT \
+    -L "${AI_TUNNEL_PORT}:127.0.0.1:8080" \
+    "${AI_SSH_HOST}"
+
+sleep 1
+if ! have_models "${AI_TUNNEL_URL}"; then
+  echo "failed to establish AI tunnel to ${AI_SSH_HOST}" >&2
+  exit 1
+fi
+
+printf '%s\n' "${AI_TUNNEL_URL%/}"

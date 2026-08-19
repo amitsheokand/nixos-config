@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+worker="${1:-}"
+watch=true
+if [[ "${2:-}" == "--once" ]]; then
+  watch=false
+fi
+
+case "$worker" in
+  claude|codex) ;;
+  *)
+    echo "usage: ai-worker claude|codex [--once]" >&2
+    exit 1
+    ;;
+esac
+
+root="${AI_QUEUE_ROOT:-$HOME/.local/share/ai/queue}"
+queue="${root}/${worker}"
+done_dir="${root}/done"
+failed_dir="${root}/failed"
+logs_dir="${root}/logs"
+mkdir -p "$queue" "$done_dir" "$failed_dir" "$logs_dir"
+
+run_task() {
+  local file="$1"
+  local title cwd body base out log
+
+  title="$(sed -n 's/^title: //p' "$file" | head -n1)"
+  cwd="$(sed -n 's/^cwd: //p' "$file" | head -n1)"
+  body="$(awk 'found { print } /^---$/ { found=1; next }' "$file")"
+  base="$(basename "$file" .task)"
+  out="${logs_dir}/${base}.out"
+  log="${logs_dir}/${base}.log"
+
+  if [[ -n "$cwd" && -d "$cwd" ]]; then
+    cd "$cwd"
+  fi
+
+  {
+    printf '== %s ==\n' "$title"
+    printf '%s\n\n' "$body"
+  } >"$log"
+
+  if [[ "$worker" == "claude" ]]; then
+    if claude -p "$body" 2>&1 | tee "$out"; then
+      mv "$file" "$done_dir/"
+      printf '%s\n' "$out"
+      return 0
+    fi
+  else
+    if codex exec "$body" 2>&1 | tee "$out"; then
+      mv "$file" "$done_dir/"
+      printf '%s\n' "$out"
+      return 0
+    fi
+  fi
+
+  mv "$file" "$failed_dir/"
+  return 1
+}
+
+while true; do
+  pending="$(find "$queue" -maxdepth 1 -type f -name '*.task' | sort | head -n1)"
+  if [[ -z "$pending" ]]; then
+    if [[ "$watch" == false ]]; then
+      exit 0
+    fi
+    sleep 2
+    continue
+  fi
+
+  run_task "$pending"
+
+  if [[ "$watch" == false ]]; then
+    exit 0
+  fi
+done

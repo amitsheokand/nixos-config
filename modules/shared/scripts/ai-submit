@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+worker="auto"
+title="Untitled task"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -w|--worker)
+      worker="${2:?missing worker}"
+      shift 2
+      ;;
+    -t|--title)
+      title="${2:?missing title}"
+      shift 2
+      ;;
+    -h|--help)
+      cat <<'EOF'
+usage: ai-submit [--worker auto|claude|codex] [--title TITLE] [prompt...]
+EOF
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [[ $# -gt 0 ]]; then
+  prompt="$*"
+else
+  prompt="$(cat)"
+fi
+
+if [[ -z "${prompt}" ]]; then
+  echo "prompt is empty" >&2
+  exit 1
+fi
+
+root="${AI_QUEUE_ROOT:-$HOME/.local/share/ai/queue}"
+inbox="${root}/inbox"
+mkdir -p "${inbox}"
+
+stamp="$(date +%Y%m%dT%H%M%S)"
+slug="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//; s/-$//')"
+slug="${slug:-task}"
+task_file="${inbox}/${stamp}-${slug}.task"
+
+tmp="$(mktemp)"
+{
+  printf 'worker: %s\n' "$worker"
+  printf 'title: %s\n' "$title"
+  printf 'cwd: %s\n' "$PWD"
+  printf 'created: %s\n' "$stamp"
+  printf '%s\n' '---'
+  printf '%s\n' "$prompt"
+} >"$tmp"
+
+mv "$tmp" "$task_file"
+printf '%s\n' "$task_file"

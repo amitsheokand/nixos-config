@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -eq 0 ]]; then
+  echo "usage: ai <prompt...>" >&2
+  exit 1
+fi
+
+endpoint="$(ai-endpoint)"
+model="${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}"
+max_tokens="${AI_MAX_TOKENS:-64}"
+prompt="$*"
+
+payload="$(jq -n \
+  --arg model "$model" \
+  --arg prompt "$prompt" \
+  --argjson max_tokens "$max_tokens" \
+  '{
+    model: $model,
+    messages: [{role: "user", content: $prompt}],
+    temperature: 0.2,
+    max_tokens: $max_tokens,
+    stream: true
+  }')"
+
+curl -NfsS "$endpoint/chat/completions" \
+  -H 'Content-Type: application/json' \
+  -d "$payload" \
+  | while IFS= read -r line; do
+      case "$line" in
+        "data: [DONE]") break ;;
+        "data: "*)
+          printf '%s' "$line" \
+            | sed 's/^data: //' \
+            | jq -r '.choices[0].delta.content // empty'
+          ;;
+      esac
+    done
+
+printf '\n'
