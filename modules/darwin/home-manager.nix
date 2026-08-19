@@ -4,28 +4,15 @@ let
   user           = "amitsheokand";
   sharedFiles     = import ../shared/files.nix { inherit config pkgs; };
   additionalFiles = import ./files.nix { inherit user config pkgs; };
-  piModels = pkgs.writeText "pi-mlx-models.json" (builtins.toJSON {
-    providers = {
-      "mlx-local" = {
-        baseUrl = "http://127.0.0.1:8080/v1";
-        api = "openai-completions";
-        apiKey = "local";
-        compat = {
-          supportsDeveloperRole = false;
-          supportsReasoningEffort = false;
-        };
-        models = [ {
-          id = "/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
-          name = "DeepSeek V4 Pro Qwen3.5 9B (MLX)";
-          reasoning = false;
-          input = [ "text" ];
-          contextWindow = 65536;
-          maxTokens = 4096;
-          cost = { input = 0; output = 0; cacheRead = 0; cacheWrite = 0; };
-        } ];
-      };
-    };
-  });
+  mlxModel = "/Users/${user}/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
+  piModels = import ../shared/pi-local-models.nix {
+    inherit pkgs;
+    providerId = "mlx-local";
+    apiModel = mlxModel;
+    displayName = "qwen35";
+    contextWindow = 65536;
+    maxTokens = 4096;
+  };
 in
 {
   users.users.${user} = {
@@ -67,10 +54,10 @@ in
           enableNixpkgsReleaseCheck = false;
           sessionVariables = {
             AI_BASE_URL = "http://127.0.0.1:8080/v1";
-            AI_MODEL = "/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
+            AI_MODEL = mlxModel;
             AI_CONTEXT_WINDOW = "65536";
             AI_MAX_TOKENS = "4096";
-            GROK_LOCAL_MODEL = "/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
+            GROK_LOCAL_MODEL = mlxModel;
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
           };
           packages = (pkgs.callPackage ./packages.nix {})
@@ -82,12 +69,12 @@ in
             {
               ".codex/mlx-local.config.toml" = {
                 text = ''
-                  model = "/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit"
+                  model = "${mlxModel}"
                   model_provider = "mlx-local"
                   model_context_window = 65536
 
                   [model_providers.mlx-local]
-                  name = "DeepSeek V4 Pro Qwen3.5 9B (MLX)"
+                  name = "qwen35"
                   base_url = "http://127.0.0.1:8080/v1"
                   wire_api = "responses"
                   requires_openai_auth = false
@@ -96,14 +83,27 @@ in
             }
             (import ../shared/ai-tools.nix { inherit pkgs lib user; })
           ];
-          activation = headroom.home.activation or {};
+          activation = lib.mkMerge [
+            (headroom.home.activation or {})
+            {
+              # pi.nix only copies models.json when missing; keep it in lockstep.
+              syncPiModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+                mkdir -p "$HOME/.pi/agent"
+                install -m 0600 ${piModels} "$HOME/.pi/agent/models.json"
+              '';
+            }
+          ];
           stateVersion = "23.11";
         };
         programs = {
           pi.coding-agent = {
             enable = true;
             models = piModels;
-            settings.model = "/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
+            settings = {
+              model = mlxModel;
+              defaultProvider = "mlx-local";
+              defaultModel = mlxModel;
+            };
           };
         } // import ../shared/home-manager.nix { inherit config pkgs lib; };
         manual.manpages.enable = false;

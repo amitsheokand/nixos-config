@@ -6,28 +6,14 @@ let
   shared-programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
-  piModels = pkgs.writeText "pi-qwen38-models.json" (builtins.toJSON {
-    providers = {
-      "qwen38-local" = {
-        baseUrl = "http://127.0.0.1:8080/v1";
-        api = "openai-completions";
-        apiKey = "local";
-        compat = {
-          supportsDeveloperRole = false;
-          supportsReasoningEffort = false;
-        };
-        models = [ {
-          id = "qwen38";
-          name = "Qwen3.8 27B (RX 6700 XT)";
-          reasoning = false;
-          input = [ "text" ];
-          contextWindow = 32768;
-          maxTokens = 4096;
-          cost = { input = 0; output = 0; cacheRead = 0; cacheWrite = 0; };
-        } ];
-      };
-    };
-  });
+  piModels = import ../shared/pi-local-models.nix {
+    inherit pkgs;
+    providerId = "qwen38-local";
+    apiModel = "qwen38";
+    displayName = "qwen38";
+    contextWindow = 32768;
+    maxTokens = 4096;
+  };
 in
 {
   imports = [ inputs.pi.homeModules.default ];
@@ -64,7 +50,12 @@ in
         };
       }
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
-    activation = headroom.home.activation or {};
+    activation = (headroom.home.activation or {}) // {
+      syncPiModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        mkdir -p "$HOME/.pi/agent"
+        install -m 0600 ${piModels} "$HOME/.pi/agent/models.json"
+      '';
+    };
     stateVersion = "25.11";
   };
 
@@ -72,7 +63,11 @@ in
     pi.coding-agent = {
       enable = true;
       models = piModels;
-      settings.model = "qwen38";
+      settings = {
+        model = "qwen38";
+        defaultProvider = "qwen38-local";
+        defaultModel = "qwen38";
+      };
     };
     gpg.enable = true;
   };

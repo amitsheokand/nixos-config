@@ -12,8 +12,18 @@
 let
   llama-cpp-vulkan = import ./llama-cpp-vulkan.nix { inherit pkgs; };
   qwen38-tools = import ./qwen38-tools.nix { inherit pkgs llama-cpp-vulkan; };
+  grokQwen38 = import ../shared/grok-local-model.nix {
+    id = "qwen38";
+    apiModel = "qwen38";
+    displayName = "Qwen3.8 27B (RX 6700 XT)";
+    description = "Local Qwen3.8-27B via llama.cpp Vulkan on :8080";
+    contextWindow = 32768;
+    maxTokens = 4096;
+  };
 in
 {
+  environment.etc."grok/managed_config.toml".text = grokQwen38;
+
   environment.systemPackages = [
     llama-cpp-vulkan
     qwen38-tools.download

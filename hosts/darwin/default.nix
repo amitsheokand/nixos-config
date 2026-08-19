@@ -1,6 +1,18 @@
 { config, pkgs, codex-cli-nix, llm-agents-nix, pi, ... }:
 let 
   user = "amitsheokand";
+  grok = import ../../modules/shared/grok-cli.nix {
+    inherit pkgs;
+    grokPkg = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok;
+  };
+  grokQwen35 = import ../../modules/shared/grok-local-model.nix {
+    id = "qwen35";
+    apiModel = "/Users/${user}/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
+    displayName = "Qwen3.5 9B (MLX)";
+    description = "Local DeepSeek-V4-Pro-Qwen3.5 9B 4-bit via mlx-vlm on :8080";
+    contextWindow = 65536;
+    maxTokens = 4096;
+  };
   mlxLmRequirements = pkgs.writeText "mlx-lm-requirements.txt" ''
     mlx-lm
     mlx-vlm
@@ -98,10 +110,13 @@ in
     ++ [
       pkgs."claude-code"
       codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
-      llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok
+      grok
       pi.packages.${pkgs.stdenv.hostPlatform.system}.default  # pi terminal coding agent
       (pkgs.callPackage ../../modules/shared/prime-agent/package.nix { })  # Prime Agent
     ];
+
+  # Grok /model picker: keep cloud grok-* and add local Qwen3.5.
+  environment.etc."grok/managed_config.toml".text = grokQwen35;
 
   # MLX model host: expose the DeepSeek/Qwen3.5 9B 4-bit checkpoint through
   # Apple's Metal-backed MLX VLM runtime as an OpenAI-compatible local server.

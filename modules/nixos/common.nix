@@ -4,6 +4,12 @@
 # and host-only packages/services. Everything identical across hosts lives here.
 { config, lib, pkgs, user, claude-code-nix, codex-cli-nix, llm-agents-nix, pi, ... }:
 
+let
+  grok = import ../shared/grok-cli.nix {
+    inherit pkgs;
+    grokPkg = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok;
+  };
+in
 {
   # Hardware platform default (hosts may override).
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
@@ -151,7 +157,7 @@
     git
     claude-code-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
     codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
-    llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok
+    grok
     pi.packages.${pkgs.stdenv.hostPlatform.system}.default  # pi terminal coding agent
     (pkgs.callPackage ../shared/prime-agent/package.nix { })  # Prime Agent (no upstream flake)
     wl-clipboard     # Wayland clipboard utilities

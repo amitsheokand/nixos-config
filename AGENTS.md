@@ -236,6 +236,22 @@ Settings → Models → OpenAI API Key → Advanced → Override Base URL →
 **Claude / Codex** already route via `headroom init -g` (`ANTHROPIC_BASE_URL` /
 Codex `model_provider = "headroom"`). They need the proxy running.
 
+## Local helpers in Grok `/model`
+
+Cloud `grok-*` stay in the picker. Local servers register as `[model.*]` in
+`/etc/grok/managed_config.toml` (do **not** set `GROK_MODELS_BASE_URL` on the
+normal `grok` session — that replaces the cloud catalog).
+
+| Host | Grok `/model` | Pi `/model` | API `model` |
+|------|---------------|-------------|-------------|
+| Mac (`ai-mac`) | `qwen35` | provider `mlx-local`, name `qwen35` (API id is the MLX path) | path under `~/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit` |
+| PC (`nixos`) | `qwen38` | provider `qwen38-local`, id `qwen38` | `qwen38` |
+
+Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `qwen35` — mlx-vlm treats unknown ids as a new load and can crash. Grok can map picker id → API id; Pi cannot.
+
+`agent` on PATH is Cursor CLI (`~/.local/bin/agent`). Grok TUI is `grok` only
+(the grok package `agent` alias is stripped).
+
 ## Local Qwen3.8 helper (desktop 6700 XT)
 
 Hosted only on the PC (`192.168.1.15`, hostname `nixos`). Display/Sunshine
@@ -247,7 +263,7 @@ stay on the iGPU so the dGPU has the full 12 GB.
 | Engine | official llama.cpp Vulkan `b10488` |
 | Weights | `default`: Unsloth `UD-Q2_K_XL` (~10.7 GB); `unc`: 0bserverx `RVN-Q2_K-mtp` (~11.2 GB) |
 | API | `http://192.168.1.15:8080/v1` (`model` = `qwen38`) |
-| Grok | `[model.qwen38]` + `explore` / `local-helper` subagent |
+| Grok | `[model.qwen38]` in `/etc/grok/managed_config.toml` |
 
 After `nix run .#build-switch` on the PC:
 
