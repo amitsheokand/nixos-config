@@ -254,7 +254,7 @@ After `nix run .#build-switch` on the PC:
 ```sh
 qwen38-download default
 qwen38-download unc
-# active variant is QWEN38_VARIANT in modules/nixos/qwen38.nix (unc for A/B)
+# active variant is QWEN38_VARIANT in modules/nixos/qwen38.nix (default for tool calling)
 systemctl --user restart qwen38-server
 systemctl --user status qwen38-server
 curl -s http://127.0.0.1:8080/v1/models

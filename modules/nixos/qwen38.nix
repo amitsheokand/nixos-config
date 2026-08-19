@@ -32,8 +32,8 @@ in
       VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
       LD_LIBRARY_PATH = "/run/opengl-driver/lib";
       QWEN38_DEVICE = "Vulkan1";
-      # A/B: "unc" = Heretic Q2+MTP; "default" = stock Unsloth Q2.
-      QWEN38_VARIANT = "unc";
+      # default = Unsloth Q2 (tools/jinja); unc = Heretic Q2+MTP (chat A/B only).
+      QWEN38_VARIANT = "default";
       QWEN38_CONTEXT = "32768";
       QWEN38_CACHE_TYPE = "q5_0";
       QWEN38_UBATCH = "1024";
