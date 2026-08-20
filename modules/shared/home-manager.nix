@@ -66,6 +66,11 @@ let name = "Amit Sheokand";
       # === PATH Setup ===
       export PATH="$HOME/.local/bin:$PATH"
 
+      # === Local secrets (gitignored, never committed) ===
+      if [[ -f "$HOME/.config/openrouter.env" ]]; then
+        source "$HOME/.config/openrouter.env"
+      fi
+
       # Remove history data we don't want to see
       export HISTIGNORE="pwd:ls:cd"
 

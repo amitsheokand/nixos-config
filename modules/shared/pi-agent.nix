@@ -43,6 +43,16 @@ let
     if localModels == null then null
     else import ./pi-local-models.nix ({ inherit pkgs; } // localModels);
 
+  # Declarative Pi extensions (OpenRouter ox-alpha, …). Key stays in
+  # ~/.config/openrouter.env (sourced by zsh); never commit secrets here.
+  piExtensions = [
+    ./pi-extensions/openrouter-ox-alpha.ts
+  ];
+
+  syncPiExtensions = lib.concatMapStrings (ext: ''
+    install -m 0644 ${ext} "$HOME/.pi/agent/extensions/$(basename ${ext})"
+  '') piExtensions;
+
   # npm:pi-tool-display@0.5.0 → pi-tool-display
   # npm:@narumitw/pi-statusline@0.49.6 → @narumitw/pi-statusline
   # splitString "@" on a scoped id yields [ "" "scope/name" "version" ].
@@ -96,6 +106,11 @@ in
         export PATH="${nodejs}/bin:$PATH"
         mkdir -p "$HOME/.pi/agent/npm"
         ${lib.concatMapStrings ensurePackage packages}
+      '';
+
+      syncPiExtensions = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''
+        mkdir -p "$HOME/.pi/agent/extensions"
+        ${syncPiExtensions}
       '';
     };
 }
