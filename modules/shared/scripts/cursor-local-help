@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Explain how to use local qwen38 with Cursor (alongside cloud models).
+set -euo pipefail
+
+base="${AI_BASE_URL:-http://127.0.0.1:8080/v1}"
+base="${base%/}"
+
+cat <<EOF
+Cursor cannot keep cloud models (Grok / Composer / Claude) and a local
+OpenAI endpoint in the same live picker. Override OpenAI Base URL is
+global, and Cursor's backend cannot reach localhost without a public
+HTTPS tunnel.
+
+Recommended (alongside — already wired):
+  • Cursor Agent / CLI  → cloud models (leave Override OFF)
+  • Continue panel      → local qwen38 at ${base}
+  • Grok / Pi / codex-local → same ${base}
+
+Open Continue in Cursor (sidebar) and pick model "qwen38".
+
+Optional (Cursor Agent ON qwen38 — cloud picker unavailable while Override is ON):
+  1. Expose ${base} via Cloudflare Tunnel / ngrok HTTPS
+  2. Settings → Models → OpenAI API Key = local
+  3. Override OpenAI Base URL = https://<tunnel>/v1
+  4. Add custom model id: qwen38
+  5. Turn Override OFF before returning to Grok/Composer/Claude
+
+Health:
+  curl -s ${base}/models | jq '.data[0].id, .data[0].meta.n_ctx'
+EOF
+
+if curl -fsS --max-time 2 "${base}/models" >/dev/null 2>&1; then
+  echo
+  echo "Local server: UP (${base})"
+else
+  echo
+  echo "Local server: DOWN (${base})" >&2
+  exit 1
+fi

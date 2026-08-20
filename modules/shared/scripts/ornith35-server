@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Temporary Ornith-1.5-35B-A3B A/B on :8080 (CPU MoE experts, GPU attention).
+set -euo pipefail
+
+MODEL="${ORNITH_MODEL:-$HOME/.local/share/ornith35/Ornith-1.5-35B-A3B-AD-IQ3_XXS-IQ2_S.gguf}"
+DEVICE="${ORNITH_DEVICE:-Vulkan1}"
+CTX="${ORNITH_CONTEXT:-32768}"
+CACHE="${ORNITH_CACHE_TYPE:-q4_0}"
+
+if [[ ! -s "$MODEL" || -e "$MODEL.aria2" ]]; then
+  echo "missing/incomplete model: $MODEL" >&2
+  exit 1
+fi
+
+export VK_DRIVER_FILES="${VK_DRIVER_FILES:-/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json}"
+export LD_LIBRARY_PATH="/run/opengl-driver/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+echo "ornith-server: model=$MODEL device=$DEVICE ctx=$CTX cpu-moe=on" >&2
+exec llama-server \
+  -m "$MODEL" \
+  -a ornith35 \
+  --device "$DEVICE" \
+  -ngl 99 \
+  -cmoe \
+  -fa on \
+  -fit on \
+  -fitt 384 \
+  -c "$CTX" \
+  -np 1 \
+  -ub 512 \
+  --cache-type-k "$CACHE" \
+  --cache-type-v "$CACHE" \
+  --host 0.0.0.0 \
+  --port "${ORNITH_PORT:-8080}" \
+  --jinja \
+  --reasoning off \
+  --temp 0.6 \
+  --top-p 0.95 \
+  --top-k 20 \
+  --min-p 0 \
+  "$@"

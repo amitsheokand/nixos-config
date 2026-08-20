@@ -57,4 +57,9 @@ in
     text = script "ai-team";
     executable = true;
   };
+
+  ".local/bin/cursor-local-help" = {
+    text = script "cursor-local-help";
+    executable = true;
+  };
 }

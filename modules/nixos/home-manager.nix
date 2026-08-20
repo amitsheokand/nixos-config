@@ -6,19 +6,26 @@ let
   shared-programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
-  piModels = import ../shared/pi-local-models.nix {
-    inherit pkgs;
-    providerId = "qwen38-local";
-    apiModel = "qwen38";
-    displayName = "qwen38";
-    contextWindow = 32768;
-    maxTokens = 4096;
+  piAgent = import ../shared/pi-agent.nix {
+    inherit pkgs lib;
+    pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
+    localSettings = {
+      model = "qwen38";
+      defaultProvider = "qwen38-local";
+      defaultModel = "qwen38";
+    };
+    localModels = {
+      providerId = "qwen38-local";
+      apiModel = "qwen38";
+      displayName = "qwen38";
+      contextWindow = 131072;
+      maxTokens = 8192;
+    };
   };
-  piSettings = pkgs.writeText "pi-settings.json" (builtins.toJSON {
-    model = "qwen38";
-    defaultProvider = "qwen38-local";
-    defaultModel = "qwen38";
-  });
+  continueConfig = import ../shared/continue-local.nix {
+    contextWindow = 131072;
+    maxTokens = 8192;
+  };
 in
 {
   home = {
@@ -28,13 +35,14 @@ in
     sessionVariables = {
       AI_BASE_URL = "http://127.0.0.1:8080/v1";
       AI_MODEL = "qwen38";
-      AI_CONTEXT_WINDOW = "32768";
-      AI_MAX_TOKENS = "4096";
+      AI_CONTEXT_WINDOW = "131072";
+      AI_MAX_TOKENS = "8192";
       GROK_LOCAL_MODEL = "qwen38";
       GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
     };
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
-      ++ (headroom.home.packages or []);
+      ++ (headroom.home.packages or [])
+      ++ (piAgent.home.packages or []);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
@@ -43,7 +51,7 @@ in
           text = ''
             model = "qwen38"
             model_provider = "qwen38-local"
-            model_context_window = 32768
+            model_context_window = 131072
 
             [model_providers.qwen38-local]
             name = "Qwen3.8 27B (RX 6700 XT)"
@@ -52,30 +60,14 @@ in
             requires_openai_auth = false
           '';
         };
+        # Continue panel uses local qwen38; Cursor Agent keeps the cloud catalog.
+        ".continue/config.yaml" = {
+          text = continueConfig;
+          force = true;
+        };
       }
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
-    activation = (headroom.home.activation or {}) // {
-      syncPiModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        mkdir -p "$HOME/.pi/agent"
-        install -m 0600 ${piModels} "$HOME/.pi/agent/models.json"
-      '';
-      syncPiSettings = lib.hm.dag.entryAfter [ "syncPiModels" ] ''
-        mkdir -p "$HOME/.pi/agent"
-        settings="$HOME/.pi/agent/settings.json"
-        tmp="$(mktemp "$settings.tmp.XXXXXX")"
-        trap 'rm -f "$tmp"' EXIT
-        if [[ -f "$settings" ]]; then
-          ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$settings" ${piSettings} > "$tmp"
-        else
-          ${pkgs.jq}/bin/jq '.' ${piSettings} > "$tmp"
-        fi
-        chmod 0600 "$tmp"
-        if [[ ! -f "$settings" ]] || ! cmp -s "$tmp" "$settings"; then
-          mv "$tmp" "$settings"
-        fi
-        chmod 0600 "$settings"
-      '';
-    };
+    activation = (headroom.home.activation or {}) // piAgent.activation;
     stateVersion = "25.11";
   };
 

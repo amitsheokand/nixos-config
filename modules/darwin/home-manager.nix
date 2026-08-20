@@ -1,23 +1,10 @@
-{ config, pkgs, lib, home-manager, ... }:
+{ config, pkgs, lib, home-manager, llm-agents-nix, ... }:
 
 let
   user           = "amitsheokand";
   sharedFiles     = import ../shared/files.nix { inherit config pkgs; };
   additionalFiles = import ./files.nix { inherit user config pkgs; };
   mlxModel = "/Users/${user}/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
-  piModels = import ../shared/pi-local-models.nix {
-    inherit pkgs;
-    providerId = "mlx-local";
-    apiModel = mlxModel;
-    displayName = "qwen35";
-    contextWindow = 65536;
-    maxTokens = 4096;
-  };
-  piSettings = pkgs.writeText "pi-settings.json" (builtins.toJSON {
-    model = mlxModel;
-    defaultProvider = "mlx-local";
-    defaultModel = mlxModel;
-  });
 in
 {
   users.users.${user} = {
@@ -52,6 +39,22 @@ in
     users.${user} = { pkgs, config, lib, ... }:
       let
         headroom = import ../shared/headroom.nix { inherit pkgs lib; };
+        piAgent = import ../shared/pi-agent.nix {
+          inherit pkgs lib;
+          pi = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
+          localSettings = {
+            model = mlxModel;
+            defaultProvider = "mlx-local";
+            defaultModel = mlxModel;
+          };
+          localModels = {
+            providerId = "mlx-local";
+            apiModel = mlxModel;
+            displayName = "qwen35";
+            contextWindow = 65536;
+            maxTokens = 4096;
+          };
+        };
       in
       {
         home = {
@@ -65,7 +68,8 @@ in
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
           };
           packages = (pkgs.callPackage ./packages.nix {})
-            ++ (headroom.home.packages or []);
+            ++ (headroom.home.packages or [])
+            ++ (piAgent.home.packages or []);
           file = lib.mkMerge [
             sharedFiles
             additionalFiles
@@ -89,28 +93,7 @@ in
           ];
           activation = lib.mkMerge [
             (headroom.home.activation or {})
-            {
-              syncPiModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-                mkdir -p "$HOME/.pi/agent"
-                install -m 0600 ${piModels} "$HOME/.pi/agent/models.json"
-              '';
-              syncPiSettings = lib.hm.dag.entryAfter [ "syncPiModels" ] ''
-                mkdir -p "$HOME/.pi/agent"
-                settings="$HOME/.pi/agent/settings.json"
-                tmp="$(mktemp "$settings.tmp.XXXXXX")"
-                trap 'rm -f "$tmp"' EXIT
-                if [[ -f "$settings" ]]; then
-                  ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$settings" ${piSettings} > "$tmp"
-                else
-                  ${pkgs.jq}/bin/jq '.' ${piSettings} > "$tmp"
-                fi
-                chmod 0600 "$tmp"
-                if [[ ! -f "$settings" ]] || ! cmp -s "$tmp" "$settings"; then
-                  mv "$tmp" "$settings"
-                fi
-                chmod 0600 "$settings"
-              '';
-            }
+            piAgent.activation
           ];
           stateVersion = "23.11";
         };
