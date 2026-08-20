@@ -71,6 +71,9 @@
   # Intel; drop to pkgs.linuxPackages_latest if you hit a hardware quirk.
   boot.kernelPackages = pkgs.linuxPackages_zen;
   boot.kernelModules  = [ "kvm-intel" ];
+  # 200 MiB ESP shared with Windows. Five zen kernels fill it and
+  # nixos-rebuild cannot copy a new generation. Keep two only.
+  boot.loader.systemd-boot.configurationLimit = lib.mkForce 2;
 
   system.stateVersion = "25.05";
 }
