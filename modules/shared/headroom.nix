@@ -115,11 +115,14 @@ in
       Wants = [ "headroom-install.service" ];
     };
     Service = {
-      ExecStart = "${headroomWrapped}/bin/headroom proxy --host 127.0.0.1 --port 8787";
+      # token = max compression (may rewrite prior turns). code-aware needs
+      # headroom-ai[code] (already in headroomExtras).
+      ExecStart = "${headroomWrapped}/bin/headroom proxy --host 127.0.0.1 --port 8787 --mode token --code-aware";
       Restart = "on-failure";
       RestartSec = "3";
       Environment = [
         "HEADROOM_TELEMETRY=off"
+        "HEADROOM_CODE_AWARE_ENABLED=1"
         "PATH=${homeDir}/.local/bin:${pkgs.uv}/bin:${pkgs.python313}/bin:/run/current-system/sw/bin"
       ];
     };
