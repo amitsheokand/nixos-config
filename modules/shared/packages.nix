@@ -33,6 +33,7 @@ with pkgs; [
   fd                  # Fast find alternative
   fzf                 # Fuzzy finder
   gh                  # GitHub CLI
+  glab                # GitLab CLI
   git                 # Version control
   gnupg               # GNU Privacy Guard
   jq                  # JSON processor
