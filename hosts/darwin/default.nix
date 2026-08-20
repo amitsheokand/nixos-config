@@ -1,10 +1,7 @@
-{ config, pkgs, codex-cli-nix, llm-agents-nix, pi, ... }:
+{ config, pkgs, llm-agents-nix, ... }:
 let 
   user = "amitsheokand";
-  grok = import ../../modules/shared/grok-cli.nix {
-    inherit pkgs;
-    grokPkg = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.grok;
-  };
+  agents = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system};
   grokQwen35 = import ../../modules/shared/grok-local-model.nix {
     id = "qwen35";
     apiModel = "/Users/${user}/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
@@ -93,11 +90,15 @@ in
     package = pkgs.nix;
     settings = {
       trusted-users = [ "@admin" "${user}" ];
-      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" "https://pi.cachix.org" ];
+      substituters = [
+        "https://nix-community.cachix.org"
+        "https://cache.nixos.org"
+        "https://cache.numtide.com"
+      ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-        "pi.cachix.org-1:lGeoGJaZ5ZDabuRzkcD5EBTNnDM4HJ1vqeOxlWk1Flk="
+        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
       ];
     };
     extraOptions = ''
@@ -108,11 +109,11 @@ in
   environment.systemPackages =
     (import ../../modules/darwin/packages.nix { inherit pkgs; })
     ++ [
-      pkgs."claude-code"
-      codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
-      grok
-      pi.packages.${pkgs.stdenv.hostPlatform.system}.default  # pi terminal coding agent
-      (pkgs.callPackage ../../modules/shared/prime-agent/package.nix { })  # Prime Agent
+      agents.claude-code
+      agents.codex
+      agents.grok
+      agents.pi
+      agents.prime-agent
     ];
 
   # Grok /model picker: keep cloud grok-* and add local Qwen3.5.

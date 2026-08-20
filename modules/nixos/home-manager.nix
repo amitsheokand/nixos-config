@@ -14,9 +14,13 @@ let
     contextWindow = 32768;
     maxTokens = 4096;
   };
+  piSettings = pkgs.writeText "pi-settings.json" (builtins.toJSON {
+    model = "qwen38";
+    defaultProvider = "qwen38-local";
+    defaultModel = "qwen38";
+  });
 in
 {
-  imports = [ inputs.pi.homeModules.default ];
   home = {
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
@@ -55,22 +59,27 @@ in
         mkdir -p "$HOME/.pi/agent"
         install -m 0600 ${piModels} "$HOME/.pi/agent/models.json"
       '';
+      syncPiSettings = lib.hm.dag.entryAfter [ "syncPiModels" ] ''
+        mkdir -p "$HOME/.pi/agent"
+        settings="$HOME/.pi/agent/settings.json"
+        tmp="$(mktemp "$settings.tmp.XXXXXX")"
+        trap 'rm -f "$tmp"' EXIT
+        if [[ -f "$settings" ]]; then
+          ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$settings" ${piSettings} > "$tmp"
+        else
+          ${pkgs.jq}/bin/jq '.' ${piSettings} > "$tmp"
+        fi
+        chmod 0600 "$tmp"
+        if [[ ! -f "$settings" ]] || ! cmp -s "$tmp" "$settings"; then
+          mv "$tmp" "$settings"
+        fi
+        chmod 0600 "$settings"
+      '';
     };
     stateVersion = "25.11";
   };
 
-  programs = shared-programs // {
-    pi.coding-agent = {
-      enable = true;
-      models = piModels;
-      settings = {
-        model = "qwen38";
-        defaultProvider = "qwen38-local";
-        defaultModel = "qwen38";
-      };
-    };
-    gpg.enable = true;
-  };
+  programs = shared-programs // { gpg.enable = true; };
 
   systemd.user.services = headroom.systemd.user.services or {};
 

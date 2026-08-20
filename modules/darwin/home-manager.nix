@@ -1,4 +1,4 @@
-{ config, pkgs, lib, home-manager, pi, ... }:
+{ config, pkgs, lib, home-manager, ... }:
 
 let
   user           = "amitsheokand";
@@ -13,6 +13,11 @@ let
     contextWindow = 65536;
     maxTokens = 4096;
   };
+  piSettings = pkgs.writeText "pi-settings.json" (builtins.toJSON {
+    model = mlxModel;
+    defaultProvider = "mlx-local";
+    defaultModel = mlxModel;
+  });
 in
 {
   users.users.${user} = {
@@ -49,7 +54,6 @@ in
         headroom = import ../shared/headroom.nix { inherit pkgs lib; };
       in
       {
-        imports = [ pi.homeModules.default ];
         home = {
           enableNixpkgsReleaseCheck = false;
           sessionVariables = {
@@ -86,26 +90,31 @@ in
           activation = lib.mkMerge [
             (headroom.home.activation or {})
             {
-              # pi.nix only copies models.json when missing; keep it in lockstep.
               syncPiModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
                 mkdir -p "$HOME/.pi/agent"
                 install -m 0600 ${piModels} "$HOME/.pi/agent/models.json"
+              '';
+              syncPiSettings = lib.hm.dag.entryAfter [ "syncPiModels" ] ''
+                mkdir -p "$HOME/.pi/agent"
+                settings="$HOME/.pi/agent/settings.json"
+                tmp="$(mktemp "$settings.tmp.XXXXXX")"
+                trap 'rm -f "$tmp"' EXIT
+                if [[ -f "$settings" ]]; then
+                  ${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$settings" ${piSettings} > "$tmp"
+                else
+                  ${pkgs.jq}/bin/jq '.' ${piSettings} > "$tmp"
+                fi
+                chmod 0600 "$tmp"
+                if [[ ! -f "$settings" ]] || ! cmp -s "$tmp" "$settings"; then
+                  mv "$tmp" "$settings"
+                fi
+                chmod 0600 "$settings"
               '';
             }
           ];
           stateVersion = "23.11";
         };
-        programs = {
-          pi.coding-agent = {
-            enable = true;
-            models = piModels;
-            settings = {
-              model = mlxModel;
-              defaultProvider = "mlx-local";
-              defaultModel = mlxModel;
-            };
-          };
-        } // import ../shared/home-manager.nix { inherit config pkgs lib; };
+        programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
         manual.manpages.enable = false;
       };
   };

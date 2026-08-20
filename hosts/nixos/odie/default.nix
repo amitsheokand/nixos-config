@@ -1,4 +1,4 @@
-{ config, lib, pkgs, modulesPath, user, inputs, claude-code-nix, codex-cli-nix, ... }:
+{ config, lib, pkgs, modulesPath, user, inputs, ... }:
 
 {
   imports = [

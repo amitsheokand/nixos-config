@@ -2,12 +2,11 @@
 
 pkgs.stdenv.mkDerivation rec {
   pname = "grok-bot";
-  version = "0.16.0";
+  version = "0.20.0";
 
-  # Commit in the path is the Cursor/sand release build id for this version.
   src = pkgs.fetchurl {
-    url = "https://downloads.cursor.com/sand/stable/076e9d4bf42abbfa576702aea18ddbc49d9d3ab5/linux/x64/Grok_Bot_${version}.deb";
-    hash = "sha256-mdizlmQZQbpLiJp5HpMGc3s5jAw5NPY6lUVDCRAZK8w=";
+    url = "https://downloads.cursor.com/grokbot/stable/ca2c2b6f79b6130a4822d8189711b0f79f9d4661/linux/x64/Grok_Bot_${version}.deb";
+    hash = "sha256-Z6brYWSrIzpcXU1QZl762iy6rp8i763oXpNKZf37sg0=";
   };
 
   nativeBuildInputs = with pkgs; [
@@ -76,13 +75,11 @@ pkgs.stdenv.mkDerivation rec {
     # Setuid chrome-sandbox is unusable on NixOS; drop the bit and disable sandbox.
     chmod 755 $out/opt/grok-bot/chrome-sandbox
 
-    substituteInPlace $out/share/applications/sand.desktop \
-      --replace-fail '"/opt/Grok Bot/sand" %U' 'grok-bot %U'
+    # 0.20.0 ships grok-bot.desktop directly; rewrite its absolute launcher path.
+    substituteInPlace $out/share/applications/grok-bot.desktop \
+      --replace-fail '"/opt/Grok Bot/grok-bot" %U' 'grok-bot %U'
 
-    # Keep sand.desktop (upstream mime/WMClass) and add a grok-bot.desktop alias.
-    cp $out/share/applications/sand.desktop $out/share/applications/grok-bot.desktop
-
-    makeWrapper $out/opt/grok-bot/sand $out/bin/grok-bot \
+    makeWrapper $out/opt/grok-bot/grok-bot $out/bin/grok-bot \
       --prefix LD_LIBRARY_PATH : ${
         pkgs.lib.makeLibraryPath (
           with pkgs;
@@ -95,8 +92,6 @@ pkgs.stdenv.mkDerivation rec {
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}" \
       --add-flags "--no-sandbox" \
       --add-flags "--disable-gpu-sandbox"
-
-    ln -s $out/bin/grok-bot $out/bin/sand
 
     runHook postInstall
   '';
