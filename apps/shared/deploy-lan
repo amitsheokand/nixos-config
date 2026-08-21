@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Pull + switch this flake on every LAN NixOS box from the current machine.
+# Usage: nix run .#deploy-lan
+#        nix run .#deploy-lan -- odie vaayu
+set -euo pipefail
+
+USER_NAME="${USER:-amitsheokand}"
+
+declare -A FLAKE_ATTR=(
+  [nixos.local]=nixos
+  [odie.local]=odie
+  [vaayu.local]=vaayu
+)
+
+declare -A EXTRA_FLAGS=(
+  [vaayu.local]="--impure"
+)
+
+repo_on_host() {
+  local host="$1"
+  ssh -o BatchMode=yes -o ConnectTimeout=8 "${USER_NAME}@${host}" \
+    'if [[ -d "$HOME/dev/nixos-config/.git" ]]; then echo "$HOME/dev/nixos-config"
+     elif [[ -d "$HOME/nixos-config/.git" ]]; then echo "$HOME/nixos-config"
+     else echo MISSING
+     fi'
+}
+
+deploy_one() {
+  local host="$1"
+  local attr="${FLAKE_ATTR[$host]}"
+  local extra="${EXTRA_FLAGS[$host]:-}"
+  echo "==> ${host} (#${attr})"
+  local repo
+  repo="$(repo_on_host "$host")"
+  if [[ "$repo" == "MISSING" ]]; then
+    echo "    skip: no nixos-config clone (expected ~/dev/nixos-config or ~/nixos-config)"
+    return 1
+  fi
+  # shellcheck disable=SC2029
+  ssh -o BatchMode=yes "${USER_NAME}@${host}" \
+    "set -euo pipefail
+     cd '${repo}'
+     git pull --ff-only origin main
+     sudo -n /run/current-system/sw/bin/nixos-rebuild switch --flake '.#${attr}' ${extra}
+    "
+}
+
+hosts=("nixos.local" "odie.local" "vaayu.local")
+if [[ $# -gt 0 ]]; then
+  hosts=()
+  for name in "$@"; do
+    case "$name" in
+      nixos|desktop) hosts+=("nixos.local") ;;
+      odie) hosts+=("odie.local") ;;
+      vaayu|air) hosts+=("vaayu.local") ;;
+      *.local) hosts+=("$name") ;;
+      *) echo "unknown host: $name (use nixos|odie|vaayu)" >&2; exit 1 ;;
+    esac
+  done
+fi
+
+fail=0
+for host in "${hosts[@]}"; do
+  if ! deploy_one "$host"; then
+    fail=1
+  fi
+done
+exit "$fail"

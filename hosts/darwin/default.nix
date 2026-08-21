@@ -106,6 +106,12 @@ in
     '';
   };
 
+  users.users.${user}.openssh.authorizedKeys.keys =
+    import ../../modules/shared/ssh-keys.nix;
+
+  # Inbound SSH on the LAN (System Settings → Sharing → Remote Login equivalent).
+  services.openssh.enable = true;
+
   # Agent CLIs: pi + OpenCode from llm-agents.nix (Cursor via Homebrew/nixpkgs).
   # Claude/Codex/Grok/prime-agent omitted. OpenCode GUI = cask opencode-desktop.
   environment.systemPackages =
@@ -113,6 +119,7 @@ in
     ++ [
       agents.pi
       agents.opencode
+      pkgs.nh
     ];
 
   # Grok /model picker: keep cloud grok-* and add local Qwen3.5.

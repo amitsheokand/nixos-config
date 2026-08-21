@@ -352,6 +352,7 @@ let name = "Amit Sheokand";
   ssh = {
     enable = true;
     enableDefaultConfig = false;
+    addKeysToAgent = "yes";
     includes = [
       (lib.mkIf pkgs.stdenv.hostPlatform.isLinux
         "/home/${user}/.ssh/config_external"
@@ -360,6 +361,12 @@ let name = "Amit Sheokand";
         "/Users/${user}/.ssh/config_external"
       )
     ];
+    matchBlocks = {
+      "nixos" = { hostname = "nixos.local"; user = "amitsheokand"; };
+      "odie" = { hostname = "odie.local"; user = "amitsheokand"; };
+      "vaayu" = { hostname = "vaayu.local"; user = "amitsheokand"; };
+      "ai-mac" = { hostname = "ai-mac.local"; user = "amitsheokand"; };
+    };
     settings."*" = {
       SendEnv = [ "LANG" "LC_*" ];
       HashKnownHosts = true;

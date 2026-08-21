@@ -53,6 +53,9 @@
   # Laptop GPU access (base groups in common.nix).
   users.users.${user}.extraGroups = [ "video" "render" ];
 
+  # Tiny ESP + tight root: collect store garbage earlier than the shared 2 GiB floor.
+  nix.settings.min-free = lib.mkForce (4 * 1024 * 1024 * 1024);
+
   # Host-only packages (core set in common.nix).
   environment.systemPackages = with pkgs; [
     moonlight-qt     # Sunshine/GameStream client for the main nixos desktop

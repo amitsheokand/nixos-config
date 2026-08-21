@@ -172,6 +172,7 @@ system.defaults = {
 |---------|---------|
 | `nix run .#build` | Build without applying (test) |
 | `nix run .#build-switch` | Build and apply configuration |
+| `nix run .#deploy-lan` | `git pull` + `nixos-rebuild switch` on nixos/odie/vaayu over SSH |
 | `nix flake update` | Update all dependencies |
 
 ## Important Notes
@@ -248,6 +249,22 @@ reboot
 ```
 
 Then copy `~/.config/openrouter.env` from another machine for Pi `stealth/ox-alpha`.
+On the Air, `ssh-keygen -t ed25519` and append `~/.ssh/id_ed25519.pub` to [`modules/shared/ssh-keys.nix`](modules/shared/ssh-keys.nix).
+
+## LAN SSH + deploy
+
+Pubkeys for Mac / desktop / odie live in [`modules/shared/ssh-keys.nix`](modules/shared/ssh-keys.nix) (`authorized_keys` on every host). Aliases: `ssh odie`, `ssh nixos`, `ssh vaayu`, `ssh ai-mac`.
+
+From Mac (after this generation is on the boxes):
+
+```sh
+nix run .#deploy-lan           # all NixOS hosts
+nix run .#deploy-lan -- odie   # one host
+nh os switch                   # local NixOS (after clone)
+nh darwin switch               # local Mac (Determinate Nix)
+```
+
+NixOS QoL: `programs.nh` auto-cleans generations older than 7d (keep 3), systemd-boot `configurationLimit = 3` (odie = 2), `boot.tmp.cleanOnBoot`, store `min-free` auto-GC.
 
 ## Headroom (context compression)
 

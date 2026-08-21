@@ -64,6 +64,14 @@
           exec ${self}/apps/${system}/${scriptName} "$@"
         '')}/bin/${scriptName}";
       };
+      mkSharedApp = scriptName: system: {
+        type = "app";
+        program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin scriptName ''
+          #!/usr/bin/env bash
+          PATH=${nixpkgs.legacyPackages.${system}.git}/bin:${nixpkgs.legacyPackages.${system}.openssh}/bin:$PATH
+          exec ${self}/apps/shared/${scriptName} "$@"
+        '')}/bin/${scriptName}";
+      };
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
@@ -75,6 +83,7 @@
         "disk-usage" = mkApp "disk-usage" system;
         "install" = mkApp "install" system;
         "install-with-secrets" = mkApp "install-with-secrets" system;
+        "deploy-lan" = mkSharedApp "deploy-lan" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -87,6 +96,7 @@
         "check-keys" = mkApp "check-keys" system;
         "disk-usage" = mkApp "disk-usage" system;
         "rollback" = mkApp "rollback" system;
+        "deploy-lan" = mkSharedApp "deploy-lan" system;
       };
     in
     {

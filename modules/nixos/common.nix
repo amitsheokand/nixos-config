@@ -27,6 +27,15 @@ in
 
   programs.zsh.enable = true;
 
+  # nix-community nh: nicer switch + generation cleanup (also covers HM profiles).
+  programs.nh = {
+    enable = true;
+    clean = {
+      enable = true;
+      extraArgs = "--keep-since 7d --keep 3";
+    };
+  };
+
   # Allow uv/pipx-installed native wheels (onnxruntime, etc.) to find
   # libstdc++ and friends — required for Headroom proxy on NixOS.
   programs.nix-ld = {
@@ -89,7 +98,14 @@ in
       pulse.enable = true;
     };
 
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      settings = {
+        PermitRootLogin = "no";
+        # Password stays on until vaayu pubkey is in ssh-keys.nix; then set false.
+        PasswordAuthentication = true;
+      };
+    };
     blueman.enable = true;
   };
 
@@ -107,13 +123,16 @@ in
   };
 
   # systemd-boot on EFI (hosts pick kernelPackages / kernelParams).
+  # Keep few ESP copies so small Asahi/Windows ESPs cannot fill (odie forces 2).
   boot.loader = {
     systemd-boot = {
       enable             = true;
-      configurationLimit = 5;
+      configurationLimit = 3;
+      editor             = false;
     };
     efi.canTouchEfiVariables = true;
   };
+  boot.tmp.cleanOnBoot = true;
 
   # Primary user (hosts append extra groups, e.g. video/render/libvirtd).
   users.users.${user} = {
@@ -121,6 +140,7 @@ in
     description  = "Amit Sheokand";
     extraGroups  = [ "networkmanager" "wheel" ];
     shell = pkgs.zsh;
+    openssh.authorizedKeys.keys = import ../shared/ssh-keys.nix;
   };
 
   # Passwordless reboot + nixos-rebuild for the wheel group.
@@ -135,6 +155,10 @@ in
           }
           {
             command = "/run/current-system/sw/bin/nixos-rebuild";
+            options = [ "NOPASSWD" ];
+          }
+          {
+            command = "${pkgs.nh}/bin/nh";
             options = [ "NOPASSWD" ];
           }
         ];
@@ -175,6 +199,10 @@ in
     settings = {
       allowed-users       = [ "${user}" ];
       trusted-users       = [ "@admin" "${user}" "root" ];
+      auto-optimise-store = true;
+      # Auto-GC when the volume is tight (odies /boot + root have filled before).
+      min-free            = 2 * 1024 * 1024 * 1024;
+      max-free            = 10 * 1024 * 1024 * 1024;
       substituters        = [
         "https://nix-community.cachix.org"
         "https://cache.nixos.org"
@@ -192,11 +220,7 @@ in
       experimental-features = nix-command flakes
     '';
 
-    gc = {
-      automatic = true;
-      dates     = "weekly";
-      options   = "--delete-older-than 7d";
-    };
+    # Generation GC is programs.nh.clean (keeps 3 gens / 7d). Store hardlinks:
     optimise.automatic = true;
   };
 }
