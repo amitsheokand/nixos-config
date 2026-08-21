@@ -5,6 +5,7 @@ _:
   "visual-studio-code"
   "ghostty"             # GPU-accelerated terminal
   "zed"                 # Modern code editor
+  "opencode-desktop"    # OpenCode GUI (CLI via nixpkgs opencode)
 
   # Display & Media
   "betterdisplay"

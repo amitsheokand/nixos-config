@@ -53,7 +53,7 @@
 
   users.users.${user}.extraGroups = [ "video" "render" ];
 
-  # Minimal extras (core set + pi in common.nix; Cursor from flake module).
+  # Minimal extras (core set + pi/opencode in common.nix; Cursor from flake module).
   environment.systemPackages = with pkgs; [
     firefox
     curl

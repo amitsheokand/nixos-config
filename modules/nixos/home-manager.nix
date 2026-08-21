@@ -6,6 +6,7 @@ let
   shared-programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
+  commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
@@ -42,6 +43,7 @@ in
     };
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
+      ++ (commandCode.home.packages or [])
       ++ (piAgent.home.packages or []);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
@@ -67,7 +69,10 @@ in
         };
       }
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
-    activation = (headroom.home.activation or {}) // piAgent.activation;
+    activation = (headroom.home.activation or {})
+      // (commandCode.home.activation or {})
+      // piAgent.activation;
+    sessionPath = (commandCode.home.sessionPath or []);
     stateVersion = "25.11";
   };
 

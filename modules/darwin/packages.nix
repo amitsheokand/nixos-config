@@ -8,6 +8,7 @@ shared-packages ++ [
 
   # Development Tools
   code-cursor # Official Cursor IDE package from nixpkgs
+  opencode    # OpenCode CLI / TUI
 
   # === Local LLM ===
   ollama  # On NixOS this comes from services.ollama.enable

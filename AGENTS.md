@@ -212,9 +212,18 @@ Current user: `amitsheokand`
 
 ## Agent CLIs (base install)
 
-Shared NixOS (`common.nix`) and Darwin system packages ship **`pi` only**.
-**Cursor** comes from `pkgs.code-cursor` (NixOS hosts) or Homebrew cask (Darwin).
+Shared NixOS (`common.nix`) and Darwin ship **`pi`**, **OpenCode** (CLI + desktop),
+and **Command Code** (`cmd` via npm → `~/.local`).
+**Cursor** comes from `pkgs.code-cursor` (NixOS) or Homebrew/nix on Darwin.
 Claude Code / Codex / Grok / prime-agent are **not** installed from `llm-agents.nix`.
+
+| Tool | NixOS | Darwin |
+|------|-------|--------|
+| Pi | `agents.pi` | `agents.pi` |
+| OpenCode CLI | `pkgs.opencode` | `pkgs.opencode` |
+| OpenCode GUI | `pkgs.opencode-desktop` | Homebrew cask `opencode-desktop` |
+| Command Code | HM `modules/shared/command-code.nix` | same |
+| Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
 
 ## MacBook Air Asahi (`vaayu`)
 

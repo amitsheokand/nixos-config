@@ -150,12 +150,15 @@ in
   };
 
   # Core packages present on every host (hosts add their own extras).
-  # Agent CLIs: pi only (Cursor is pkgs.code-cursor / Homebrew cask).
+  # Agent CLIs: pi + OpenCode. Cursor is pkgs.code-cursor / Homebrew cask.
   # Claude / Codex / Grok / prime-agent intentionally omitted.
+  # Command Code (npm `cmd`) is installed via HM modules/shared/command-code.nix.
   environment.systemPackages = with pkgs; [
     vim
     git
     agents.pi
+    opencode
+    opencode-desktop
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors

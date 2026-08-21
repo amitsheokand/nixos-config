@@ -39,6 +39,7 @@ in
     users.${user} = { pkgs, config, lib, ... }:
       let
         headroom = import ../shared/headroom.nix { inherit pkgs lib; };
+        commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
         piAgent = import ../shared/pi-agent.nix {
           inherit pkgs lib;
           pi = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
@@ -67,8 +68,10 @@ in
             GROK_LOCAL_MODEL = mlxModel;
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
           };
+          sessionPath = (commandCode.home.sessionPath or []);
           packages = (pkgs.callPackage ./packages.nix {})
             ++ (headroom.home.packages or [])
+            ++ (commandCode.home.packages or [])
             ++ (piAgent.home.packages or []);
           file = lib.mkMerge [
             sharedFiles
@@ -93,6 +96,7 @@ in
           ];
           activation = lib.mkMerge [
             (headroom.home.activation or {})
+            (commandCode.home.activation or {})
             piAgent.activation
           ];
           stateVersion = "23.11";
