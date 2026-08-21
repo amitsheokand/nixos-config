@@ -106,11 +106,13 @@ in
     '';
   };
 
-  # Agent CLIs: pi only (Cursor via Homebrew cask). Claude/Codex/Grok/prime-agent omitted.
+  # Agent CLIs: pi + OpenCode from llm-agents.nix (Cursor via Homebrew/nixpkgs).
+  # Claude/Codex/Grok/prime-agent omitted. OpenCode GUI = cask opencode-desktop.
   environment.systemPackages =
     (import ../../modules/darwin/packages.nix { inherit pkgs; })
     ++ [
       agents.pi
+      agents.opencode
     ];
 
   # Grok /model picker: keep cloud grok-* and add local Qwen3.5.
