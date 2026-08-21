@@ -28,9 +28,12 @@ flake.nix (entry point)
     │       └── secrets.nix               (agenix secrets)
     │
     ├── NixOS (Linux)
-    │   ├── hosts/nixos/default.nix       (system config)
+    │   ├── hosts/nixos/default.nix       (desktop PC)
+    │   ├── hosts/nixos/odie/             (x86_64 laptop)
+    │   ├── hosts/nixos/vaayu/            (M1 Air Asahi, aarch64)
     │   └── modules/nixos/
-    │       ├── home-manager.nix          (user config, dconf/GNOME)
+    │       ├── home-manager.nix          (desktop/odie GNOME + local qwen38)
+    │       ├── home-manager-vaayu.nix    (Air: slim HM + Pi/OpenRouter)
     │       ├── packages.nix              (nixos-specific packages)
     │       └── secrets.nix               (agenix secrets)
     │
@@ -73,7 +76,9 @@ flake.nix (entry point)
 | File | Purpose | Platform |
 |------|---------|----------|
 | `hosts/darwin/default.nix` | macOS system settings (keyboard, dock position, etc.) | macOS |
-| `hosts/nixos/default.nix` | NixOS system config (services, networking, desktop) | NixOS |
+| `hosts/nixos/default.nix` | Desktop PC (AMD, Sunshine, qwen38) | NixOS |
+| `hosts/nixos/odie/` | x86_64 laptop | NixOS |
+| `hosts/nixos/vaayu/` | MacBook Air M1 Asahi (minimal GNOME) | NixOS aarch64 |
 
 ### Files & Dotfiles
 
@@ -205,6 +210,34 @@ Current user: `amitsheokand`
 - Desktop: GNOME (NixOS), macOS native (Darwin)
 - Focus: Rust development
 
+## Agent CLIs (base install)
+
+Shared NixOS (`common.nix`) and Darwin system packages ship **`pi` only**.
+**Cursor** comes from `pkgs.code-cursor` (NixOS hosts) or Homebrew cask (Darwin).
+Claude Code / Codex / Grok / prime-agent are **not** installed from `llm-agents.nix`.
+
+## MacBook Air Asahi (`vaayu`)
+
+| Piece | Where |
+|-------|--------|
+| Flake | `nixosConfigurations.vaayu` (`aarch64-linux`) |
+| Host | `hosts/nixos/vaayu/` |
+| HM | `modules/nixos/home-manager-vaayu.nix` |
+| Asahi | `apple-silicon` flake input + `hardware.asahi.enable` |
+| Apps | Minimal GNOME + Firefox + Cursor + Pi (no games/office/Wine) |
+
+First rebuild on the Air (vendor firmware from ESP — requires impure):
+
+```sh
+mkdir -p ~/dev && cd ~/dev
+git clone git@github.com:amitsheokand/nixos-config.git   # or HTTPS
+cd nixos-config
+sudo nixos-rebuild switch --flake .#vaayu --impure
+reboot
+```
+
+Then copy `~/.config/openrouter.env` from another machine for Pi `stealth/ox-alpha`.
+
 ## Headroom (context compression)
 
 [Headroom](https://github.com/headroomlabs-ai/headroom) compresses tool
@@ -247,8 +280,9 @@ normal `grok` session — that replaces the cloud catalog).
 | Mac (`ai-mac`) | `qwen35` | provider `mlx-local`, name `qwen35` (API id is the MLX path) | path under `~/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit` |
 | PC (`nixos`) | `qwen38` | provider `qwen38-local`, id `qwen38` | `qwen38` |
 | Laptop (`odie`) | — | same Pi packages/UI; use Cursor via `/model` (no local GPU server) | — |
+| Air (`vaayu`) | — | OpenRouter ox-alpha via Pi extension (no local GPU) | — |
 
-### Shared Pi agent (Mac / PC / odie)
+### Shared Pi agent (Mac / PC / odie / vaayu)
 
 | Piece | Where |
 |-------|--------|

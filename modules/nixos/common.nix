@@ -84,7 +84,7 @@ in
       enable = true;
       alsa = {
         enable = true;
-        support32Bit = true;
+        support32Bit = lib.mkDefault pkgs.stdenv.hostPlatform.isx86_64;
       };
       pulse.enable = true;
     };
@@ -94,6 +94,7 @@ in
   };
 
   # Bluetooth + base graphics (hosts add GPU-specific extraPackages).
+  # enable32Bit is x86_64-only (Wine/DXVK); Asahi aarch64 hosts mkForce false.
   hardware = {
     bluetooth = {
       enable = true;
@@ -101,7 +102,7 @@ in
     };
     graphics = {
       enable = true;
-      enable32Bit = true;  # 32-bit graphics for Wine/DXVK
+      enable32Bit = lib.mkDefault pkgs.stdenv.hostPlatform.isx86_64;
     };
   };
 
@@ -149,14 +150,12 @@ in
   };
 
   # Core packages present on every host (hosts add their own extras).
+  # Agent CLIs: pi only (Cursor is pkgs.code-cursor / Homebrew cask).
+  # Claude / Codex / Grok / prime-agent intentionally omitted.
   environment.systemPackages = with pkgs; [
     vim
     git
-    agents.claude-code
-    agents.codex
-    agents.grok
     agents.pi
-    agents.prime-agent
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors

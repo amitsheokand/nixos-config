@@ -106,14 +106,11 @@ in
     '';
   };
 
+  # Agent CLIs: pi only (Cursor via Homebrew cask). Claude/Codex/Grok/prime-agent omitted.
   environment.systemPackages =
     (import ../../modules/darwin/packages.nix { inherit pkgs; })
     ++ [
-      agents.claude-code
-      agents.codex
-      agents.grok
       agents.pi
-      agents.prime-agent
     ];
 
   # Grok /model picker: keep cloud grok-* and add local Qwen3.5.

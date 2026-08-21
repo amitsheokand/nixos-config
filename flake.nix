@@ -36,8 +36,12 @@
       url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    apple-silicon = {
+      url = "github:nix-community/nixos-apple-silicon";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { self, darwin, llm-agents-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic } @inputs:
+  outputs = { self, darwin, llm-agents-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic, apple-silicon } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
@@ -188,6 +192,30 @@
                 environment.systemPackages = [ pkgs.code-cursor ];
               })
               ./hosts/nixos/odie
+            ];
+          };
+
+          # MacBook Air M1 (Asahi) — minimal GNOME + Cursor + Pi.
+          # First rebuilds need --impure so Asahi can read vendor firmware from the ESP.
+          vaayu = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+            specialArgs = inputs // { inherit user; };
+            modules = [
+              apple-silicon.nixosModules.apple-silicon-support
+              agenix.nixosModules.default
+              home-manager.nixosModules.home-manager {
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  backupFileExtension = "hm-backup";
+                  users.${user} = { config, pkgs, lib, ... }:
+                    import ./modules/nixos/home-manager-vaayu.nix { inherit config pkgs lib inputs; };
+                };
+              }
+              ({ pkgs, ... }: {
+                environment.systemPackages = [ pkgs.code-cursor ];
+              })
+              ./hosts/nixos/vaayu
             ];
           };
         };
