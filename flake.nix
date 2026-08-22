@@ -45,8 +45,9 @@
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
+      linuxAppSystems = linuxSystems ++ [ "aarch64-linux" ];
       darwinSystems = [ "aarch64-darwin" ];
-      forAllSystems = f: nixpkgs.lib.genAttrs (linuxSystems ++ darwinSystems) f;
+      forAllSystems = f: nixpkgs.lib.genAttrs (linuxAppSystems ++ darwinSystems) f;
       devShell = system: let pkgs = nixpkgs.legacyPackages.${system}; in {
         default = with pkgs; mkShell {
           nativeBuildInputs = with pkgs; [ bashInteractive git age age-plugin-yubikey ];
@@ -101,7 +102,7 @@
     in
     {
       devShells = forAllSystems devShell;
-      apps = nixpkgs.lib.genAttrs linuxSystems mkLinuxApps // nixpkgs.lib.genAttrs darwinSystems mkDarwinApps;
+      apps = nixpkgs.lib.genAttrs linuxAppSystems mkLinuxApps // nixpkgs.lib.genAttrs darwinSystems mkDarwinApps;
       darwinConfigurations = nixpkgs.lib.genAttrs darwinSystems (system:
         darwin.lib.darwinSystem {
           inherit system;

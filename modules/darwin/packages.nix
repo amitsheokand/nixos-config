@@ -8,6 +8,7 @@ shared-packages ++ [
 
   # Development Tools
   code-cursor # Official Cursor IDE package from nixpkgs
+  (callPackage ../shared/rgitui-package.nix { }) # GPU Git client; not in nixpkgs
   # OpenCode CLI: agents.opencode from llm-agents.nix (hosts/darwin/default.nix)
 
   # === Local LLM ===

@@ -5,15 +5,42 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-echo -e "${YELLOW}Cleaning up old system generations and boot files...${NC}"
+# Shared by aarch64-linux via apps/aarch64-linux → x86_64-linux.
+arch_target() {
+  SYSTEM=$(uname -m)
+  case "$SYSTEM" in
+    x86_64)  echo "x86_64-linux" ;;
+    aarch64) echo "aarch64-linux" ;;
+    *)
+      echo -e "${RED}Unsupported architecture: $SYSTEM${NC}" >&2
+      exit 1
+      ;;
+  esac
+}
 
-# Remove generations older than 1 day (reclaim space; boot keeps 5 via configurationLimit)
+HOSTNAME=$(hostname -s 2>/dev/null || hostname)
+CONFIGS=$(nix eval --raw .#nixosConfigurations \
+  --apply 'cfgs: builtins.concatStringsSep " " (builtins.attrNames cfgs)' 2>/dev/null || true)
+
+case " $CONFIGS " in
+  *" $HOSTNAME "*) FLAKE_TARGET="$HOSTNAME" ;;
+  *) FLAKE_TARGET=$(arch_target) ;;
+esac
+
+EXTRA=""
+if [ "$FLAKE_TARGET" = "vaayu" ]; then
+  EXTRA="--impure"
+fi
+
+echo -e "${YELLOW}Cleaning up old system generations and boot files (${FLAKE_TARGET})...${NC}"
+
+# Drop generations older than 1 day. Boot copies are capped by configurationLimit
+# (vaayu/odie = 2, others = 3).
 echo -e "${YELLOW}Removing old system generations...${NC}"
 sudo nix-collect-garbage --delete-older-than 1d
 
-# Clean up boot partition by reinstalling bootloader
-echo -e "${YELLOW}Cleaning up boot partition...${NC}"
-sudo nixos-rebuild boot --flake .#aarch64-linux --install-bootloader
+echo -e "${YELLOW}Refreshing boot entries (no --install-bootloader; Asahi ESP is vendor-managed)...${NC}"
+/run/current-system/sw/bin/nixos-rebuild boot --elevate=sudo --flake ".#$FLAKE_TARGET" $EXTRA
 
 echo -e "${GREEN}Cleanup complete!${NC}"
 echo -e "${YELLOW}Boot partition status:${NC}"

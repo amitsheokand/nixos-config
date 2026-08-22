@@ -231,6 +231,14 @@ Claude Code / Codex / Grok / prime-agent are **not** installed from `llm-agents.
 | Command Code | HM `modules/shared/command-code.nix` | same |
 | Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
 
+## Git clients (all hosts)
+
+| Tool | Source | Notes |
+|------|--------|--------|
+| `gh` / `glab` | nixpkgs (`gh` also via HM `programs.gh`) | `gh auth login`, `glab auth login` |
+| GitButler | llm-agents.nix `gitbutler` + `but` (NixOS); Homebrew cask `gitbutler` (Darwin) | nixpkgs also has `gitbutler` but older |
+| rgitui | `modules/shared/rgitui-package.nix` (upstream binaries) | x86_64 Linux + Apple Silicon macOS; **no aarch64-linux release** |
+
 ## MacBook Air Asahi (`vaayu`)
 
 | Piece | Where |
@@ -267,7 +275,7 @@ nh os switch                   # local NixOS (after clone)
 nh darwin switch               # local Mac (Determinate Nix)
 ```
 
-NixOS QoL: `programs.nh` auto-cleans generations older than 7d (keep 3), systemd-boot `configurationLimit = 3` (odie = 2), `boot.tmp.cleanOnBoot`, store `min-free` auto-GC.
+NixOS QoL: `programs.nh` auto-cleans generations older than 7d (keep 3), systemd-boot `configurationLimit = 3` (odie + vaayu = 2 gens, vaayu nh keep 2 / 3d), `boot.tmp.cleanOnBoot`, store `min-free` auto-GC.
 
 ## Headroom (context compression)
 

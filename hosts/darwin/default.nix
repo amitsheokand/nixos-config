@@ -183,4 +183,11 @@ in
   };
 
   networking.hostName = "ai-mac";
+
+  # LAN names when mDNS is flaky (Asahi has advertised as vaayu-2.local).
+  networking.hosts = {
+    "192.168.1.15" = [ "nixos" "nixos.local" ];
+    "192.168.1.16" = [ "odie" "odie.local" ];
+    "192.168.1.18" = [ "vaayu" "vaayu.local" ];
+  };
 }

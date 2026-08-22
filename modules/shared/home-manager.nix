@@ -178,12 +178,23 @@ let name = "Amit Sheokand";
           insteadOf = "https://github.com/";
         };
       };
+      # glab cannot `git config --global` — HM gitconfig is a nix-store symlink.
+      credential."https://gitlab.com" = {
+        helper = "!${lib.getExe pkgs.glab} auth git-credential";
+      };
       # GPG commit signing
       commit.gpgsign = true;
       user.signingkey = "49D7A75D71371965";
       pull.rebase = true;
       rebase.autoStash = true;
     };
+  };
+
+  # GitHub / GitLab CLIs for `gh auth login` / `glab auth login`.
+  # glab's HM module was removed (can't mix declarative + stateful auth).
+  gh = {
+    enable = true;
+    gitCredentialHelper.enable = true;
   };
 
   vim = {
@@ -365,6 +376,7 @@ let name = "Amit Sheokand";
       "nixos" = { hostname = "nixos.local"; user = "amitsheokand"; };
       "odie" = { hostname = "odie.local"; user = "amitsheokand"; };
       "vaayu" = { hostname = "vaayu.local"; user = "amitsheokand"; };
+      "vaayu-2" = { hostname = "vaayu-2.local"; user = "amitsheokand"; };
       "ai-mac" = { hostname = "ai-mac.local"; user = "amitsheokand"; };
     };
     settings."*" = {

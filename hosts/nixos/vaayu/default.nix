@@ -15,8 +15,14 @@
   nixpkgs.hostPlatform = lib.mkForce "aarch64-linux";
 
   # ESP is managed by Asahi m1n1/U-Boot — never touch EFI variables.
+  # 499 MiB ESP: keep 2 kernels (same as odie).
   boot.loader.efi.canTouchEfiVariables = lib.mkForce false;
-  boot.loader.systemd-boot.configurationLimit = lib.mkForce 3;
+  boot.loader.systemd-boot.configurationLimit = lib.mkForce 2;
+
+  # Tight root + tiny ESP: GC sooner than the shared 3 gens / 7d.
+  programs.nh.clean.extraArgs = lib.mkForce "--keep-since 3d --keep 2";
+  nix.settings.min-free = lib.mkForce (4 * 1024 * 1024 * 1024);
+  nix.settings.max-free = lib.mkForce (8 * 1024 * 1024 * 1024);
 
   # No 32-bit userspace on aarch64 Asahi.
   hardware.graphics.enable32Bit = lib.mkForce false;
@@ -34,6 +40,18 @@
     networkmanager.enable = true;
     networkmanager.wifi.backend = "iwd";
     firewall.enable = true;
+  };
+
+  # iwd + Avahi on lo+wlan0 self-conflicts and republishes as vaayu-2.local,
+  # so `ssh vaayu` from the Mac fails DNS. Publish only on Wi-Fi, after the
+  # link is up.
+  services.avahi = {
+    hostName = "vaayu";
+    allowInterfaces = [ "wlan0" ];
+  };
+  systemd.services.avahi-daemon = {
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
   };
 
   time.timeZone = "Asia/Kolkata";
@@ -55,12 +73,16 @@
 
   users.users.${user}.extraGroups = [ "video" "render" ];
 
+  # LAN send + firewall for LocalSend discovery/transfer.
+  programs.localsend.enable = true;
+
   # Minimal extras (core + pi/opencode from llm-agents in common.nix; Cursor from flake).
   environment.systemPackages = with pkgs; [
     firefox
     curl
     wget
     htop
+    zed-editor
   ];
 
   # Trim GNOME bloat — keep Files, Settings, Terminal, browser, Cursor.

@@ -178,18 +178,26 @@ in
   # Cursor is pkgs.code-cursor / cask. Claude / Codex / Grok / prime-agent omitted.
   # Command Code (npm `cmd`) via HM modules/shared/command-code.nix.
   # OpenCode GUI: pkgs.opencode-desktop (CLI comes from agents.opencode).
+  # Git: gh/glab (nixpkgs); GitButler GUI+CLI from llm-agents.nix (newer than nixpkgs).
+  # rgitui: not in nixpkgs/llm-agents — official x86_64 binary (no aarch64-linux release).
   environment.systemPackages = with pkgs; [
     vim
     git
+    gh
+    glab
     agents.pi
     agents.opencode
     agents.hermes-agent
     agents.hermes-desktop
+    agents.gitbutler
+    agents.but
     opencode-desktop
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
     lm_sensors       # Hardware monitoring sensors
-  ];
+  ] ++ lib.optional pkgs.stdenv.hostPlatform.isx86_64 (
+    pkgs.callPackage ../shared/rgitui-package.nix { }
+  );
 
   fonts.packages = import ../shared/fonts.nix { inherit pkgs; };
 
