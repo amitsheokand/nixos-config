@@ -213,8 +213,9 @@ Current user: `amitsheokand`
 
 ## Agent CLIs (base install)
 
-Shared NixOS (`common.nix`) and Darwin ship **`pi`**, **OpenCode CLI**, and
-**Hermes Agent** from [`llm-agents.nix`](https://github.com/numtide/llm-agents.nix),
+Shared NixOS (`common.nix`) and Darwin ship **`pi`**, **OpenCode CLI**,
+**Hermes Agent**, and **Hermes Desktop** from
+[`llm-agents.nix`](https://github.com/numtide/llm-agents.nix),
 plus **Command Code** (`cmd` via npm → `~/.local`).
 **Cursor** comes from `pkgs.code-cursor` (NixOS) or Homebrew/nix on Darwin.
 **OpenCode GUI** is separate: `pkgs.opencode-desktop` (NixOS) / cask `opencode-desktop` (Darwin).
@@ -226,6 +227,7 @@ Claude Code / Codex / Grok / prime-agent are **not** installed from `llm-agents.
 | OpenCode CLI | `agents.opencode` (llm-agents.nix) | same |
 | OpenCode GUI | `pkgs.opencode-desktop` | Homebrew cask `opencode-desktop` |
 | Hermes Agent | `agents.hermes-agent` (`hermes`) | same |
+| Hermes Desktop | `agents.hermes-desktop` | same |
 | Command Code | HM `modules/shared/command-code.nix` | same |
 | Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
 

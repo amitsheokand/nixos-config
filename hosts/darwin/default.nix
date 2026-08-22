@@ -120,6 +120,7 @@ in
       agents.pi
       agents.opencode
       agents.hermes-agent
+      agents.hermes-desktop
       pkgs.nh
     ];
 
