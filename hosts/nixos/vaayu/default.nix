@@ -25,6 +25,8 @@
   # US Mac keyboard: unswap ` / ~
   boot.extraModprobeConfig = ''
     options hid_apple iso_layout=0
+    # NT-personality sync engine: the aikya sync consumer needs /dev/ntsync
+    modprobe ntsync
   '';
 
   networking = {
