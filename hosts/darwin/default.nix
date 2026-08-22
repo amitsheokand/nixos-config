@@ -112,13 +112,14 @@ in
   # Inbound SSH on the LAN (System Settings → Sharing → Remote Login equivalent).
   services.openssh.enable = true;
 
-  # Agent CLIs: pi + OpenCode from llm-agents.nix (Cursor via Homebrew/nixpkgs).
+  # Agent CLIs from llm-agents.nix: pi + OpenCode + Hermes (Cursor via Homebrew/nixpkgs).
   # Claude/Codex/Grok/prime-agent omitted. OpenCode GUI = cask opencode-desktop.
   environment.systemPackages =
     (import ../../modules/darwin/packages.nix { inherit pkgs; })
     ++ [
       agents.pi
       agents.opencode
+      agents.hermes-agent
       pkgs.nh
     ];
 

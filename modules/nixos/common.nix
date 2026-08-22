@@ -174,8 +174,8 @@ in
   };
 
   # Core packages present on every host (hosts add their own extras).
-  # Agent CLIs: pi + OpenCode from llm-agents.nix. Cursor is pkgs.code-cursor / cask.
-  # Claude / Codex / Grok / prime-agent intentionally omitted.
+  # Agent CLIs from llm-agents.nix: pi + OpenCode + Hermes.
+  # Cursor is pkgs.code-cursor / cask. Claude / Codex / Grok / prime-agent omitted.
   # Command Code (npm `cmd`) via HM modules/shared/command-code.nix.
   # OpenCode GUI: pkgs.opencode-desktop (CLI comes from agents.opencode).
   environment.systemPackages = with pkgs; [
@@ -183,6 +183,7 @@ in
     git
     agents.pi
     agents.opencode
+    agents.hermes-agent
     opencode-desktop
     wl-clipboard     # Wayland clipboard utilities
     wayland-utils    # Wayland utilities
