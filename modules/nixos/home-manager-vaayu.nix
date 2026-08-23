@@ -1,5 +1,5 @@
 # Slim Home Manager for Asahi MacBook Air (vaayu).
-# Shell/git/tmux + Headroom + Pi (OpenRouter). No local qwen38 / ROCm / ai-tools.
+# Shell/git/tmux + Headroom + Pi (OpenRouter). No ROCm / ai-tools.
 { config, pkgs, lib, inputs, ... }:
 
 let

@@ -12,7 +12,7 @@
 # Notes for this host (GNOME on Wayland + AMD iGPU display):
 #   - capSysAdmin = true grants CAP_SYS_ADMIN, required for DRM/KMS screen
 #     capture under Wayland (GNOME doesn't expose wlroots capture).
-#   - VA-API encoding is pinned to the integrated GPU so the RX 6700 XT VRAM
+#   - VA-API encoding is pinned to the integrated GPU so the R9700 VRAM
 #     remains available for local AI workloads.
 #   - networking.firewall is disabled on this host, so openFirewall is a no-op
 #     but kept for correctness if the firewall is ever turned on.

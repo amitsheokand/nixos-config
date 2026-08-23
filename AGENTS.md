@@ -32,7 +32,7 @@ flake.nix (entry point)
     │   ├── hosts/nixos/odie/             (x86_64 laptop)
     │   ├── hosts/nixos/vaayu/            (M1 Air Asahi, aarch64)
     │   └── modules/nixos/
-    │       ├── home-manager.nix          (desktop/odie GNOME + local qwen38)
+    │       ├── home-manager.nix          (desktop/odie GNOME)
     │       ├── home-manager-vaayu.nix    (Air: slim HM + Pi/OpenRouter)
     │       ├── packages.nix              (nixos-specific packages)
     │       └── secrets.nix               (agenix secrets)
@@ -76,7 +76,7 @@ flake.nix (entry point)
 | File | Purpose | Platform |
 |------|---------|----------|
 | `hosts/darwin/default.nix` | macOS system settings (keyboard, dock position, etc.) | macOS |
-| `hosts/nixos/default.nix` | Desktop PC (AMD, Sunshine, qwen38) | NixOS |
+| `hosts/nixos/default.nix` | Desktop PC (AMD, Sunshine) | NixOS |
 | `hosts/nixos/odie/` | x86_64 laptop | NixOS |
 | `hosts/nixos/vaayu/` | MacBook Air M1 Asahi (minimal GNOME) | NixOS aarch64 |
 
@@ -317,7 +317,7 @@ normal `grok` session — that replaces the cloud catalog).
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
 | Mac (`ai-mac`) | `qwen35` | provider `mlx-local`, name `qwen35` (API id is the MLX path) | path under `~/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit` |
-| PC (`nixos`) | `qwen38` | provider `qwen38-local`, id `qwen38` | `qwen38` |
+| PC (`nixos`) | — | same Pi packages/UI; local LLM service pending hipfire NixOS module | — |
 | Laptop (`odie`) | — | same Pi packages/UI; use Cursor via `/model` (no local GPU server) | — |
 | Air (`vaayu`) | — | OpenRouter ox-alpha via Pi extension (no local GPU) | — |
 
@@ -326,7 +326,7 @@ normal `grok` session — that replaces the cloud catalog).
 | Piece | Where |
 |-------|--------|
 | Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, …) |
-| Local model defaults | host HM (`qwen38` on NixOS, MLX path on Darwin) |
+| Local model defaults | host HM (MLX path on Darwin) |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys.
@@ -335,51 +335,6 @@ Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `qwen35` — mlx-vl
 
 `agent` on PATH is Cursor CLI (`~/.local/bin/agent`). Grok TUI is `grok` only
 (the grok package `agent` alias is stripped).
-
-## Local Qwen3.8 helper (desktop 6700 XT)
-
-Hosted only on the PC (`192.168.1.15`, hostname `nixos`). Display/Sunshine
-stay on the iGPU so the dGPU has the full 12 GB.
-
-| Piece | Where |
-|-------|--------|
-| Module | `modules/nixos/qwen38.nix` (desktop host only) |
-| Engine | official llama.cpp Vulkan `b10488` |
-| Weights | `default`: Unsloth V3 `UD-IQ2_S` (~8.4 GB, **131072** ctx); `q2`: `UD-Q2_K_XL`; `unc`: 0bserverx `RVN-Q2_K-mtp` (~11.2 GB) |
-| API | `http://192.168.1.15:8080/v1` (`model` = `qwen38`) |
-| Grok | `[model.qwen38]` in `/etc/grok/managed_config.toml` |
-
-After `nix run .#build-switch` on the PC:
-
-```sh
-qwen38-download default   # V3 IQ2_S helper (~128K)
-qwen38-download q2        # optional higher-quality Q2
-qwen38-download unc
-# active variant is QWEN38_VARIANT in modules/nixos/qwen38.nix (default = IQ2 helper)
-systemctl --user restart qwen38-server
-systemctl --user status qwen38-server
-curl -s http://127.0.0.1:8080/v1/models
-```
-
-Main Grok session / Cursor CLI / Cursor IDE stay on cloud models. The local
-model is a helper via OpenAI-compatible `:8080` (`grok` `/model qwen38`,
-`codex-local`, `ai`, Pi, **Continue** panel).
-
-### Cursor + local (alongside)
-
-Cursor **cannot** mix subscription models and a local OpenAI endpoint in one
-picker: Override Base URL is global, and Cursor’s backend cannot reach
-`localhost` without a public HTTPS tunnel.
-
-| Client | Model source |
-|--------|----------------|
-| Cursor Agent / CLI | Cloud (Grok / Composer / Claude) — leave Override **OFF** |
-| Continue (sidebar) | Local `qwen38` via `~/.continue/config.yaml` → `:8080` |
-| Grok / Pi / `codex-local` | Local `qwen38` on `:8080` |
-
-```sh
-cursor-local-help   # print status + optional tunnel steps
-```
 
 ## Cross-Compilation to Windows
 

@@ -65,7 +65,7 @@ shared-packages ++ [
   vulkan-tools      # Vulkan utilities
   amdgpu_top        # Per-process VRAM/GTT usage for AMD GPUs
   
-  # === ROCm for AMD GPU compute (RX 6700 XT / gfx1031) ===
+  # === ROCm for AMD GPU compute (Radeon AI PRO R9700 / gfx1201) ===
   rocmPackages.rocm-smi       # GPU monitoring
   rocmPackages.rocminfo       # ROCm device info
   rocmPackages.clr            # ROCm runtime (includes HIP)

@@ -236,51 +236,6 @@ Settings → Models → OpenAI API Key → Advanced → Override Base URL →
 **Claude / Codex** already route via `headroom init -g` (`ANTHROPIC_BASE_URL` /
 Codex `model_provider = "headroom"`). They need the proxy running.
 
-## Local Qwen3.8 helper (desktop 6700 XT)
-
-Hosted only on the PC (`192.168.1.15`, hostname `nixos`). Display/Sunshine
-stay on the iGPU so the dGPU has the full 12 GB.
-
-| Piece | Where |
-|-------|--------|
-| Module | `modules/nixos/qwen38.nix` (desktop host only) |
-| Engine | official llama.cpp Vulkan `b10488` |
-| Weights | `default`: Unsloth V3 `UD-IQ2_S` (~8.4 GB, **131072** ctx); `q2`: `UD-Q2_K_XL`; `unc`: 0bserverx `RVN-Q2_K-mtp` (~11.2 GB) |
-| API | `http://192.168.1.15:8080/v1` (`model` = `qwen38`) |
-| Grok | `[model.qwen38]` + explore / local-helper style use |
-
-After `nix run .#build-switch` on the PC:
-
-```sh
-qwen38-download default   # V3 IQ2_S helper (~128K)
-qwen38-download q2        # optional higher-quality Q2
-qwen38-download unc
-# active variant is QWEN38_VARIANT in modules/nixos/qwen38.nix (default = IQ2 helper)
-systemctl --user restart qwen38-server
-systemctl --user status qwen38-server
-curl -s http://127.0.0.1:8080/v1/models
-```
-
-Main Grok session / Cursor CLI / Cursor IDE stay on cloud models. The local
-model is a helper via OpenAI-compatible `:8080` (`grok` `/model qwen38`,
-`codex-local`, `ai`, Pi, **Continue** panel).
-
-### Cursor + local (alongside)
-
-Cursor **cannot** mix subscription models and a local OpenAI endpoint in one
-picker: Override Base URL is global, and Cursor’s backend cannot reach
-`localhost` without a public HTTPS tunnel.
-
-| Client | Model source |
-|--------|----------------|
-| Cursor Agent / CLI | Cloud (Grok / Composer / Claude) — leave Override **OFF** |
-| Continue (sidebar) | Local `qwen38` via `~/.continue/config.yaml` → `:8080` |
-| Grok / Pi / `codex-local` | Local `qwen38` on `:8080` |
-
-```sh
-cursor-local-help   # print status + optional tunnel steps
-```
-
 ## Cross-Compilation to Windows
 
 This config includes `cargo-xwin` for cross-compiling Rust to Windows MSVC target.

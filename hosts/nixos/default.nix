@@ -14,8 +14,6 @@
     ../../modules/nixos/rustdesk-server.nix
     # Sunshine game-stream host (stream this desktop to Moonlight clients)
     ../../modules/nixos/sunshine.nix
-    # Qwen3.8-27B helper (Vulkan llama-server on the 6700 XT)
-    ../../modules/nixos/qwen38.nix
   ];
 
   # Boot configuration (systemd-boot loader lives in common.nix).
@@ -24,9 +22,14 @@
     # in nixpkgs binary cache so no local kernel build required.
     kernelPackages = pkgs.linuxPackages_zen;
 
-    # Headless dGPU (RX 6700 XT, Navi 22): pin at D0, BACO runtime-PM
-    # wedges the chip and takes the display path down with it.
-    kernelParams = [ "amdgpu.runpm=0" ];
+    # Headless dGPU (Radeon AI PRO R9700, Navi 48 / gfx1201): pin at D0,
+    # BACO runtime-PM wedges the chip and takes the display path down with it.
+    kernelParams = [
+      "amdgpu.runpm=0"                 # prevent BACO runtime-PM wedge
+      "pcie_aspm.policy=performance"    # remove PCIe L1 exit latency (dense decode)
+      "amdgpu.ras_enable=0"            # disable GECC/RAS overhead
+      "amdgpu.ppfeaturemask=0xffffffff" # full OverDrive/DPM control
+    ];
 
     initrd.availableKernelModules = [ "nvme" "xhci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" ];
     initrd.kernelModules        = [];
@@ -73,7 +76,7 @@
     { device = "/dev/disk/by-label/swap"; }
   ];
 
-  # GPU: AMD RX 6700 XT — base graphics enabled in common.nix; add ROCm OpenCL.
+  # GPU: AMD Radeon AI PRO R9700 (gfx1201) — base graphics enabled in common.nix; add ROCm OpenCL.
   hardware.graphics.extraPackages = with pkgs; [
     rocmPackages.clr.icd  # OpenCL ICD for ROCm
   ];

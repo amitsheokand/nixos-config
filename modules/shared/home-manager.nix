@@ -150,8 +150,8 @@ let name = "Amit Sheokand";
       ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
         alias open="xdg-open"
         
-        # === ROCm for RX 6700 XT (gfx1031 → compatible with gfx1030) ===
-        export HSA_OVERRIDE_GFX_VERSION=10.3.0
+        # === ROCm for Radeon AI PRO R9700 (gfx1201 / RDNA4) ===
+        export HSA_OVERRIDE_GFX_VERSION=12.0.1
       ''}
     '';
   };

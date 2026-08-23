@@ -10,22 +10,6 @@ let
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
-    localSettings = {
-      model = "qwen38";
-      defaultProvider = "qwen38-local";
-      defaultModel = "qwen38";
-    };
-    localModels = {
-      providerId = "qwen38-local";
-      apiModel = "qwen38";
-      displayName = "qwen38";
-      contextWindow = 131072;
-      maxTokens = 8192;
-    };
-  };
-  continueConfig = import ../shared/continue-local.nix {
-    contextWindow = 131072;
-    maxTokens = 8192;
   };
 in
 {
@@ -34,12 +18,8 @@ in
     username = "${user}";
     homeDirectory = "/home/${user}";
     sessionVariables = {
-      AI_BASE_URL = "http://127.0.0.1:8080/v1";
-      AI_MODEL = "qwen38";
       AI_CONTEXT_WINDOW = "131072";
       AI_MAX_TOKENS = "8192";
-      GROK_LOCAL_MODEL = "qwen38";
-      GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
     };
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
@@ -48,26 +28,6 @@ in
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
-      // {
-        ".codex/mlx-local.config.toml" = {
-          text = ''
-            model = "qwen38"
-            model_provider = "qwen38-local"
-            model_context_window = 131072
-
-            [model_providers.qwen38-local]
-            name = "Qwen3.8 27B (RX 6700 XT)"
-            base_url = "http://127.0.0.1:8080/v1"
-            wire_api = "responses"
-            requires_openai_auth = false
-          '';
-        };
-        # Continue panel uses local qwen38; Cursor Agent keeps the cloud catalog.
-        ".continue/config.yaml" = {
-          text = continueConfig;
-          force = true;
-        };
-      }
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
