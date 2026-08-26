@@ -142,8 +142,8 @@
                   useGlobalPkgs = true;
                   useUserPackages = true;
                   backupFileExtension = "hm-backup";
-                  users.${user} = { config, pkgs, lib, ... }:
-                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
+                  users.${user} = { config, pkgs, lib, osConfig, ... }:
+                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs osConfig; };
                 };
               }
               # Cursor IDE from nixpkgs
@@ -170,8 +170,8 @@
                   useGlobalPkgs = true;
                   useUserPackages = true;
                   backupFileExtension = "hm-backup";
-                  users.${user} = { config, pkgs, lib, ... }:
-                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
+                  users.${user} = { config, pkgs, lib, osConfig, ... }:
+                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs osConfig; };
                 };
               }
               # Cursor IDE from nixpkgs
@@ -194,8 +194,8 @@
                   useGlobalPkgs = true;
                   useUserPackages = true;
                   backupFileExtension = "hm-backup";
-                  users.${user} = { config, pkgs, lib, ... }:
-                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs; };
+                  users.${user} = { config, pkgs, lib, osConfig, ... }:
+                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs osConfig; };
                 };
               }
               # Cursor IDE from nixpkgs

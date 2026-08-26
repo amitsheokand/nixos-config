@@ -317,21 +317,31 @@ normal `grok` session — that replaces the cloud catalog).
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
 | Mac (`ai-mac`) | `qwen35` | provider `mlx-local`, name `qwen35` (API id is the MLX path) | path under `~/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit` |
-| PC (`nixos`) | — | same Pi packages/UI; local LLM service pending hipfire NixOS module | — |
+| PC (`nixos`) | `forge` (default), `anvil`, `feather` | provider `hipfire`, names Forge / Anvil / Feather | profile ids at `http://127.0.0.1:8080/v1` (proxy → hipfire `:11435`). Backend checkpoint is `qwen3.8:27b` in `modules/shared/agent-profiles.nix` |
 | Laptop (`odie`) | — | same Pi packages/UI; use Cursor via `/model` (no local GPU server) | — |
 | Air (`vaayu`) | — | OpenRouter ox-alpha via Pi extension (no local GPU) | — |
+
+PC local profiles (names stay if the checkpoint changes):
+
+| Profile | Cursor analogue | Thinking | Effort | Use |
+|---------|-----------------|----------|--------|-----|
+| `feather` | — | off | DFlash 2 (greedy) | fastest subagent, 64k context |
+| `forge` | Composer | on | medium (Shift+Tab: low / xhigh) | default long sessions, moderate speed, quick research |
+| `anvil` | Grok | on | xhigh | hard / slow |
+
+Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites `~/.hipfire/config.toml`. The desktop uses `modules/shared/hipfire-local.nix` (existing cargo binaries + user config). After `build-switch`: `systemctl --user start hipfire-serve hipfire-profile-proxy` (WantedBy default.target). Hermes gets `/model forge`, `/model anvil`, and `/model feather` aliases; the Nous default provider is unchanged. Cursor Agent stays on cloud Grok/Composer; Continue / `cursor-local-help` use the named profiles.
 
 ### Shared Pi agent (Mac / PC / odie / vaayu)
 
 | Piece | Where |
 |-------|--------|
 | Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, …) |
-| Local model defaults | host HM (MLX path on Darwin) |
+| Local model defaults | host HM (MLX path on Darwin; Forge/Anvil/Feather on PC) |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys.
 
-Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `qwen35` — mlx-vlm treats unknown ids as a new load and can crash. Grok can map picker id → API id; Pi cannot.
+Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `qwen35` — mlx-vlm treats unknown ids as a new load and can crash. On the PC, Pi `id` is the profile name (`forge` / `anvil` / `feather`); the proxy rewrites it to the hipfire tag. Grok can map picker id → API id without a proxy.
 
 `agent` on PATH is Cursor CLI (`~/.local/bin/agent`). Grok TUI is `grok` only
 (the grok package `agent` alias is stripped).

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Explain how to use local qwen38 with Cursor (alongside cloud models).
+# Explain how to use local Forge/Anvil (or Darwin MLX) with Cursor.
 set -euo pipefail
 
 base="${AI_BASE_URL:-http://127.0.0.1:8080/v1}"
 base="${base%/}"
+model="${AI_MODEL:-forge}"
 
 cat <<EOF
 Cursor cannot keep cloud models (Grok / Composer / Claude) and a local
@@ -12,21 +13,28 @@ global, and Cursor's backend cannot reach localhost without a public
 HTTPS tunnel.
 
 Recommended (alongside — already wired):
-  • Cursor Agent / CLI  → cloud models (leave Override OFF)
-  • Continue panel      → local qwen38 at ${base}
-  • Grok / Pi / codex-local → same ${base}
+  • Cursor Agent / CLI  → cloud Grok (complex) / Composer (normal)
+  • Continue panel      → local ${model} at ${base}
+  • Pi / Hermes / Grok TUI / codex-local → same ${base}
 
-Open Continue in Cursor (sidebar) and pick model "qwen38".
+Named profiles (stable; backend checkpoint can change later):
+  • feather — DFlash 2, thinking off, greedy, 64k (fastest subagent)
+  • forge   — thinking on, medium effort, 256k (daily / long sessions)
+  • anvil   — thinking on, xhigh effort, 256k (hard / slow)
+  Fast research with thinking: stay on forge and drop effort to low (Shift+Tab in Pi).
 
-Optional (Cursor Agent ON qwen38 — cloud picker unavailable while Override is ON):
+Open Continue in Cursor (sidebar) and pick Feather / Forge / Anvil.
+
+Optional (Cursor Agent ON the local endpoint — cloud picker unavailable
+while Override is ON):
   1. Expose ${base} via Cloudflare Tunnel / ngrok HTTPS
   2. Settings → Models → OpenAI API Key = local
   3. Override OpenAI Base URL = https://<tunnel>/v1
-  4. Add custom model id: qwen38
-  5. Turn Override OFF before returning to Grok/Composer/Claude
+  4. Add custom model ids: feather, forge, and anvil
+  5. Turn Override OFF before returning to cloud Grok/Composer/Claude
 
 Health:
-  curl -s ${base}/models | jq '.data[0].id, .data[0].meta.n_ctx'
+  curl -s ${base}/models | jq '.data[].id'
 EOF
 
 if curl -fsS --max-time 2 "${base}/models" >/dev/null 2>&1; then

@@ -1,5 +1,19 @@
 { config, lib, pkgs, modulesPath, user, ... }:
 
+let
+  profiles = import ../../modules/shared/agent-profiles.nix;
+  grokProfile = name:
+    let profile = profiles.profiles.${name};
+    in import ../../modules/shared/grok-local-model.nix {
+      id = name;
+      apiModel = name;
+      displayName = profile.displayName;
+      description = profile.description;
+      contextWindow = profile.contextWindow or profiles.contextWindow;
+      maxTokens = profile.maxTokens or profiles.maxTokens;
+      baseUrl = "http://127.0.0.1:${toString profiles.listenPort}/v1";
+    };
+in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
@@ -106,6 +120,11 @@
 
   time.timeZone = "Asia/Kolkata";
 
+  # Grok /model picker: keep cloud grok-* and add Forge/Anvil (hipfire profiles).
+  # Do not set GROK_MODELS_BASE_URL — that replaces the cloud catalog.
+  environment.etc."grok/managed_config.toml".text =
+    grokProfile "forge" + grokProfile "anvil";
+
   # Desktop GPU uses amdgpu; GNOME fractional-scaling overrides.
   # https://discourse.nixos.org/t/how-to-set-fractional-scaling-via-nix-configuration-for-gnome-wayland/56774
   services.xserver.videoDrivers = ["amdgpu"];
@@ -117,8 +136,13 @@
     '';
   };
 
-  # Ollama: local LLM server (API at http://localhost:11434).
-  services.ollama.enable = true;
+  # Hipfire (Forge/Anvil) is the local LLM. Drop Ollama and its model store.
+  services.ollama.enable = false;
+  system.activationScripts.removeOllama = {
+    text = ''
+      rm -rf /var/lib/private/ollama /var/lib/ollama
+    '';
+  };
 
   # Host-only packages (core set in common.nix).
   environment.systemPackages = with pkgs; [

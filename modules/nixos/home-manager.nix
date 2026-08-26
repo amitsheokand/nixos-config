@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, osConfig ? {}, ... }:
 
 let
   user = "amitsheokand";
@@ -7,9 +7,15 @@ let
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+  hipfireEnabled = (osConfig.networking.hostName or "") == "nixos";
+  hipfireLocal = if hipfireEnabled
+    then import ../shared/hipfire-local.nix { inherit pkgs lib user; }
+    else null;
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
+    localSettings = if hipfireLocal == null then {} else hipfireLocal.piLocalSettings;
+    localModels = if hipfireLocal == null then null else hipfireLocal.piLocalModels;
   };
 in
 {
@@ -20,25 +26,30 @@ in
     sessionVariables = {
       AI_CONTEXT_WINDOW = "131072";
       AI_MAX_TOKENS = "8192";
-    };
+    } // (if hipfireLocal == null then {} else hipfireLocal.sessionVariables);
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
-      ++ (piAgent.home.packages or []);
+      ++ (piAgent.home.packages or [])
+      ++ (if hipfireLocal == null then [] else hipfireLocal.packages);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
-      // piAgent.activation;
+      // piAgent.activation
+      // (if hipfireLocal == null then {} else {
+        mergeHermesHipfireAliases = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.hermesMergeScript;
+      });
     sessionPath = (commandCode.home.sessionPath or []);
     stateVersion = "25.11";
   };
 
   programs = shared-programs // { gpg.enable = true; };
 
-  systemd.user.services = headroom.systemd.user.services or {};
+  systemd.user.services = (headroom.systemd.user.services or {})
+    // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
 
   # GPG agent with pinentry for passphrase prompts
   services.gpg-agent = {
