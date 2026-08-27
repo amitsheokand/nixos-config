@@ -54,6 +54,7 @@ with pkgs; [
   lldb                # Debugger (useful for Rust)
   uv                  # Python package/tool installer (Headroom CLI via `uv tool`)
   python313           # Interpreter for Headroom / uv tool installs
+  (python313Packages.toPythonApplication python313Packages.huggingface-hub) # `hf` / `huggingface-cli`
 
   # === Build Tools ===
   cmake               # Cross-platform build system
