@@ -1,0 +1,18 @@
+{
+  "memoryMode": "policy-only",
+  "memoryPolicyStyle": "compact",
+  "reviewEnabled": false,
+  "flushOnCompact": true,
+  "flushOnShutdown": true,
+  "flushMinTurns": 6,
+  "llmModelOverride": "openrouter/stealth/ox-alpha",
+  "llmThinkingOverride": "low",
+  "memoryOverflowStrategy": "fifo-evict",
+  "autoConsolidate": false,
+  "correctionDetection": false,
+  "failureInjectionEnabled": false,
+  "standingInstructionsEnabled": true,
+  "sessionSearch": {
+    "variant": "anchors"
+  }
+}

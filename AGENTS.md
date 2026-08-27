@@ -346,6 +346,13 @@ Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites 
 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` and `/async-compact-now` still work.
 
+**Session knowledge (do not stuff the prompt):**
+- hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via OpenRouter (`stealth/ox-alpha`) so it does not steal the R9700 slot.
+- Rewind with `/tree`, do not resume a long leaf. New chat per task.
+- `/compact` before huge tool dumps. Quote last 20 log lines, not the file.
+- Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that).
+- One GPU client at a time. Headroom in front of `:8080` is optional later, not on this path.
+
 Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `qwen35` — mlx-vlm treats unknown ids as a new load and can crash. Keep id = filesystem path, picker name = `qwen35`. Mac MLX is capped (16k context / 2k gen, thinking off) so Pi’s ~5k system prompt does not stall prefill. `/model forge` on Mac/odie/vaayu uses the desktop catalog at `http://nixos.local:8080/v1`. On the PC, Pi `id` is the profile name (`forge` / `anvil` / `feather`); the proxy rewrites it to the hipfire tag. Grok can map picker id → API id without a proxy.
 
 `agent` on PATH is Cursor CLI (`~/.local/bin/agent`). Grok TUI is `grok` only

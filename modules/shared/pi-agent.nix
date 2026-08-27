@@ -46,6 +46,8 @@ let
   } // localSettings;
 
   settingsFile = pkgs.writeText "pi-shared-settings.json" (builtins.toJSON sharedSettings);
+  hermesMemoryConfig = ./pi-hermes-memory-config.json;
+  standingInstructions = ./pi-standing.md;
 
   modelsFile =
     if localModels == null then null
@@ -129,6 +131,17 @@ in
       syncPiExtensions = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''
         mkdir -p "$HOME/.pi/agent/extensions"
         ${syncPiExtensions}
+      '';
+
+      # policy-only hermes: compact policy, no MEMORY.md injection, flush via
+      # OpenRouter so compact does not spawn a second job on the desktop GPU.
+      syncHermesMemory = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''
+        mkdir -p "$HOME/.pi/agent/pi-hermes-memory"
+        install -m 0600 ${hermesMemoryConfig} "$HOME/.pi/agent/hermes-memory-config.json"
+        standing="$HOME/.pi/agent/pi-hermes-memory/STANDING.md"
+        if [[ ! -f "$standing" ]]; then
+          install -m 0600 ${standingInstructions} "$standing"
+        fi
       '';
 
       # Cursor CLI wraps `git commit` and appends Co-authored-by when this is
