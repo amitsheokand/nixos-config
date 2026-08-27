@@ -36,6 +36,10 @@ def extra_body_from_lane(lane: dict) -> dict:
     extra = {}
     if "reasoning_effort" in defaults:
         extra["reasoning_effort"] = defaults["reasoning_effort"]
+    if "max_think_tokens" in defaults:
+        extra["max_think_tokens"] = defaults["max_think_tokens"]
+    if "max_tokens" in defaults:
+        extra["max_tokens"] = defaults["max_tokens"]
     if "chat_template_kwargs" in defaults:
         extra["chat_template_kwargs"] = defaults["chat_template_kwargs"]
     if "temperature" in defaults:

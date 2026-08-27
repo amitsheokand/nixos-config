@@ -14,6 +14,9 @@ rec {
   backendModel = backends.${defaultBackend}.tag;
   hipfirePort = 11435;
   listenPort = 8080;
+  # Bind the catalog proxy on all interfaces so LAN clients can use
+  # http://nixos.local:8080/v1. hipfire :11435 stays loopback-only via the proxy.
+  listenHost = "0.0.0.0";
   contextWindow = 262144;
   maxTokens = 32768;
 
@@ -84,14 +87,26 @@ rec {
     };
     feather = {
       displayName = "Feather";
-      description = "Fast lane: thinking off, greedy. DFlash when the backend has a draft; otherwise AR.";
-      thinking = false;
-      reasoning = false;
+      description = "Fast lane: thinking on, low effort, 512-token think cap, greedy. DFlash when the backend has a draft; otherwise MTP/AR.";
+      thinking = true;
+      effort = "low";
+      # Explicit cap: Qwen3.8 "low" is a prompt instruction, not a token budget.
+      maxThinkTokens = 512;
+      preserveThinking = false;
       contextWindow = 65536;
-      maxTokens = 8192;
+      maxTokens = 16384;
       temperature = 0;
       presencePenalty = 0;
       speculation = "dflash-if-capable";
+      thinkingLevelMap = {
+        off = null;
+        minimal = "low";
+        low = "low";
+        medium = "low";
+        high = "low";
+        xhigh = "low";
+        max = "low";
+      };
     };
   };
 }

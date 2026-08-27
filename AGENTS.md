@@ -317,7 +317,7 @@ normal `grok` session — that replaces the cloud catalog).
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
 | Mac (`ai-mac`) | `qwen35` | provider `mlx-local`, name `qwen35` (API id is the MLX path) | path under `~/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit` |
-| PC (`nixos`) | `forge` (default), `anvil`, `feather`, plus `ornith` / `qwen38` | provider `hipfire`, names Forge / Anvil / Feather / Ornith / Qwen 3.8 | lane and backend ids at `http://127.0.0.1:8080/v1` (proxy → hipfire `:11435`). Default backend is Ornith (`ornith-1.5:35b-a3b`); Qwen 3.8 is an explicit option. Catalog: `modules/shared/agent-profiles.nix` |
+| PC (`nixos`) | `forge` (default), `anvil`, `feather`, plus `ornith` / `qwen38` | provider `hipfire`, names Forge / Anvil / Feather / Ornith / Qwen 3.8 | lane and backend ids at `http://127.0.0.1:8080/v1` locally, or `http://nixos.local:8080/v1` on the LAN (proxy → hipfire `:11435`). Default backend is Ornith (`ornith-1.5:35b-a3b`); Qwen 3.8 is an explicit option. Catalog: `modules/shared/agent-profiles.nix` |
 | Laptop (`odie`) | — | same Pi packages/UI; use Cursor via `/model` (no local GPU server) | — |
 | Air (`vaayu`) | — | OpenRouter ox-alpha via Pi extension (no local GPU) | — |
 
@@ -325,7 +325,7 @@ PC local profiles (names stay if the checkpoint changes):
 
 | Profile | Cursor analogue | Thinking | Effort | Use |
 |---------|-----------------|----------|--------|-----|
-| `feather` | — | off | DFlash if the backend has a draft, else MTP/AR | fastest subagent, 64k context |
+| `feather` | — | on (low, 512-token cap) | greedy; DFlash if the backend has a draft, else MTP | fastest subagent, 64k context, 16k gen |
 | `forge` | Composer | on | medium (Shift+Tab: low / xhigh) | default long sessions, moderate speed, quick research |
 | `anvil` | Grok | on | xhigh | hard / slow |
 | `ornith` / `qwen38` | — | raw backend | none injected | explicit weight selection (swaps GPU) |

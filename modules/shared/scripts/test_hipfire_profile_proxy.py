@@ -46,7 +46,16 @@ CFG = {
         },
         "feather": {
             "display_name": "Feather",
-            "defaults": {"temperature": 0},
+            "defaults": {
+                "temperature": 0,
+                "reasoning_effort": "low",
+                "max_think_tokens": 512,
+                "max_tokens": 16384,
+                "chat_template_kwargs": {
+                    "enable_thinking": True,
+                    "preserve_thinking": False,
+                },
+            },
             "speculation": "dflash-if-capable",
         },
     },
@@ -71,6 +80,17 @@ class ApplyRequestTests(unittest.TestCase):
         body = proxy.apply_request(CFG, {"model": "feather"})
         self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
         self.assertEqual(body["speculation"], "mtp")
+        self.assertEqual(body["reasoning_effort"], "low")
+        self.assertEqual(body["max_think_tokens"], 512)
+        self.assertEqual(body["max_tokens"], 16384)
+        self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
+        self.assertFalse(body["chat_template_kwargs"]["preserve_thinking"])
+
+    def test_client_think_cap_wins(self) -> None:
+        body = proxy.apply_request(
+            CFG, {"model": "feather", "max_think_tokens": 256}
+        )
+        self.assertEqual(body["max_think_tokens"], 256)
 
     def test_feather_on_qwen_is_dflash(self) -> None:
         cfg = dict(CFG)

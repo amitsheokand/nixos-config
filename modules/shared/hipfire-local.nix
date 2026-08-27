@@ -30,13 +30,17 @@ let
   modelsDir = "${homeDir}/.hipfire/models";
 
   mkDefaults = profile:
-    let thinking = profile.thinking or true;
+    let
+      thinking = profile.thinking or true;
+      preserveThinking = profile.preserveThinking or thinking;
     in {
       chat_template_kwargs = {
         enable_thinking = thinking;
-      } // lib.optionalAttrs thinking { preserve_thinking = true; };
+      } // lib.optionalAttrs thinking { preserve_thinking = preserveThinking; };
+      max_tokens = profile.maxTokens or profiles.maxTokens;
     }
     // lib.optionalAttrs (profile ? effort) { reasoning_effort = profile.effort; }
+    // lib.optionalAttrs (profile ? maxThinkTokens) { max_think_tokens = profile.maxThinkTokens; }
     // lib.optionalAttrs (profile ? temperature) { temperature = profile.temperature; }
     // lib.optionalAttrs (profile ? presencePenalty) { presence_penalty = profile.presencePenalty; }
     // lib.optionalAttrs (profile ? speculation) { speculation = profile.speculation; };
@@ -76,7 +80,7 @@ let
     runtimeInputs = [ pkgs.python3 ];
     text = ''
       export HIPFIRE_PROFILES_JSON=${lib.escapeShellArg profilesJsonText}
-      export HIPFIRE_PROFILE_HOST=127.0.0.1
+      export HIPFIRE_PROFILE_HOST=${lib.escapeShellArg (profiles.listenHost or "0.0.0.0")}
       export HIPFIRE_PROFILE_PORT=${toString profiles.listenPort}
       exec ${pkgs.python3}/bin/python3 ${./scripts/hipfire-profile-proxy.py}
     '';
