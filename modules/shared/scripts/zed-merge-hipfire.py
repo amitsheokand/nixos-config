@@ -30,8 +30,8 @@ def available_models(cfg: dict) -> list[dict]:
             {
                 "name": lane_id,
                 "display_name": lane.get("display_name", lane_id),
-                "max_tokens": lane.get("context_window") or 262144,
-                "max_output_tokens": lane.get("max_tokens") or 32768,
+                "max_tokens": lane.get("context_window") or 49152,
+                "max_output_tokens": lane.get("max_tokens") or 16384,
                 **(
                     {"reasoning_effort": lane.get("defaults", {}).get("reasoning_effort")}
                     if (lane.get("defaults") or {}).get("reasoning_effort")
@@ -44,8 +44,8 @@ def available_models(cfg: dict) -> list[dict]:
             {
                 "name": backend_id,
                 "display_name": backend.get("display_name", backend_id),
-                "max_tokens": backend.get("context_window") or 262144,
-                "max_output_tokens": backend.get("max_tokens") or 32768,
+                "max_tokens": backend.get("context_window") or 49152,
+                "max_output_tokens": backend.get("max_tokens") or 16384,
             }
         )
     for lane_id, lane in lanes.items():
@@ -62,8 +62,8 @@ def available_models(cfg: dict) -> list[dict]:
                     ),
                     "max_tokens": lane.get("context_window")
                     or backend.get("context_window")
-                    or 262144,
-                    "max_output_tokens": lane.get("max_tokens") or 32768,
+                    or 49152,
+                    "max_output_tokens": lane.get("max_tokens") or 16384,
                 }
             )
     return models

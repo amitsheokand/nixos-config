@@ -33,6 +33,14 @@ let
     hideThinkingBlock = false;
     quietStartup = true;
     defaultThinkingLevel = "high";
+    # Pi auto-compacts when tokens > contextWindow - reserveTokens.
+    # reserve must stay < 0.2 * smallest advertised window (feather 32k)
+    # so pi-async-compaction has a non-empty start window at START_RATIO=0.6.
+    compaction = {
+      enabled = true;
+      reserveTokens = 4096;
+      keepRecentTokens = 12000;
+    };
     # So `pi install` / activation works without a global npm on PATH.
     npmCommand = [ "${nodejs}/bin/npm" ];
   } // localSettings;
@@ -80,6 +88,9 @@ in
   # smoke scripts or a one-off shell.
   sessionVariables = {
     PI_CURSOR_PI_TOOL_BRIDGE = "1";
+    # Background compact from 60% of the advertised window; hard compact at
+    # window - reserveTokens. Default 0.8 is too late on a 48k honest window.
+    PI_ASYNC_PREFIX_COMPACTION_START_RATIO = "0.6";
   };
 
   activation =

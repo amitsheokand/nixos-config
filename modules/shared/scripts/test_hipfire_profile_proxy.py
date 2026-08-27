@@ -24,33 +24,46 @@ CFG = {
             "aliases": ["ornith", "ornith-1.5"],
             "speculation": ["off", "mtp"],
             "display_name": "Ornith",
+            "context_window": 49152,
+            "max_tokens": 16384,
+            "max_seq": 65536,
         },
         "qwen38": {
             "tag": "qwen3.8:27b",
             "aliases": ["qwen38", "qwen3.8"],
             "speculation": ["off", "dflash", "mtp"],
             "display_name": "Qwen 3.8",
+            "context_window": 32768,
+            "max_tokens": 8192,
+            "max_seq": 65536,
         },
     },
     "profiles": {
         "forge": {
             "display_name": "Forge",
+            "context_window": 49152,
+            "max_tokens": 16384,
+            "max_think_tokens": 2048,
             "defaults": {
                 "reasoning_effort": "medium",
+                "max_think_tokens": 2048,
                 "chat_template_kwargs": {
                     "enable_thinking": True,
-                    "preserve_thinking": True,
+                    "preserve_thinking": False,
                 },
             },
             "speculation": "off",
         },
         "feather": {
             "display_name": "Feather",
+            "context_window": 32768,
+            "max_tokens": 8192,
+            "max_think_tokens": 512,
             "defaults": {
                 "temperature": 0,
                 "reasoning_effort": "low",
                 "max_think_tokens": 512,
-                "max_tokens": 16384,
+                "max_tokens": 8192,
                 "chat_template_kwargs": {
                     "enable_thinking": True,
                     "preserve_thinking": False,
@@ -68,7 +81,10 @@ class ApplyRequestTests(unittest.TestCase):
         self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
         self.assertEqual(body["reasoning_effort"], "medium")
         self.assertEqual(body["speculation"], "off")
+        self.assertEqual(body["max_tokens"], 16384)
+        self.assertEqual(body["max_think_tokens"], 2048)
         self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
+        self.assertFalse(body["chat_template_kwargs"]["preserve_thinking"])
 
     def test_client_effort_wins(self) -> None:
         body = proxy.apply_request(
@@ -82,7 +98,7 @@ class ApplyRequestTests(unittest.TestCase):
         self.assertEqual(body["speculation"], "mtp")
         self.assertEqual(body["reasoning_effort"], "low")
         self.assertEqual(body["max_think_tokens"], 512)
-        self.assertEqual(body["max_tokens"], 16384)
+        self.assertEqual(body["max_tokens"], 8192)
         self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
         self.assertFalse(body["chat_template_kwargs"]["preserve_thinking"])
 
@@ -109,6 +125,20 @@ class ApplyRequestTests(unittest.TestCase):
         body = proxy.apply_request(CFG, {"model": "qwen38"})
         self.assertEqual(body["model"], "qwen3.8:27b")
         self.assertNotIn("reasoning_effort", body)
+        self.assertEqual(body["max_tokens"], 8192)
+
+    def test_client_max_tokens_is_clamped(self) -> None:
+        body = proxy.apply_request(CFG, {"model": "forge", "max_tokens": 999999})
+        self.assertEqual(body["max_tokens"], 16384)
+
+    def test_oversize_prompt_is_rejected(self) -> None:
+        body = {
+            "model": "forge",
+            "max_tokens": 16384,
+            "messages": [{"role": "user", "content": "x" * 120_000}],
+        }
+        with self.assertRaises(proxy.RequestTooLarge):
+            proxy.apply_request(CFG, body)
 
     def test_unknown_model_is_rejected(self) -> None:
         with self.assertRaises(proxy.UnknownModel):

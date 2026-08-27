@@ -28,6 +28,12 @@ let
   defaultBackend = profiles.backends.${defaultBackendId};
   defaultLane = profiles.defaultLane or profiles.defaultProfile;
   modelsDir = "${homeDir}/.hipfire/models";
+  baseUrl = "http://127.0.0.1:${toString profiles.listenPort}/v1";
+  catalog = import ./pi-hipfire-catalog.nix {
+    inherit lib;
+    inherit baseUrl;
+  };
+  inherit (catalog) compositeEntries;
 
   mkDefaults = profile:
     let
@@ -52,6 +58,7 @@ let
     description = backend.description;
     context_window = backend.contextWindow or profiles.contextWindow;
     max_tokens = backend.maxTokens or profiles.maxTokens;
+    max_seq = backend.maxSeq or 65536;
     speculation = backend.speculation or [ "off" ];
   } // lib.optionalAttrs (backend ? draftFile) { draft_file = backend.draftFile; };
 
@@ -62,6 +69,8 @@ let
     max_tokens = profile.maxTokens or profiles.maxTokens;
     speculation = profile.speculation or "off";
     defaults = mkDefaults profile;
+  } // lib.optionalAttrs (profile ? maxThinkTokens) {
+    max_think_tokens = profile.maxThinkTokens;
   };
 
   profileJson = {
@@ -112,6 +121,7 @@ let
       export LD_LIBRARY_PATH="${rocmLib}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
       cd ${lib.escapeShellArg hipfireRoot}
       exec ${lib.escapeShellArg hipfireBin} serve \
+        127.0.0.1 \
         --model ${lib.escapeShellArg defaultBackend.tag} \
         --kv-mode ${lib.escapeShellArg (defaultBackend.kvMode or "q8")} \
         --idle-timeout 0 \
@@ -121,19 +131,11 @@ let
 
   hermesPython = pkgs.python3.withPackages (ps: [ ps.pyyaml ]);
 
-  baseUrl = "http://127.0.0.1:${toString profiles.listenPort}/v1";
-
-  catalog = import ./pi-hipfire-catalog.nix {
-    inherit lib;
-    baseUrl = "http://127.0.0.1:${toString profiles.listenPort}/v1";
-  };
-  inherit (catalog) piModels compositeEntries;
-
   grokEntry = { id, displayName, description, contextWindow, maxTokens }:
     import ./grok-local-model.nix {
       inherit id displayName description contextWindow maxTokens;
       apiModel = id;
-      baseUrl = baseUrl;
+      inherit baseUrl;
     };
 
   grokToml =
@@ -189,6 +191,43 @@ let
     rm -f "$HOME/.config/systemd/user/hipfire-serve.service.d/ornith-ar.conf"
     rm -f "$HOME/.config/systemd/user/hipfire-profile-proxy.service.d/ornith-ar.conf"
   '' + hermesMergeScript + zedMergeScript + continueMergeScript;
+
+  daemonWatch = pkgs.writeShellApplication {
+    name = "hipfire-daemon-watch";
+    runtimeInputs = [ pkgs.curl pkgs.coreutils pkgs.systemd ];
+    text = ''
+      set -euo pipefail
+      pidfile="$HOME/.hipfire/daemon.pid"
+      daemon_alive() {
+        local pid state
+        pid="$(cat "$pidfile" 2>/dev/null || true)"
+        [[ -n "$pid" && -d "/proc/$pid" ]] || return 1
+        state="$(awk '{print $3}' "/proc/$pid/stat")"
+        [[ "$state" != "Z" ]]
+      }
+      misses=0
+      while true; do
+        sleep 15
+        if ! systemctl --user is-active --quiet hipfire-serve.service; then
+          misses=0
+          continue
+        fi
+        if curl -fsS --max-time 2 http://127.0.0.1:${toString profiles.hipfirePort}/health >/dev/null 2>&1 \
+          && ! daemon_alive; then
+          misses=$((misses + 1))
+        else
+          misses=0
+          continue
+        fi
+        if [[ "$misses" -ge 2 ]]; then
+          echo "hipfire-daemon-watch: GPU daemon dead; restarting hipfire-serve" >&2
+          systemctl --user restart hipfire-serve.service
+          misses=0
+          sleep 45
+        fi
+      done
+    '';
+  };
 in
 {
   inherit profiles baseUrl proxy serve grokToml profileJson
@@ -197,13 +236,17 @@ in
   sessionVariables = {
     AI_BASE_URL = baseUrl;
     AI_MODEL = defaultLane;
-    AI_CONTEXT_WINDOW = toString profiles.contextWindow;
-    AI_MAX_TOKENS = toString profiles.maxTokens;
+    AI_CONTEXT_WINDOW = toString (
+      profiles.profiles.${defaultLane}.contextWindow or profiles.contextWindow
+    );
+    AI_MAX_TOKENS = toString (
+      profiles.profiles.${defaultLane}.maxTokens or profiles.maxTokens
+    );
     GROK_LOCAL_MODEL = defaultLane;
     GROK_LOCAL_BASE_URL = baseUrl;
   };
 
-  packages = [ proxy serve ];
+  packages = [ proxy serve daemonWatch ];
 
   piLocalSettings = catalog.piLocalSettings;
   piLocalModels = catalog.piLocalModels;
@@ -214,7 +257,7 @@ in
         Description = "hipfire serve (local cargo build, existing ~/.hipfire config)";
         After = [ "graphical-session.target" ];
         StartLimitIntervalSec = 300;
-        StartLimitBurst = 3;
+        StartLimitBurst = 6;
       };
       Service = {
         ExecStart = "${serve}/bin/hipfire-serve-local";
@@ -240,6 +283,21 @@ in
         ExecStart = "${proxy}/bin/hipfire-profile-proxy";
         Restart = "on-failure";
         RestartSec = "2";
+        Environment = [ "HOME=${homeDir}" ];
+      };
+      Install.WantedBy = [ "default.target" ];
+    };
+
+    hipfire-daemon-watch = {
+      Unit = {
+        Description = "Restart hipfire-serve if the GPU daemon dies (zombie HTTP parent)";
+        After = [ "hipfire-serve.service" ];
+        Wants = [ "hipfire-serve.service" ];
+      };
+      Service = {
+        ExecStart = "${daemonWatch}/bin/hipfire-daemon-watch";
+        Restart = "always";
+        RestartSec = "10";
         Environment = [ "HOME=${homeDir}" ];
       };
       Install.WantedBy = [ "default.target" ];

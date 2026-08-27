@@ -24,8 +24,12 @@ let
         id = "${laneId}/${backendId}";
         displayName = "${lane.displayName} (${backend.displayName})";
         description = "Lane ${laneId} on ${backend.displayName}.";
-        contextWindow = lane.contextWindow or backend.contextWindow or profiles.contextWindow;
-        maxTokens = lane.maxTokens or backend.maxTokens or profiles.maxTokens;
+        contextWindow = lib.min
+          (lane.contextWindow or profiles.contextWindow)
+          (backend.contextWindow or profiles.contextWindow);
+        maxTokens = lib.min
+          (lane.maxTokens or profiles.maxTokens)
+          (backend.maxTokens or profiles.maxTokens);
         reasoning = lane.reasoning or true;
         thinkingLevelMap = lane.thinkingLevelMap or null;
       }
@@ -84,7 +88,20 @@ let
     model = profiles.defaultLane;
     defaultThinkingLevel = "medium";
   };
+
+  sessionVariables = {
+    AI_BASE_URL = baseUrl;
+    AI_MODEL = profiles.defaultLane;
+    AI_CONTEXT_WINDOW = toString (
+      profiles.profiles.${profiles.defaultLane}.contextWindow or profiles.contextWindow
+    );
+    AI_MAX_TOKENS = toString (
+      profiles.profiles.${profiles.defaultLane}.maxTokens or profiles.maxTokens
+    );
+    GROK_LOCAL_MODEL = profiles.defaultLane;
+    GROK_LOCAL_BASE_URL = baseUrl;
+  };
 in
 {
-  inherit piModels provider piLocalModels piLocalSettings compositeEntries;
+  inherit piModels provider piLocalModels piLocalSettings compositeEntries sessionVariables;
 }

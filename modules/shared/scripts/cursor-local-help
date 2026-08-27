@@ -19,9 +19,11 @@ Recommended (alongside — already wired):
   • Pi / Hermes / Grok TUI / Zed → same ${base}
 
 Generic lanes (stable; default backend is Ornith):
-  • feather — thinking on, low effort, 512-token cap, greedy, 16k gen; DFlash on Qwen, MTP on Ornith; 64k
-  • forge   — thinking on, medium effort, 256k (daily / long sessions)
-  • anvil   — thinking on, xhigh effort, 256k (hard / slow)
+  • feather — short/fast: 32k window, 8k gen, 512-token think cap; DFlash on Qwen, MTP on Ornith
+  • forge   — daily long-form on Ornith: medium effort, 2048-token think cap, 48k window (Pi compacts ~29–45k)
+  • anvil   — hard long-form on Ornith: xhigh effort, 8192-token think cap, same 48k compact window
+
+Do not use qwen38 / forge/qwen38 for long sessions (27B dense; GPU died ~94k filled).
 
 Optional weight ids (swap the resident checkpoint):
   • ornith  — Ornith 1.5 35B-A3B (default backend)

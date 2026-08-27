@@ -31,10 +31,9 @@ in
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
-    sessionVariables = {
-      AI_CONTEXT_WINDOW = "131072";
-      AI_MAX_TOKENS = "8192";
-    } // (if hipfireLocal == null then {} else hipfireLocal.sessionVariables)
+    sessionVariables = (if hipfireLocal == null
+      then hipfireLan.sessionVariables
+      else hipfireLocal.sessionVariables)
       // (piAgent.sessionVariables or {});
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])

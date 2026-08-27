@@ -1,5 +1,7 @@
 # Slim Home Manager for Asahi MacBook Air (vaayu).
-# Shell/git/tmux + Headroom + Pi (OpenRouter). No ROCm / ai-tools.
+# Shell/git/tmux + Headroom + Pi. GPU inference is on the desktop catalog
+# at http://nixos.local:8080/v1 (forge/anvil/feather). OpenRouter stays as
+# a Pi extension. No ROCm / ai-tools.
 { config, pkgs, lib, inputs, ... }:
 
 let
@@ -25,7 +27,8 @@ in
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
-    sessionVariables = (piAgent.sessionVariables or {});
+    sessionVariables = hipfireLan.sessionVariables
+      // (piAgent.sessionVariables or {});
     packages = (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
       ++ (piAgent.home.packages or []);

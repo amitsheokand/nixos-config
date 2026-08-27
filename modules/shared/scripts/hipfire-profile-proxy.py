@@ -11,8 +11,8 @@ Model ids:
   ornith / qwen38       backend ids — no lane defaults
   ornith-1.5:35b-a3b    hipfire tags listed as backend aliases
 
-Unknown ids return HTTP 400. Direct hipfire :11435 remains available for
-operator filenames.
+Unknown ids return HTTP 400. Oversized prompt+max_tokens returns HTTP 413.
+Direct hipfire :11435 is loopback-only on the GPU host.
 """
 from __future__ import annotations
 
@@ -29,6 +29,12 @@ class UnknownModel(ValueError):
     def __init__(self, model: str) -> None:
         super().__init__(model)
         self.model = model
+
+
+class RequestTooLarge(ValueError):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message = message
 
 
 def load_config() -> dict[str, Any]:
@@ -111,12 +117,100 @@ def split_composite(model: str) -> tuple[str, str] | None:
     return lane_id, backend_id
 
 
+def _as_int(value: Any) -> int | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    return None
+
+
+def estimate_prompt_tokens(body: dict[str, Any]) -> int:
+    chars = 0
+    prompt = body.get("prompt")
+    if isinstance(prompt, str):
+        chars += len(prompt)
+    messages = body.get("messages")
+    if isinstance(messages, list):
+        for message in messages:
+            if not isinstance(message, dict):
+                continue
+            content = message.get("content")
+            if isinstance(content, str):
+                chars += len(content)
+            elif isinstance(content, list):
+                for part in content:
+                    if isinstance(part, dict) and isinstance(part.get("text"), str):
+                        chars += len(part["text"])
+    return max((chars + 1) // 2, 1)
+
+
+def enforce_budgets(
+    body: dict[str, Any],
+    lane: dict[str, Any] | None,
+    backend: dict[str, Any] | None,
+) -> None:
+    """Clamp generation/think caps and refuse prompts that cannot fit the window."""
+    window = None
+    max_tokens_cap = None
+    think_cap = None
+    max_seq = None
+    if isinstance(lane, dict):
+        window = _as_int(lane.get("context_window"))
+        max_tokens_cap = _as_int(lane.get("max_tokens"))
+        defaults = lane.get("defaults") if isinstance(lane.get("defaults"), dict) else {}
+        think_cap = _as_int(defaults.get("max_think_tokens")) or _as_int(
+            lane.get("max_think_tokens")
+        )
+    if isinstance(backend, dict):
+        backend_window = _as_int(backend.get("context_window"))
+        backend_max = _as_int(backend.get("max_tokens"))
+        max_seq = _as_int(backend.get("max_seq"))
+        if window is None:
+            window = backend_window
+        elif backend_window is not None:
+            window = min(window, backend_window)
+        if max_tokens_cap is None:
+            max_tokens_cap = backend_max
+        elif backend_max is not None:
+            max_tokens_cap = min(max_tokens_cap, backend_max)
+    if max_tokens_cap is not None:
+        for key in ("max_tokens", "max_completion_tokens"):
+            current = _as_int(body.get(key))
+            if current is not None:
+                body[key] = min(current, max_tokens_cap)
+        if "max_tokens" not in body and "max_completion_tokens" not in body:
+            body["max_tokens"] = max_tokens_cap
+    if think_cap is not None:
+        current = _as_int(body.get("max_think_tokens"))
+        body["max_think_tokens"] = think_cap if current is None else min(current, think_cap)
+    max_tokens = (
+        _as_int(body.get("max_tokens"))
+        or _as_int(body.get("max_completion_tokens"))
+        or max_tokens_cap
+        or 0
+    )
+    ceiling_parts = [value for value in (window, max_seq) if value]
+    if not ceiling_parts:
+        return
+    ceiling = min(ceiling_parts)
+    required = estimate_prompt_tokens(body) + max_tokens + 1
+    if required > ceiling:
+        raise RequestTooLarge(
+            "prompt + max_tokens (%s) exceed context window (%s)" % (required, ceiling)
+        )
+
+
 def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
     model = body.get("model")
     if not isinstance(model, str) or not model:
         raise UnknownModel("")
     lanes = lanes_of(cfg)
     backends = backends_of(cfg)
+    lane: dict[str, Any] | None = None
+    backend: dict[str, Any] | None = None
 
     composite = split_composite(model)
     if composite is not None:
@@ -130,29 +224,35 @@ def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
                 raise UnknownModel(model)
             backend_id, backend = found
         body["model"] = str(backend.get("tag") or backend_id)
-        apply_lane_defaults(body, lanes[lane_id], backend)
+        lane = lanes[lane_id]
+        apply_lane_defaults(body, lane, backend)
+        enforce_budgets(body, lane, backend)
         return body
 
     if model in lanes:
         backend_id = default_backend_id(cfg)
         backend = backends.get(backend_id)
+        lane = lanes[model]
         if not isinstance(backend, dict):
             legacy = cfg.get("backend_model")
             if isinstance(legacy, str):
                 body["model"] = legacy
                 apply_lane_defaults(
-                    body, lanes[model], {"speculation": ["off", "dflash", "mtp"]}
+                    body, lane, {"speculation": ["off", "dflash", "mtp"]}
                 )
+                enforce_budgets(body, lane, None)
                 return body
             raise UnknownModel(model)
         body["model"] = str(backend.get("tag") or backend_id)
-        apply_lane_defaults(body, lanes[model], backend)
+        apply_lane_defaults(body, lane, backend)
+        enforce_budgets(body, lane, backend)
         return body
 
     found = lookup_backend(cfg, model)
     if found is not None:
         backend_id, backend = found
         body["model"] = str(backend.get("tag") or model)
+        enforce_budgets(body, None, backend)
         return body
 
     raise UnknownModel(model)
@@ -272,6 +372,12 @@ class Handler(BaseHTTPRequestHandler):
                         }
                     ).encode()
                     self._send_bytes(400, message, "application/json")
+                    return
+                except RequestTooLarge as error:
+                    message = json.dumps(
+                        {"error": {"message": error.message}}
+                    ).encode()
+                    self._send_bytes(413, message, "application/json")
                     return
 
         headers = {
