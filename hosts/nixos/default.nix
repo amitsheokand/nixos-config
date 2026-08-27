@@ -1,18 +1,7 @@
 { config, lib, pkgs, modulesPath, user, ... }:
 
 let
-  profiles = import ../../modules/shared/agent-profiles.nix;
-  grokProfile = name:
-    let profile = profiles.profiles.${name};
-    in import ../../modules/shared/grok-local-model.nix {
-      id = name;
-      apiModel = name;
-      displayName = profile.displayName;
-      description = profile.description;
-      contextWindow = profile.contextWindow or profiles.contextWindow;
-      maxTokens = profile.maxTokens or profiles.maxTokens;
-      baseUrl = "http://127.0.0.1:${toString profiles.listenPort}/v1";
-    };
+  hipfireLocal = import ../../modules/shared/hipfire-local.nix { inherit pkgs lib user; };
 in
 {
   imports = [
@@ -120,10 +109,9 @@ in
 
   time.timeZone = "Asia/Kolkata";
 
-  # Grok /model picker: keep cloud grok-* and add Forge/Anvil (hipfire profiles).
+  # Grok /model picker: keep cloud grok-* and add catalog lanes/backends.
   # Do not set GROK_MODELS_BASE_URL — that replaces the cloud catalog.
-  environment.etc."grok/managed_config.toml".text =
-    grokProfile "forge" + grokProfile "anvil";
+  environment.etc."grok/managed_config.toml".text = hipfireLocal.grokToml;
 
   # Desktop GPU uses amdgpu; GNOME fractional-scaling overrides.
   # https://discourse.nixos.org/t/how-to-set-fractional-scaling-via-nix-configuration-for-gnome-wayland/56774

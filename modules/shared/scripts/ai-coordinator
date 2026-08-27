@@ -23,7 +23,7 @@ route_task() {
   if [[ -z "$worker" || "$worker" == "auto" ]]; then
     if endpoint="$(ai-endpoint 2>/dev/null)"; then
       payload="$(jq -n \
-        --arg model "${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}" \
+        --arg model "${AI_MODEL:-forge}" \
         --arg task "${title}" \
         --arg body "${body}" \
         '{

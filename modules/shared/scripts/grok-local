@@ -2,7 +2,7 @@
 set -euo pipefail
 
 base_url="${GROK_LOCAL_BASE_URL:-${AI_BASE_URL:-http://127.0.0.1:8080/v1}}"
-model="${GROK_LOCAL_MODEL:-${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}}"
+model="${GROK_LOCAL_MODEL:-${AI_MODEL:-forge}}"
 
 # Grok Build discovers custom OpenAI-compatible models from /v1/models and
 # requires a non-empty API-key variable even when the local server ignores it.

@@ -40,7 +40,7 @@ in
       // (commandCode.home.activation or {})
       // piAgent.activation
       // (if hipfireLocal == null then {} else {
-        mergeHermesHipfireAliases = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.hermesMergeScript;
+        mergeHipfireCatalogClients = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.catalogMergeScript;
       });
     sessionPath = (commandCode.home.sessionPath or []);
     stateVersion = "25.11";

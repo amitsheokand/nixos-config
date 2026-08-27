@@ -7,7 +7,7 @@
 }:
 
 ''
-[model.${id}]
+[model."${id}"]
 model = "${apiModel}"
 base_url = "${baseUrl}"
 name = "${displayName}"

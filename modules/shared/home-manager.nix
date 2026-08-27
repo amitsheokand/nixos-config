@@ -83,7 +83,7 @@ let name = "Amit Sheokand";
       export EDITOR="vim"
       export VISUAL="zed"
       export AI_BASE_URL="''${AI_BASE_URL:-http://127.0.0.1:8080/v1}"
-      export AI_MODEL="''${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}"
+      export AI_MODEL="''${AI_MODEL:-forge}"
 
       ai-health() {
         local endpoint

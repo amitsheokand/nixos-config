@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Explain how to use local Forge/Anvil (or Darwin MLX) with Cursor.
+# Explain how to use local hipfire lanes with Cursor.
 set -euo pipefail
 
 base="${AI_BASE_URL:-http://127.0.0.1:8080/v1}"
@@ -14,23 +14,28 @@ HTTPS tunnel.
 
 Recommended (alongside — already wired):
   • Cursor Agent / CLI  → cloud Grok (complex) / Composer (normal)
-  • Continue panel      → local ${model} at ${base}
-  • Pi / Hermes / Grok TUI / codex-local → same ${base}
+  • Continue panel      → local lanes at ${base} (default ${model})
+  • Pi / Hermes / Grok TUI / Zed → same ${base}
 
-Named profiles (stable; backend checkpoint can change later):
-  • feather — DFlash 2, thinking off, greedy, 64k (fastest subagent)
+Generic lanes (stable; default backend is Ornith):
+  • feather — thinking off, greedy; DFlash on Qwen, MTP on Ornith; 64k
   • forge   — thinking on, medium effort, 256k (daily / long sessions)
   • anvil   — thinking on, xhigh effort, 256k (hard / slow)
-  Fast research with thinking: stay on forge and drop effort to low (Shift+Tab in Pi).
 
-Open Continue in Cursor (sidebar) and pick Feather / Forge / Anvil.
+Optional weight ids (swap the resident checkpoint):
+  • ornith  — Ornith 1.5 35B-A3B (default backend)
+  • qwen38  — Qwen 3.8 27B dense
+  • forge/qwen38 — daily lane on Qwen (explicit swap)
+
+Open Continue in Cursor (sidebar) and pick Forge / Anvil / Feather.
+Do not set AI_MODEL=qwen38 unless you intend to swap off Ornith.
 
 Optional (Cursor Agent ON the local endpoint — cloud picker unavailable
 while Override is ON):
   1. Expose ${base} via Cloudflare Tunnel / ngrok HTTPS
   2. Settings → Models → OpenAI API Key = local
   3. Override OpenAI Base URL = https://<tunnel>/v1
-  4. Add custom model ids: feather, forge, and anvil
+  4. Add custom model ids: forge, anvil, feather, ornith, qwen38
   5. Turn Override OFF before returning to cloud Grok/Composer/Claude
 
 Health:

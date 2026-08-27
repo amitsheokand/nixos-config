@@ -7,7 +7,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 endpoint="$(ai-endpoint)"
-model="${AI_MODEL:-/Users/amitsheokand/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit}"
+model="${AI_MODEL:-forge}"
 max_tokens="${AI_MAX_TOKENS:-64}"
 prompt="$*"
 
