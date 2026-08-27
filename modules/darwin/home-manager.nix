@@ -42,6 +42,11 @@ in
       let
         headroom = import ../shared/headroom.nix { inherit pkgs lib; };
         commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+        # Desktop catalog over LAN. Default stays MLX; `/model forge` hits PC.
+        hipfireLan = import ../shared/pi-hipfire-catalog.nix {
+          inherit lib;
+          baseUrl = "http://nixos.local:8080/v1";
+        };
         piAgent = import ../shared/pi-agent.nix {
           inherit pkgs lib;
           pi = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
@@ -49,13 +54,17 @@ in
             model = mlxModel;
             defaultProvider = "mlx-local";
             defaultModel = mlxModel;
+            defaultThinkingLevel = "off";
           };
           localModels = {
             providerId = "mlx-local";
             apiModel = mlxModel;
             displayName = "qwen35";
-            contextWindow = 65536;
-            maxTokens = 4096;
+            contextWindow = 16384;
+            maxTokens = 2048;
+            reasoning = false;
+            extraCompat = { maxTokensField = "max_tokens"; };
+            extraProviders = { hipfire = hipfireLan.provider; };
           };
         };
       in
@@ -65,8 +74,8 @@ in
           sessionVariables = {
             AI_BASE_URL = "http://127.0.0.1:8080/v1";
             AI_MODEL = mlxModel;
-            AI_CONTEXT_WINDOW = "65536";
-            AI_MAX_TOKENS = "4096";
+            AI_CONTEXT_WINDOW = "16384";
+            AI_MAX_TOKENS = "2048";
             GROK_LOCAL_MODEL = mlxModel;
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
           } // (piAgent.sessionVariables or {});
@@ -84,7 +93,7 @@ in
                 text = ''
                   model = "${mlxModel}"
                   model_provider = "mlx-local"
-                  model_context_window = 65536
+                  model_context_window = 16384
 
                   [model_providers.mlx-local]
                   name = "qwen35"

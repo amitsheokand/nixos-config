@@ -21,6 +21,7 @@
 , reasoning ? false
 , extraCompat ? {}
 , models ? null
+, extraProviders ? {}
 }:
 
 let
@@ -43,5 +44,5 @@ pkgs.writeText "pi-local-models.json" (builtins.toJSON {
       } // extraCompat;
       models = modelList;
     };
-  };
+  } // extraProviders;
 })

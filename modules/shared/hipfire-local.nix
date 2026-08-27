@@ -123,48 +123,11 @@ let
 
   baseUrl = "http://127.0.0.1:${toString profiles.listenPort}/v1";
 
-  piModel = name: profile: {
-    id = name;
-    name = profile.displayName or name;
-    reasoning = profile.reasoning or true;
-    input = [ "text" ];
-    contextWindow = profile.contextWindow or profiles.contextWindow;
-    maxTokens = profile.maxTokens or profiles.maxTokens;
-    cost = { input = 0; output = 0; cacheRead = 0; cacheWrite = 0; };
-  } // lib.optionalAttrs (profile ? thinkingLevelMap) {
-    thinkingLevelMap = profile.thinkingLevelMap;
+  catalog = import ./pi-hipfire-catalog.nix {
+    inherit lib;
+    baseUrl = "http://127.0.0.1:${toString profiles.listenPort}/v1";
   };
-
-  compositeEntries = lib.flatten (lib.mapAttrsToList (laneId: lane:
-    lib.mapAttrsToList (backendId: backend:
-      {
-        id = "${laneId}/${backendId}";
-        displayName = "${lane.displayName} (${backend.displayName})";
-        description = "Lane ${laneId} on ${backend.displayName}.";
-        contextWindow = lane.contextWindow or backend.contextWindow or profiles.contextWindow;
-        maxTokens = lane.maxTokens or backend.maxTokens or profiles.maxTokens;
-        reasoning = lane.reasoning or true;
-        thinkingLevelMap = lane.thinkingLevelMap or null;
-      }
-    ) (lib.filterAttrs (id: _: id != defaultBackendId) profiles.backends)
-  ) profiles.profiles);
-
-  piModels =
-    lib.mapAttrsToList piModel profiles.profiles
-    ++ lib.mapAttrsToList (id: backend: piModel id {
-      displayName = backend.displayName;
-      reasoning = true;
-      contextWindow = backend.contextWindow or profiles.contextWindow;
-      maxTokens = backend.maxTokens or profiles.maxTokens;
-    }) profiles.backends
-    ++ map (entry: piModel entry.id {
-      displayName = entry.displayName;
-      reasoning = entry.reasoning;
-      contextWindow = entry.contextWindow;
-      maxTokens = entry.maxTokens;
-    } // lib.optionalAttrs (entry.thinkingLevelMap != null) {
-      thinkingLevelMap = entry.thinkingLevelMap;
-    }) compositeEntries;
+  inherit (catalog) piModels compositeEntries;
 
   grokEntry = { id, displayName, description, contextWindow, maxTokens }:
     import ./grok-local-model.nix {
@@ -242,28 +205,8 @@ in
 
   packages = [ proxy serve ];
 
-  piLocalSettings = {
-    defaultProvider = "hipfire";
-    defaultModel = defaultLane;
-    model = defaultLane;
-    defaultThinkingLevel = "medium";
-  };
-
-  piLocalModels = {
-    providerId = "hipfire";
-    baseUrl = baseUrl;
-    apiKey = "hipfire-local";
-    api = "openai-completions";
-    supportsDeveloperRole = true;
-    supportsReasoningEffort = true;
-    extraCompat = {
-      supportsUsageInStreaming = true;
-      maxTokensField = "max_tokens";
-    };
-    contextWindow = profiles.contextWindow;
-    maxTokens = profiles.maxTokens;
-    models = piModels;
-  };
+  piLocalSettings = catalog.piLocalSettings;
+  piLocalModels = catalog.piLocalModels;
 
   systemdUserServices = {
     hipfire-serve = {

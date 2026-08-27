@@ -11,11 +11,19 @@ let
   hipfireLocal = if hipfireEnabled
     then import ../shared/hipfire-local.nix { inherit pkgs lib user; }
     else null;
+  hipfireLan = import ../shared/pi-hipfire-catalog.nix {
+    inherit lib;
+    baseUrl = "http://nixos.local:8080/v1";
+  };
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
-    localSettings = if hipfireLocal == null then {} else hipfireLocal.piLocalSettings;
-    localModels = if hipfireLocal == null then null else hipfireLocal.piLocalModels;
+    localSettings = if hipfireLocal != null
+      then hipfireLocal.piLocalSettings
+      else hipfireLan.piLocalSettings;
+    localModels = if hipfireLocal != null
+      then hipfireLocal.piLocalModels
+      else hipfireLan.piLocalModels;
   };
 in
 {

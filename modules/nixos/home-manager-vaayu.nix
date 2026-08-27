@@ -8,12 +8,16 @@ let
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+  hipfireLan = import ../shared/pi-hipfire-catalog.nix {
+    inherit lib;
+    baseUrl = "http://nixos.local:8080/v1";
+  };
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
-    # Prefer OpenRouter ox-alpha via extension; no local llama defaults.
-    localSettings = { };
-    localModels = null;
+    # OpenRouter ox-alpha stays via extension. `/model forge` hits desktop LAN.
+    localSettings = hipfireLan.piLocalSettings;
+    localModels = hipfireLan.piLocalModels;
   };
 in
 {
