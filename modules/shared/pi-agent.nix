@@ -134,7 +134,7 @@ in
       '';
 
       # policy-only hermes: compact policy, no MEMORY.md injection, flush via
-      # OpenRouter so compact does not spawn a second job on the desktop GPU.
+      # GPT-5.6 Luna so compact does not spawn a second job on the desktop GPU.
       syncHermesMemory = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''
         mkdir -p "$HOME/.pi/agent/pi-hermes-memory"
         install -m 0600 ${hermesMemoryConfig} "$HOME/.pi/agent/hermes-memory-config.json"

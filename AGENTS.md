@@ -347,7 +347,7 @@ Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` and `/async-compact-now` still work.
 
 **Session knowledge (do not stuff the prompt):**
-- hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via OpenRouter (`stealth/ox-alpha`) so it does not steal the R9700 slot.
+- hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via `openai-codex/gpt-5.6-luna` so it does not steal the R9700 slot.
 - Rewind with `/tree`, do not resume a long leaf. New chat per task.
 - `/compact` before huge tool dumps. Quote last 20 log lines, not the file.
 - Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that).
