@@ -26,7 +26,8 @@ in
     sessionVariables = {
       AI_CONTEXT_WINDOW = "131072";
       AI_MAX_TOKENS = "8192";
-    } // (if hipfireLocal == null then {} else hipfireLocal.sessionVariables);
+    } // (if hipfireLocal == null then {} else hipfireLocal.sessionVariables)
+      // (piAgent.sessionVariables or {});
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])

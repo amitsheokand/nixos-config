@@ -69,7 +69,7 @@ in
             AI_MAX_TOKENS = "4096";
             GROK_LOCAL_MODEL = mlxModel;
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
-          };
+          } // (piAgent.sessionVariables or {});
           sessionPath = (commandCode.home.sessionPath or []);
           packages = (pkgs.callPackage ./packages.nix {})
             ++ (headroom.home.packages or [])

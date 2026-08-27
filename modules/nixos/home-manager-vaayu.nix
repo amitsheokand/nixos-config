@@ -21,6 +21,7 @@ in
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
+    sessionVariables = (piAgent.sessionVariables or {});
     packages = (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
       ++ (piAgent.home.packages or []);

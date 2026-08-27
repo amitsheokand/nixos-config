@@ -75,6 +75,13 @@ in
 {
   home.packages = [ nodejs ];
 
+  # Keep the pi↔Cursor tool bridge on for every login. Default is already on
+  # in pi-cursor-sdk; this blocks PI_CURSOR_PI_TOOL_BRIDGE=0 leaking in from
+  # smoke scripts or a one-off shell.
+  sessionVariables = {
+    PI_CURSOR_PI_TOOL_BRIDGE = "1";
+  };
+
   activation =
     (lib.optionalAttrs (modelsFile != null) {
       syncPiModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -111,6 +118,21 @@ in
       syncPiExtensions = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''
         mkdir -p "$HOME/.pi/agent/extensions"
         ${syncPiExtensions}
+      '';
+
+      # Cursor CLI wraps `git commit` and appends Co-authored-by when this is
+      # true. Keep it off so agent commits stay unsigned by Cursor.
+      syncCursorCliAttribution = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        cfg="$HOME/.cursor/cli-config.json"
+        if [[ -f "$cfg" ]]; then
+          tmp="$(mktemp "$cfg.tmp.XXXXXX")"
+          trap 'rm -f "$tmp"' EXIT
+          ${pkgs.jq}/bin/jq '.attribution.attributeCommitsToAgent = false' "$cfg" > "$tmp"
+          chmod 0600 "$tmp"
+          if ! cmp -s "$tmp" "$cfg"; then
+            mv "$tmp" "$cfg"
+          fi
+        fi
       '';
     };
 }
