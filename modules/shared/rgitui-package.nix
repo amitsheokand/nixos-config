@@ -7,7 +7,6 @@
   fetchzip,
   autoPatchelfHook,
   makeWrapper,
-  undmg,
   zlib,
   libxkbcommon,
   xorg,
@@ -99,10 +98,18 @@ else if stdenv.hostPlatform.isDarwin then
       hash = "sha256-dZPGwtrfSt3m5VYjkdrLTNRZ3031WCHNz6XK7yHNTRM=";
     };
 
-    nativeBuildInputs = [
-      undmg
-      makeWrapper
-    ];
+    nativeBuildInputs = [ makeWrapper ];
+
+    # Upstream ships an APFS .dmg. nixpkgs `undmg` only reads HFS, so unpack
+    # with macOS hdiutil (this attr is Darwin-native only).
+    unpackPhase = ''
+      runHook preUnpack
+      mkdir -p "$TMPDIR/rgitui-dmg"
+      /usr/bin/hdiutil attach -readonly -nobrowse -mountpoint "$TMPDIR/rgitui-dmg" "$src"
+      cp -a "$TMPDIR/rgitui-dmg"/*.app .
+      /usr/bin/hdiutil detach "$TMPDIR/rgitui-dmg"
+      runHook postUnpack
+    '';
 
     sourceRoot = ".";
 
