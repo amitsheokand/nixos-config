@@ -184,10 +184,34 @@ in
 
   networking.hostName = "ai-mac";
 
-  # LAN names when mDNS is flaky (Asahi has advertised as vaayu-2.local).
-  networking.hosts = {
-    "192.168.1.15" = [ "nixos" "nixos.local" ];
-    "192.168.1.16" = [ "odie" "odie.local" ];
-    "192.168.1.18" = [ "vaayu" "vaayu.local" ];
-  };
+  # nix-darwin has no `networking.hosts` (NixOS-only; the darwin port was
+  # reverted because a symlink /etc/hosts breaks macOS name resolution).
+  # Idempotently keep LAN names in the real file when mDNS is flaky
+  # (Asahi has advertised as vaayu-2.local).
+  system.activationScripts.lanHosts.text = ''
+    echo "setting up LAN /etc/hosts entries..." >&2
+    /usr/bin/python3 - <<'PY'
+    from pathlib import Path
+
+    path = Path("/etc/hosts")
+    begin = "# nixos-config-lan-begin"
+    end = "# nixos-config-lan-end"
+    block = (
+        f"{begin}\n"
+        "192.168.1.15\tnixos nixos.local\n"
+        "192.168.1.16\todie odie.local\n"
+        "192.168.1.18\tvaayu vaayu.local\n"
+        f"{end}\n"
+    )
+    text = path.read_text() if path.exists() else ""
+    if begin in text:
+        pre, rest = text.split(begin, 1)
+        rest = rest.split(end, 1)[1].lstrip("\n") if end in rest else ""
+        text = pre.rstrip("\n") + ("\n" if rest.strip() else "") + rest
+    text = text.rstrip("\n")
+    new = (text + "\n\n" + block) if text else block
+    if new != (path.read_text() if path.exists() else ""):
+        path.write_text(new)
+    PY
+  '';
 }
