@@ -36,6 +36,8 @@ in
 
   home-manager = {
     useGlobalPkgs = true;
+    # Existing files (gh config.yml, etc.) get renamed instead of aborting switch.
+    backupFileExtension = "hm-backup";
     users.${user} = { pkgs, config, lib, ... }:
       let
         headroom = import ../shared/headroom.nix { inherit pkgs lib; };
