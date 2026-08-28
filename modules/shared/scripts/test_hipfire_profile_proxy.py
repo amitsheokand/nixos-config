@@ -135,10 +135,26 @@ class ApplyRequestTests(unittest.TestCase):
         body = {
             "model": "forge",
             "max_tokens": 16384,
-            "messages": [{"role": "user", "content": "x" * 120_000}],
+            "messages": [{"role": "user", "content": "x" * 200_000}],
         }
         with self.assertRaises(proxy.RequestTooLarge):
             proxy.apply_request(CFG, body)
+
+    def test_mid_window_prompt_clamps_max_tokens_instead_of_413(self) -> None:
+        # ~60k chars/2 would 413 against forge's 49k window once 16k gen is
+        # reserved. GPU max_seq is 65k; clamp generation, do not refuse.
+        body = proxy.apply_request(
+            CFG,
+            {
+                "model": "forge",
+                "max_tokens": 16384,
+                "messages": [{"role": "user", "content": "x" * 120_000}],
+            },
+        )
+        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
+        self.assertLessEqual(body["max_tokens"], 16384)
+        self.assertGreater(body["max_tokens"], 0)
+        self.assertEqual(body["max_tokens"], 65536 - 60_000 - 1)
 
     def test_unknown_model_is_rejected(self) -> None:
         with self.assertRaises(proxy.UnknownModel):

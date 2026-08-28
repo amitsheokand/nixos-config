@@ -11,8 +11,10 @@ Model ids:
   ornith / qwen38       backend ids — no lane defaults
   ornith-1.5:35b-a3b    hipfire tags listed as backend aliases
 
-Unknown ids return HTTP 400. Oversized prompt+max_tokens returns HTTP 413.
-Direct hipfire :11435 is loopback-only on the GPU host.
+Unknown ids return HTTP 400. Prompts that cannot fit `max_seq` return HTTP 413.
+If the prompt fits, `max_tokens` is clamped to the remaining GPU room instead
+of 413 (chars/2 plus a 16k gen cap against the advertised 49k window was
+tripping Pi at ~57% of forge). Direct hipfire :11435 is loopback-only.
 """
 from __future__ import annotations
 
@@ -192,15 +194,35 @@ def enforce_budgets(
         or max_tokens_cap
         or 0
     )
-    ceiling_parts = [value for value in (window, max_seq) if value]
-    if not ceiling_parts:
+    # Advertised `context_window` is the Pi/Grok compaction target, not the GPU
+    # allocation. hipfire fail-closes on `max_seq`. Mixing the two here 413'd
+    # forge around 57% of 49k: chars/2 overestimates Qwen BPE, then we reserved
+    # the full 16k gen cap against that smaller window.
+    hard_ceiling = max_seq or window
+    if hard_ceiling is None:
         return
-    ceiling = min(ceiling_parts)
-    required = estimate_prompt_tokens(body) + max_tokens + 1
-    if required > ceiling:
+    prompt_tokens = estimate_prompt_tokens(body)
+    if prompt_tokens > hard_ceiling:
         raise RequestTooLarge(
-            "prompt + max_tokens (%s) exceed context window (%s)" % (required, ceiling)
+            "prompt (~%s tokens) exceeds max_seq (%s)" % (prompt_tokens, hard_ceiling)
         )
+    room = hard_ceiling - prompt_tokens - 1
+    if room < 1:
+        raise RequestTooLarge(
+            "prompt (~%s tokens) leaves no room under max_seq (%s)"
+            % (prompt_tokens, hard_ceiling)
+        )
+    if max_tokens > room:
+        sys.stderr.write(
+            "hipfire-profile-proxy: clamping max_tokens %s -> %s "
+            "(prompt~%s max_seq=%s)\n"
+            % (max_tokens, room, prompt_tokens, hard_ceiling)
+        )
+        for key in ("max_tokens", "max_completion_tokens"):
+            if key in body:
+                body[key] = room
+        if "max_tokens" not in body and "max_completion_tokens" not in body:
+            body["max_tokens"] = room
 
 
 def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
