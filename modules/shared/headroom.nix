@@ -3,6 +3,10 @@
 # and (on Linux) runs the proxy as a user systemd service so Claude/Codex
 # ANTHROPIC_BASE_URL / provider routing work.
 #
+# Cursor / Agent CLI cannot send Grok/Composer traffic through :8787 (Cursor
+# protocol → api2.cursor.sh). What we *can* persist: MCP tools + RTK hooks +
+# `agent mcp enable headroom`. Do not set CURSOR_API_ENDPOINT to the proxy.
+#
 # Extras: [proxy,mcp,code] — skip [memory] (pulls torch/CUDA).
 #
 # Also enable `programs.nix-ld` (modules/nixos/common.nix) for other uv wheels.
@@ -60,6 +64,51 @@ let
     fi
   '';
 
+  # Cursor-hosted Grok/Composer still talk to api2.cursor.sh (cannot wrap).
+  # This registers RTK hooks + approves the Headroom MCP for Agent CLI.
+  wrapCursorAgents = pkgs.writeShellScript "headroom-wrap-cursor-agents" ''
+    set -uo pipefail
+    export HOME="${homeDir}"
+    export PATH="${homeDir}/.headroom/bin:${homeDir}/.local/bin:${pkgs.uv}/bin:${pkgs.python313}/bin:/run/current-system/sw/bin:$PATH"
+    export LD_LIBRARY_PATH="${libPath}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+    if [[ -x "${headroomWrapped}/bin/headroom" ]]; then
+      ${headroomWrapped}/bin/headroom wrap cursor --no-proxy --prepare-only || true
+    fi
+
+    agent_bin=""
+    if [[ -x "${homeDir}/.local/bin/agent" ]]; then
+      agent_bin="${homeDir}/.local/bin/agent"
+    elif command -v agent >/dev/null 2>&1; then
+      agent_bin="$(command -v agent)"
+    fi
+    if [[ -n "$agent_bin" ]]; then
+      "$agent_bin" mcp enable headroom || true
+    fi
+
+    rtk="${homeDir}/.headroom/bin/rtk"
+    hooks="${homeDir}/.cursor/hooks.json"
+    if [[ -x "$rtk" && -f "$hooks" ]]; then
+      ${pkgs.python313}/bin/python3 - "$rtk" "$hooks" <<'PY'
+import json, sys
+rtk, path = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    data = json.load(f)
+changed = False
+for event, entries in (data.get("hooks") or {}).items():
+    for entry in entries or []:
+        cmd = entry.get("command")
+        if isinstance(cmd, str) and cmd.startswith("rtk "):
+            entry["command"] = f"{rtk} {cmd[4:]}"
+            changed = True
+if changed:
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+PY
+    fi
+  '';
+
   cursorMcp = {
     mcpServers = {
       headroom = {
@@ -79,6 +128,9 @@ in
     pkgs.python313
     headroomWrapped
   ];
+
+  # So Cursor hooks.json `rtk hook cursor` resolves outside a login shell.
+  home.sessionPath = [ "${homeDir}/.headroom/bin" ];
 
   # Global Cursor MCP (all workspaces). Project repos may also ship `.cursor/mcp.json`.
   home.file.".cursor/mcp.json" = {
@@ -124,6 +176,24 @@ in
         "HEADROOM_TELEMETRY=off"
         "HEADROOM_CODE_AWARE_ENABLED=1"
         "PATH=${homeDir}/.local/bin:${pkgs.uv}/bin:${pkgs.python313}/bin:/run/current-system/sw/bin"
+      ];
+    };
+    Install.WantedBy = [ "default.target" ];
+  };
+
+  systemd.user.services.headroom-cursor-wrap = {
+    Unit = {
+      Description = "Headroom Cursor/Agent MCP enable + RTK hooks";
+      After = [ "headroom-install.service" ];
+      Wants = [ "headroom-install.service" ];
+    };
+    Service = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${wrapCursorAgents}";
+      Environment = [
+        "HEADROOM_TELEMETRY=off"
+        "PATH=${homeDir}/.headroom/bin:${homeDir}/.local/bin:${pkgs.uv}/bin:${pkgs.python313}/bin:/run/current-system/sw/bin"
       ];
     };
     Install.WantedBy = [ "default.target" ];

@@ -290,6 +290,7 @@ Cursor.
 | NixOS libs | `programs.nix-ld` in `modules/nixos/common.nix` |
 | Proxy | user systemd unit `headroom-proxy` (port `8787`) |
 | Cursor MCP | `~/.cursor/mcp.json` (HM-managed) |
+| Cursor wrap | user systemd unit `headroom-cursor-wrap` (RTK hooks + `agent mcp enable`) |
 
 Install extras: `headroom-ai[proxy,mcp,code]` (skip `[memory]` — pulls torch).
 
@@ -301,9 +302,18 @@ headroom mcp status      # Claude / Codex MCP registration
 systemctl --user status headroom-proxy
 ```
 
-**Cursor full proxy compression** (MCP alone is on-demand only):
-Settings → Models → OpenAI API Key → Advanced → Override Base URL →
-`http://127.0.0.1:8787/v1` (or run `headroom wrap cursor` for printed steps).
+**Cursor / Agent CLI** (Grok, Composer, Auto still talk to `api2.cursor.sh`):
+Headroom cannot wrap Cursor-hosted model traffic. Do **not** set
+`CURSOR_API_ENDPOINT` / `--endpoint` to `:8787` — that is a different
+protocol and will break Agent CLI.
+
+What *is* wired:
+- MCP tools (`headroom_compress` / retrieve) via `~/.cursor/mcp.json`
+- `agent mcp enable headroom` (user systemd `headroom-cursor-wrap`)
+- RTK shell hooks (`headroom wrap cursor --prepare-only`)
+
+OpenAI **BYOK** only: Settings → Models → Override OpenAI Base URL →
+`http://127.0.0.1:8787/v1`. That does not affect Grok/Composer.
 
 **Claude / Codex** already route via `headroom init -g` (`ANTHROPIC_BASE_URL` /
 Codex `model_provider = "headroom"`). They need the proxy running.

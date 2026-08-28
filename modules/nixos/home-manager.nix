@@ -50,7 +50,8 @@ in
       // (if hipfireLocal == null then {} else {
         mergeHipfireCatalogClients = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.catalogMergeScript;
       });
-    sessionPath = (commandCode.home.sessionPath or []);
+    sessionPath = (commandCode.home.sessionPath or [])
+      ++ (headroom.home.sessionPath or []);
     stateVersion = "25.11";
   };
 

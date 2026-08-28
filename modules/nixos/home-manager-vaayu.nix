@@ -38,7 +38,8 @@ in
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
       // piAgent.activation;
-    sessionPath = (commandCode.home.sessionPath or []);
+    sessionPath = (commandCode.home.sessionPath or [])
+      ++ (headroom.home.sessionPath or []);
     stateVersion = "25.11";
   };
 
