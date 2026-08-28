@@ -5,5 +5,6 @@
 - Put durable facts in git resume files or `memory_*` tools, not the prompt.
 - Never set hermes `memoryMode` to legacy-inject.
 - `/compact` before huge tool dumps or logs. Quote last 20 lines, not the file.
+- Search with FFF (`grep` in override mode): follow the cursor page; do not dump TODO/FIXME across the repo.
 - One client on the desktop GPU at a time. No Agent Team or parallel Pi on that slot.
 - Long local sessions use lane `forge`. Do not use `qwen38` for long-form.

@@ -340,7 +340,7 @@ Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites 
 
 | Piece | Where |
 |-------|--------|
-| Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, …) |
+| Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, pi-fff override grep, …) |
 | Local model defaults | host HM (MLX + LAN hipfire on Darwin; local hipfire on PC; LAN hipfire on odie/vaayu) |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 

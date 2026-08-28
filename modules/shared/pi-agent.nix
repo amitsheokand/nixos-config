@@ -25,6 +25,10 @@ let
     "npm:pi-async-compaction@0.1.7"
     "npm:pi-cursor-sdk@0.2.0"
     "npm:pi-tool-display@0.5.0"
+    # Replaces Pi rg/fd grep+find (limit 100, --json, --hidden) with FFF:
+    # grouped pages + cursor, frecency, no rg subprocess. Override so the
+    # model cannot keep calling the flooding built-in grep.
+    "npm:@ff-labs/pi-fff@0.10.5"
   ];
 
   sharedSettings = {
@@ -93,6 +97,11 @@ in
     # Background compact from 60% of the advertised window; hard compact at
     # window - reserveTokens. Default 0.8 is too late on a 48k honest window.
     PI_ASYNC_PREFIX_COMPACTION_START_RATIO = "0.6";
+    # Chasen Liao 2026-08-27: built-in grep is rg --json, limit 100, 50KB
+    # truncations; TODO-class queries dump the page. FFF override paginates.
+    PI_FFF_MODE = "override";
+    # Home trees here include nix store, models, and worktrees.
+    FFF_ENABLE_HOME_SCAN = "0";
   };
 
   activation =
