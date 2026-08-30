@@ -143,6 +143,28 @@ in
         ${syncPiExtensions}
       '';
 
+      # pi-tool-display 0.5.0 re-registers grep/find even when FFF already owns
+      # them (tryGetAllTools is empty during extension load). Leave FFF as the
+      # owner; display still wraps read/ls/bash/edit/write.
+      syncPiToolDisplayOwnership = lib.hm.dag.entryAfter [ "syncPiExtensions" ] ''
+        cfg="$HOME/.pi/agent/extensions/pi-tool-display/config.json"
+        mkdir -p "$(dirname "$cfg")"
+        tmp="$(mktemp "$cfg.tmp.XXXXXX")"
+        trap 'rm -f "$tmp"' EXIT
+        if [[ -f "$cfg" ]]; then
+          ${pkgs.jq}/bin/jq \
+            '.registerToolOverrides.grep = false | .registerToolOverrides.find = false' \
+            "$cfg" > "$tmp"
+        else
+          ${pkgs.jq}/bin/jq -n \
+            '{registerToolOverrides: {grep: false, find: false}}' > "$tmp"
+        fi
+        chmod 0600 "$tmp"
+        if [[ ! -f "$cfg" ]] || ! cmp -s "$tmp" "$cfg"; then
+          mv "$tmp" "$cfg"
+        fi
+      '';
+
       # policy-only hermes: compact policy, no MEMORY.md injection, flush via
       # GPT-5.6 Luna so compact does not spawn a second job on the desktop GPU.
       syncHermesMemory = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''
