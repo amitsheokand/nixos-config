@@ -264,7 +264,7 @@ On the Air, `ssh-keygen -t ed25519` and append `~/.ssh/id_ed25519.pub` to [`modu
 
 ## LAN SSH + deploy
 
-Pubkeys for Mac / desktop / odie live in [`modules/shared/ssh-keys.nix`](modules/shared/ssh-keys.nix) (`authorized_keys` on every host). Aliases: `ssh odie`, `ssh nixos`, `ssh vaayu`, `ssh ai-mac`.
+Pubkeys for Mac / desktop / odie live in [`modules/shared/ssh-keys.nix`](modules/shared/ssh-keys.nix) (`authorized_keys` on every host). Server host keys (so this Mac can `ssh odie` without TOFU) live in [`modules/shared/ssh-host-keys.nix`](modules/shared/ssh-host-keys.nix) → `~/.ssh/known_hosts.lan` plus NixOS `programs.ssh.knownHosts`. Aliases: `ssh odie`, `ssh nixos`, `ssh vaayu`, `ssh ai-mac`.
 
 From Mac (after this generation is on the boxes):
 

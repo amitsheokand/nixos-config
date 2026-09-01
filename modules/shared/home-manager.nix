@@ -379,6 +379,9 @@ let name = "Amit Sheokand";
       "vaayu-2" = { hostname = "vaayu-2.local"; user = "amitsheokand"; };
       "ai-mac" = { hostname = "ai-mac.local"; user = "amitsheokand"; };
     };
+    extraConfig = ''
+      UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.lan
+    '';
     settings."*" = {
       SendEnv = [ "LANG" "LC_*" ];
       HashKnownHosts = true;

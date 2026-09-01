@@ -109,6 +109,9 @@ in
     blueman.enable = true;
   };
 
+  # LAN SSH server host keys (TOFU-free). User keys stay in ssh-keys.nix.
+  programs.ssh.knownHosts = (import ../shared/ssh-host-keys.nix).knownHosts;
+
   # Bluetooth + base graphics (hosts add GPU-specific extraPackages).
   # enable32Bit is x86_64-only (Wine/DXVK); Asahi aarch64 hosts mkForce false.
   hardware = {

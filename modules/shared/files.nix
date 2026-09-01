@@ -2,5 +2,8 @@
 
 {
   # Dotfiles live in platform home-manager modules.
-  # LAN SSH public keys: modules/shared/ssh-keys.nix (authorized_keys via NixOS/Darwin).
+  # LAN SSH user pubs: ssh-keys.nix. Server host keys: ssh-host-keys.nix.
+  ".ssh/known_hosts.lan" = {
+    text = (import ./ssh-host-keys.nix).fileText;
+  };
 }
