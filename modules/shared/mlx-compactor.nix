@@ -31,8 +31,6 @@ let
       venv="$HOME/.local/share/mlx-lm/venv"
       stamp="$venv/.requirements"
       requirements="${mlxMac.mlxLmRequirements}"
-      adapter_path="${adapterPath}"
-      base_mlx="${baseMlxPath}"
       fused_path="${fusedPath}"
 
       if [[ ! -x "$venv/bin/python" ]] || [[ ! -f "$stamp" ]] || ! cmp -s "$stamp" "$requirements"; then
@@ -90,6 +88,9 @@ def run(args):
     return subprocess.call(args)
 
 if not os.path.isfile(os.path.join(base_mlx, "config.json")):
+    if os.path.isdir(base_mlx):
+        import shutil
+        shutil.rmtree(base_mlx)
     os.makedirs(base_mlx, exist_ok=True)
     rc = run([
         py, "-m", "mlx_lm.convert",
