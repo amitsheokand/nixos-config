@@ -24,7 +24,7 @@ def available_models(cfg: dict) -> list[dict]:
     models = []
     lanes = cfg.get("profiles") or {}
     backends = cfg.get("backends") or {}
-    default_backend = cfg.get("default_backend") or "ornith"
+    default_backend = cfg.get("default_backend") or "qwen38"
     for lane_id, lane in lanes.items():
         models.append(
             {
@@ -40,6 +40,8 @@ def available_models(cfg: dict) -> list[dict]:
             }
         )
     for backend_id, backend in backends.items():
+        if backend.get("available", True) is False:
+            continue
         models.append(
             {
                 "name": backend_id,
@@ -50,7 +52,7 @@ def available_models(cfg: dict) -> list[dict]:
         )
     for lane_id, lane in lanes.items():
         for backend_id, backend in backends.items():
-            if backend_id == default_backend:
+            if backend_id == default_backend or backend.get("available", True) is False:
                 continue
             models.append(
                 {

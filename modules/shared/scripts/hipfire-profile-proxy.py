@@ -6,10 +6,9 @@ backend tag and fill thinking/effort/speculation when the client omitted
 those fields. Explicit client fields win.
 
 Model ids:
-  forge                 lane on the default backend
-  forge/qwen38          lane on an explicit backend (weight swap)
-  ornith / qwen38       backend ids — no lane defaults
-  ornith-1.5:35b-a3b    hipfire tags listed as backend aliases
+  forge / anvil / feather   lanes on the catalog default backend
+  forge/ornith              optional MoE swap (kept for a later checkpoint)
+  qwen38                    raw backend — no lane defaults
 
 Unknown ids return HTTP 400. Prompts that cannot fit `max_seq` return HTTP 413.
 If the prompt fits, `max_tokens` is clamped to the remaining GPU room instead
@@ -54,13 +53,41 @@ def lanes_of(cfg: dict[str, Any]) -> dict[str, Any]:
     return dict(cfg.get("profiles") or cfg.get("lanes") or {})
 
 
+THINK_ANSWER_ROOM = 512
+
+
+def backend_available(backend: Any) -> bool:
+    if not isinstance(backend, dict):
+        return False
+    return backend.get("available", True) is not False
+
+
 def default_backend_id(cfg: dict[str, Any]) -> str:
-    if cfg.get("default_backend"):
-        return str(cfg["default_backend"])
     backends = backends_of(cfg)
+    requested = cfg.get("default_backend")
+    if isinstance(requested, str) and requested in backends and backend_available(
+        backends[requested]
+    ):
+        return requested
+    for backend_id, backend in backends.items():
+        if backend_available(backend):
+            return backend_id
     if len(backends) == 1:
         return next(iter(backends))
-    return "ornith"
+    return "qwen38"
+
+
+def lane_backend_id(cfg: dict[str, Any], lane: dict[str, Any] | None) -> str:
+    """Bare lane id uses an optional pin, else the catalog default backend."""
+    pinned = lane.get("backend") if isinstance(lane, dict) else None
+    if isinstance(pinned, str) and pinned:
+        backends = backends_of(cfg)
+        if pinned in backends:
+            return pinned
+        found = lookup_backend(cfg, pinned)
+        if found is not None:
+            return found[0]
+    return default_backend_id(cfg)
 
 
 def lookup_backend(cfg: dict[str, Any], model: str) -> tuple[str, dict[str, Any]] | None:
@@ -97,7 +124,9 @@ def apply_lane_defaults(
     spec = resolve_speculation(
         defaults.pop("speculation", lane.get("speculation")), backend
     )
-    if spec and "speculation" not in body:
+    # Omit "off": hipfire serve reloads (and unloads the DFlash draft) when
+    # the selector changes. AR lanes inherit the resident default.
+    if spec and spec != "off" and "speculation" not in body:
         body["speculation"] = spec
     for key, value in defaults.items():
         if key == "chat_template_kwargs":
@@ -188,6 +217,24 @@ def enforce_budgets(
     if think_cap is not None:
         current = _as_int(body.get("max_think_tokens"))
         body["max_think_tokens"] = think_cap if current is None else min(current, think_cap)
+    thinking_on = True
+    kwargs = body.get("chat_template_kwargs")
+    if isinstance(kwargs, dict) and "enable_thinking" in kwargs:
+        thinking_on = bool(kwargs["enable_thinking"])
+    elif "enable_thinking" in body:
+        thinking_on = bool(body["enable_thinking"])
+    elif think_cap is None:
+        thinking_on = False
+    if thinking_on and think_cap is not None:
+        floor = think_cap + THINK_ANSWER_ROOM
+        if max_tokens_cap is not None:
+            floor = min(floor, max_tokens_cap)
+        for key in ("max_tokens", "max_completion_tokens"):
+            current = _as_int(body.get(key))
+            if current is not None and current < floor:
+                body[key] = floor
+        if "max_tokens" not in body and "max_completion_tokens" not in body:
+            body["max_tokens"] = floor
     max_tokens = (
         _as_int(body.get("max_tokens"))
         or _as_int(body.get("max_completion_tokens"))
@@ -252,9 +299,9 @@ def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
         return body
 
     if model in lanes:
-        backend_id = default_backend_id(cfg)
-        backend = backends.get(backend_id)
         lane = lanes[model]
+        backend_id = lane_backend_id(cfg, lane)
+        backend = backends.get(backend_id)
         if not isinstance(backend, dict):
             legacy = cfg.get("backend_model")
             if isinstance(legacy, str):
@@ -282,7 +329,6 @@ def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
 
 def catalog_ids(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     data: list[dict[str, Any]] = []
-    default_id = default_backend_id(cfg)
     for lane_id, lane in lanes_of(cfg).items():
         data.append(
             {
@@ -295,6 +341,8 @@ def catalog_ids(cfg: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     for backend_id, backend in backends_of(cfg).items():
+        if not backend_available(backend):
+            continue
         data.append(
             {
                 "id": backend_id,
@@ -306,8 +354,9 @@ def catalog_ids(cfg: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     for lane_id, lane in lanes_of(cfg).items():
+        skip_id = lane_backend_id(cfg, lane)
         for backend_id, backend in backends_of(cfg).items():
-            if backend_id == default_id:
+            if backend_id == skip_id or not backend_available(backend):
                 continue
             composite = f"{lane_id}/{backend_id}"
             data.append(
@@ -387,7 +436,7 @@ class Handler(BaseHTTPRequestHandler):
                             "error": {
                                 "message": (
                                     "unknown model %r; use a lane (forge/anvil/feather), "
-                                    "a backend (ornith/qwen38), or lane/backend"
+                                    "a backend (qwen38), or lane/backend"
                                     % error.model
                                 )
                             }

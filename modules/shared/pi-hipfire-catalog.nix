@@ -5,6 +5,7 @@
 let
   profiles = import ./agent-profiles.nix;
   defaultBackendId = profiles.defaultBackend;
+  visibleBackends = lib.filterAttrs (_: backend: backend.available or true) profiles.backends;
 
   piModel = name: profile: {
     id = name;
@@ -33,7 +34,7 @@ let
         reasoning = lane.reasoning or true;
         thinkingLevelMap = lane.thinkingLevelMap or null;
       }
-    ) (lib.filterAttrs (id: _: id != defaultBackendId) profiles.backends)
+    ) (lib.filterAttrs (id: _: id != (lane.backend or defaultBackendId)) visibleBackends)
   ) profiles.profiles);
 
   piModels =
@@ -43,7 +44,7 @@ let
       reasoning = true;
       contextWindow = backend.contextWindow or profiles.contextWindow;
       maxTokens = backend.maxTokens or profiles.maxTokens;
-    }) profiles.backends
+    }) visibleBackends
     ++ map (entry: piModel entry.id {
       displayName = entry.displayName;
       reasoning = entry.reasoning;

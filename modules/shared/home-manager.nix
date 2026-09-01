@@ -101,7 +101,7 @@ let name = "Amit Sheokand";
         local payload
         local max_tokens
         endpoint="$(ai-endpoint)"
-        max_tokens="''${AI_MAX_TOKENS:-64}"
+        max_tokens="''${AI_MAX_TOKENS:-4096}"
         payload="$(jq -n \
           --arg model "$AI_MODEL" \
           --arg prompt "$*" \

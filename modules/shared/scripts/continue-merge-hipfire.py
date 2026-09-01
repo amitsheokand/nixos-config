@@ -22,11 +22,15 @@ def hipfire_models(cfg: dict) -> list[dict]:
     models = []
     lanes = cfg.get("profiles") or {}
     backends = cfg.get("backends") or {}
-    default_backend = cfg.get("default_backend") or "ornith"
-    ids = list(lanes) + list(backends)
+    default_backend = cfg.get("default_backend") or "qwen38"
+    ids = list(lanes) + [
+        backend_id
+        for backend_id, backend in backends.items()
+        if backend.get("available", True) is not False
+    ]
     for lane_id in lanes:
-        for backend_id in backends:
-            if backend_id != default_backend:
+        for backend_id, backend in backends.items():
+            if backend_id != default_backend and backend.get("available", True) is not False:
                 ids.append(f"{lane_id}/{backend_id}")
     seen = set()
     for model_id in ids:

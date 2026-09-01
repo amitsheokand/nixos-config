@@ -2,11 +2,12 @@
 #
 # Public API for Pi / Hermes / Grok / Continue / Zed:
 #   forge / anvil / feather  — generic lanes (thinking, effort, spec policy)
-#   ornith / qwen38          — optional weight ids (swap the resident checkpoint)
+#   qwen38                   — daily weight id
+#   ornith                   — parked MoE slot (available=false until weights exist)
 #
 # Do not put checkpoint names in AI_MODEL / GROK_LOCAL_MODEL. Default lane is
-# forge; default backend is ornith. Swap `defaultBackend` when the daily
-# checkpoint changes — keep lane ids stable.
+# forge; default backend is qwen38 (mq4-pro). Swap `defaultBackend` when the
+# daily checkpoint changes — keep lane ids stable.
 #
 # Context windows are the *filled* working set Pi/Grok advertise, not the
 # model card. hipfire `memory.max_seq` is the GPU fail-closed ceiling.
@@ -14,7 +15,7 @@
 # 94k prefill on the R9700 (daemon abort in PrefillBatchScratch / hipFree).
 # Keep advertised windows inside that envelope so auto-compact fires first.
 rec {
-  defaultBackend = "ornith";
+  defaultBackend = "qwen38";
   defaultLane = "forge";
   defaultProfile = defaultLane;
   backendModel = backends.${defaultBackend}.tag;
@@ -24,7 +25,7 @@ rec {
   # http://nixos.local:8080/v1. hipfire serve binds loopback only; LAN
   # traffic must go through this proxy (clamp + think caps + 413).
   listenHost = "0.0.0.0";
-  # Catalog default = daily long-session window (forge/anvil/Ornith).
+  # Catalog default = daily long-session window (forge/anvil).
   contextWindow = 49152;
   maxTokens = 16384;
 
@@ -33,7 +34,8 @@ rec {
       tag = "ornith-1.5:35b-a3b";
       aliases = [ "ornith" "ornith-1.5" "ornith1.5" "ornith-1.5:35b-a3b" ];
       displayName = "Ornith";
-      description = "Ornith 1.5 35B-A3B MoE (3B active). Default for long sessions. MTP optional. No DFlash draft.";
+      description = "Parked MoE slot. Composite routing (forge/ornith) stays implemented; flip available when a checkpoint is on disk.";
+      available = false;
       contextWindow = 49152;
       maxTokens = 16384;
       maxSeq = 65536;
@@ -41,16 +43,16 @@ rec {
       speculation = [ "off" "mtp" ];
     };
     qwen38 = {
-      tag = "qwen3.8:27b";
-      aliases = [ "qwen38" "qwen3.8" "qwen3.8:27b" "qwen3.8:latest" ];
+      tag = "qwen3.8:27b-mq4-pro";
+      aliases = [ "qwen38" "qwen3.8" "qwen3.8:27b" "qwen3.8:latest" "qwen3.8:27b-mq4-pro" ];
       displayName = "Qwen 3.8";
-      description = "Qwen3.8 27B dense MQ4. Short/fast (DFlash 2). Do not use for long-form — denser KV, crashed ~94k filled.";
-      contextWindow = 32768;
-      maxTokens = 8192;
+      description = "Qwen3.8 27B mq4-pro. Daily backend for forge/anvil/feather. DFlash on feather. Advertised 32k/48k; GPU cap 65k.";
+      contextWindow = 49152;
+      maxTokens = 16384;
       maxSeq = 65536;
       kvMode = "q8";
       speculation = [ "off" "dflash" "mtp" ];
-      draftFile = "qwen38-27b-dflash2.hfq";
+      draftFile = "qwen38-27b-dflash-mq4.hfq";
     };
   };
 
@@ -59,7 +61,8 @@ rec {
   profiles = {
     forge = {
       displayName = "Forge";
-      description = "Daily long session: thinking on, medium effort, 2048-token think cap. Compact before ~40k. Stay on Ornith.";
+      description = "Daily long session on Qwen 3.8: thinking on, medium, 2048-token think cap. Compact before ~40k.";
+      backend = "qwen38";
       thinking = true;
       effort = "medium";
       maxThinkTokens = 2048;
@@ -79,7 +82,8 @@ rec {
     };
     anvil = {
       displayName = "Anvil";
-      description = "Hard long-form: thinking on, xhigh, 8192-token think cap. Same compact window as forge. Stay on Ornith.";
+      description = "Hard long-form on Qwen 3.8: thinking on, xhigh, 8192-token think cap. Same compact window as forge.";
+      backend = "qwen38";
       thinking = true;
       effort = "xhigh";
       maxThinkTokens = 8192;
@@ -99,7 +103,8 @@ rec {
     };
     feather = {
       displayName = "Feather";
-      description = "Fast short lane: thinking on, low effort, 512-token think cap, greedy. DFlash when the backend has a draft; otherwise MTP/AR.";
+      description = "Fast short lane on Qwen 3.8: thinking on, low effort, 512-token think cap, greedy, DFlash. Compact at 32k.";
+      backend = "qwen38";
       thinking = true;
       effort = "low";
       # Explicit cap: Qwen3.8 "low" is a prompt instruction, not a token budget.

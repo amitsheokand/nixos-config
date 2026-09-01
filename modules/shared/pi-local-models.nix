@@ -5,8 +5,8 @@
 # the server's real model id; use `name` for the /model picker search string.
 #
 # Hipfire on the PC sits behind the catalog proxy, so lane ids (`forge` /
-# `anvil` / `feather`) and backend ids (`ornith` / `qwen38`) are real as far
-# as the client is concerned.
+# `anvil` / `feather`) and the daily backend (`qwen38`) are real as far
+# as the client is concerned. Parked MoE ids stay out of this picker.
 { pkgs
 , providerId
 , contextWindow

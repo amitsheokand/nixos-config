@@ -60,6 +60,14 @@ in
   systemd.user.services = (headroom.systemd.user.services or {})
     // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
 
+  # `systemctl --user mask` leaves ~/.config/systemd/user/*.service -> /dev/null.
+  # HM then refuses to clobber those links and activation fails. Force overwrite
+  # so a leftover mask cannot block nixos-rebuild.
+  xdg.configFile = lib.mkIf hipfireEnabled {
+    "systemd/user/hipfire-serve.service".force = true;
+    "systemd/user/hipfire-daemon-watch.service".force = true;
+  };
+
   # GPG agent with pinentry for passphrase prompts
   services.gpg-agent = {
     enable = true;

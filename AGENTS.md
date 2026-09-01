@@ -327,7 +327,7 @@ normal `grok` session — that replaces the cloud catalog).
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
 | Mac (`ai-mac`) | `qwen35` | default `mlx-local` / `qwen35` (API id = MLX path). Also `hipfire` over LAN (`/model forge`) | MLX path under `~/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit`; hipfire `http://nixos.local:8080/v1` |
-| PC (`nixos`) | `forge` (default), `anvil`, `feather`, plus `ornith` / `qwen38` | provider `hipfire`, names Forge / Anvil / Feather / Ornith / Qwen 3.8 | lane and backend ids at `http://127.0.0.1:8080/v1` locally, or `http://nixos.local:8080/v1` on the LAN (proxy → hipfire `:11435`). Default backend is Ornith (`ornith-1.5:35b-a3b`); Qwen 3.8 is an explicit option. Catalog: `modules/shared/agent-profiles.nix` |
+| PC (`nixos`) | `forge` (default), `anvil`, `feather`, `qwen38` | provider `hipfire`, names Forge / Anvil / Feather / Qwen 3.8 | lane ids at `http://127.0.0.1:8080/v1` locally, or `http://nixos.local:8080/v1` on the LAN (proxy → hipfire `:11435`). Daily backend is Qwen 3.8 mq4-pro. Catalog: `modules/shared/agent-profiles.nix` |
 | Laptop (`odie`) | `forge` (LAN) | provider `hipfire` at `http://nixos.local:8080/v1` | same lane ids as the PC |
 | Air (`vaayu`) | `forge` (LAN) | provider `hipfire` at `http://nixos.local:8080/v1`; OpenRouter ox-alpha stays as a Pi extension | same lane ids |
 
@@ -335,14 +335,14 @@ PC local profiles (names stay if the checkpoint changes):
 
 | Profile | Cursor analogue | Thinking | Effort | Use |
 |---------|-----------------|----------|--------|-----|
-| `feather` | — | on (low, 512-token cap) | greedy; DFlash if the backend has a draft, else MTP | short/fast subagent, **32k** window, 8k gen |
-| `forge` | Composer | on (medium, 2048-token cap; old think stripped) | medium | **daily long-form on Ornith**, 48k window, Pi auto-compacts |
-| `anvil` | Grok | on (xhigh, 8192-token cap; old think stripped) | xhigh | **hard long-form on Ornith**, same 48k compact window |
-| `ornith` / `qwen38` | — | raw backend | none injected | explicit weight selection (swaps GPU). `qwen38` is short/fast only |
+| `feather` | — | on (low, 512-token cap) | greedy; **DFlash on Qwen 3.8** | short/fast, **32k** window, 8k gen |
+| `forge` | Composer | on (medium, 2048-token cap; old think stripped) | medium | **daily on Qwen 3.8 mq4-pro**, AR, 48k window, Pi auto-compacts |
+| `anvil` | Grok | on (xhigh, 8192-token cap; old think stripped) | xhigh | **hard long-form on Qwen 3.8**, same 48k compact window |
+| `qwen38` | — | raw backend | none injected | explicit weight. MoE swap code (`forge/ornith`) stays in the proxy but is hidden until a checkpoint is on disk |
 
-Long sessions stay on **Ornith** (`forge` / `anvil`). Qwen 3.8 dense is the DFlash/feather backend; a ~94k filled Qwen turn aborted the GPU daemon (2026-08-28). Pi compaction (`pi-async-compaction` + `compaction.enabled`) fires from ~60% of the advertised window. hipfire `memory.max_seq=65536` is the fail-closed ceiling so a non-Pi client cannot allocate 256k and die.
+Long sessions stay on **Qwen 3.8 mq4-pro** (`forge` / `anvil` / `feather`). Advertised windows stay 32k (feather) / 48k (forge/anvil). hipfire `memory.max_seq=65536` is the product fail-closed ceiling. An isolated 86k/98k probe is a temp project, not a catalog size. Pi compaction (`pi-async-compaction` + `compaction.enabled`) fires from ~60% of the advertised window.
 
-Default `AI_MODEL` / `GROK_LOCAL_MODEL` is the **lane** `forge`, never a checkpoint name. `forge/qwen38` is an explicit Qwen swap (shorter window).
+Default `AI_MODEL` / `GROK_LOCAL_MODEL` is the **lane** `forge`, never a checkpoint name. Composite MoE routing is kept in the proxy for a later checkpoint; it is not in the Pi/Grok picker.
 
 Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites `~/.hipfire/config.toml`. The desktop uses `modules/shared/hipfire-local.nix` (existing cargo binaries + user config). After `build-switch`: `systemctl --user start hipfire-serve hipfire-profile-proxy hipfire-daemon-watch` (WantedBy default.target). Serve binds **127.0.0.1:11435**; LAN clients use the catalog at `:8080` (clamp `max_tokens`, inject think caps, HTTP 413 on oversize). hipfire itself refuses to bump `memory.max_seq`. The watch unit restarts serve if `/health` is up but `daemon.pid` is dead or zombie (the 2026-08-28 failure mode). Hermes gets `/model forge`, `/model anvil`, `/model feather`, plus backend aliases; the Nous default provider is unchanged. Cursor Agent stays on cloud Grok/Composer; Continue / `cursor-local-help` use the named profiles. Zed gets `language_models.openai_compatible.hipfire` without changing `agent.default_model`.
 

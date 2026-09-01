@@ -3,7 +3,7 @@
 # Does not import hipfire's NixOS module (that rebuilds the Rust workspace and
 # overwrites ~/.hipfire/config.toml). Uses the locally built binaries and the
 # existing user config. Catalog lives in ./agent-profiles.nix:
-#   lanes (forge/anvil/feather) vs backends (ornith/qwen38).
+#   lanes (forge/anvil/feather) vs backends (qwen38; ornith parked).
 {
   pkgs,
   lib,
@@ -60,7 +60,10 @@ let
     max_tokens = backend.maxTokens or profiles.maxTokens;
     max_seq = backend.maxSeq or 65536;
     speculation = backend.speculation or [ "off" ];
+    available = backend.available or true;
   } // lib.optionalAttrs (backend ? draftFile) { draft_file = backend.draftFile; };
+
+  visibleBackends = lib.filterAttrs (_: backend: backend.available or true) profiles.backends;
 
   jsonLane = _name: profile: {
     display_name = profile.displayName;
@@ -71,6 +74,8 @@ let
     defaults = mkDefaults profile;
   } // lib.optionalAttrs (profile ? maxThinkTokens) {
     max_think_tokens = profile.maxThinkTokens;
+  } // lib.optionalAttrs (profile ? backend) {
+    backend = profile.backend;
   };
 
   profileJson = {
@@ -113,6 +118,7 @@ let
         exit 127
       fi
       ${draftExport}
+      export HIPFIRE_DFLASH_MODE="''${HIPFIRE_DFLASH_MODE:-auto}"
       export HIPFIRE_QWEN_MTP="''${HIPFIRE_QWEN_MTP:-0}"
       export HIPFIRE_MODELS_DIR="''${HIPFIRE_MODELS_DIR:-${modelsDir}}"
       export HIPFIRE_DAEMON_BIN="''${HIPFIRE_DAEMON_BIN:-${hipfireDaemon}}"
@@ -150,7 +156,7 @@ let
       }
     ) (builtins.attrNames profiles.profiles)
     + lib.concatMapStrings (name:
-      let backend = profiles.backends.${name};
+      let backend = visibleBackends.${name};
       in grokEntry {
         id = name;
         displayName = backend.displayName;
@@ -158,7 +164,7 @@ let
         contextWindow = backend.contextWindow or profiles.contextWindow;
         maxTokens = backend.maxTokens or profiles.maxTokens;
       }
-    ) (builtins.attrNames profiles.backends)
+    ) (builtins.attrNames visibleBackends)
     + lib.concatMapStrings (entry: grokEntry {
       id = entry.id;
       displayName = entry.displayName;
@@ -268,6 +274,7 @@ in
           "HOME=${homeDir}"
           "HIP_VISIBLE_DEVICES=0"
           "HIPFIRE_QWEN_MTP=0"
+          "HIPFIRE_DFLASH_MODE=auto"
         ];
       };
       Install.WantedBy = [ "default.target" ];

@@ -56,6 +56,7 @@ CFG = {
         },
         "feather": {
             "display_name": "Feather",
+            "backend": "qwen38",
             "context_window": 32768,
             "max_tokens": 8192,
             "max_think_tokens": 512,
@@ -80,7 +81,7 @@ class ApplyRequestTests(unittest.TestCase):
         body = proxy.apply_request(CFG, {"model": "forge"})
         self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
         self.assertEqual(body["reasoning_effort"], "medium")
-        self.assertEqual(body["speculation"], "off")
+        self.assertNotIn("speculation", body)
         self.assertEqual(body["max_tokens"], 16384)
         self.assertEqual(body["max_think_tokens"], 2048)
         self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
@@ -92,15 +93,21 @@ class ApplyRequestTests(unittest.TestCase):
         )
         self.assertEqual(body["reasoning_effort"], "xhigh")
 
-    def test_feather_on_ornith_is_mtp_not_dflash(self) -> None:
+    def test_feather_pins_qwen38_dflash(self) -> None:
         body = proxy.apply_request(CFG, {"model": "feather"})
-        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
-        self.assertEqual(body["speculation"], "mtp")
+        self.assertEqual(body["model"], "qwen3.8:27b")
+        self.assertEqual(body["speculation"], "dflash")
         self.assertEqual(body["reasoning_effort"], "low")
         self.assertEqual(body["max_think_tokens"], 512)
         self.assertEqual(body["max_tokens"], 8192)
         self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
         self.assertFalse(body["chat_template_kwargs"]["preserve_thinking"])
+
+    def test_feather_ornith_composite_is_mtp(self) -> None:
+        body = proxy.apply_request(CFG, {"model": "feather/ornith"})
+        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
+        self.assertEqual(body["speculation"], "mtp")
+        self.assertEqual(body["reasoning_effort"], "low")
 
     def test_client_think_cap_wins(self) -> None:
         body = proxy.apply_request(
@@ -118,8 +125,7 @@ class ApplyRequestTests(unittest.TestCase):
     def test_composite_forge_qwen_keeps_lane_defaults(self) -> None:
         body = proxy.apply_request(CFG, {"model": "forge/qwen38"})
         self.assertEqual(body["model"], "qwen3.8:27b")
-        self.assertEqual(body["reasoning_effort"], "medium")
-        self.assertEqual(body["speculation"], "off")
+        self.assertNotIn("speculation", body)
 
     def test_qwen38_alias_does_not_inject_lane_defaults(self) -> None:
         body = proxy.apply_request(CFG, {"model": "qwen38"})
@@ -170,9 +176,34 @@ class ApplyRequestTests(unittest.TestCase):
                 "ornith",
                 "qwen38",
                 "forge/qwen38",
-                "feather/qwen38",
+                "feather/ornith",
             ],
         )
+
+    def test_small_max_tokens_is_floored_for_thinking(self) -> None:
+        body = proxy.apply_request(CFG, {"model": "forge", "max_tokens": 32})
+        self.assertEqual(body["max_think_tokens"], 2048)
+        self.assertEqual(body["max_tokens"], 2048 + proxy.THINK_ANSWER_ROOM)
+
+    def test_unavailable_backend_is_omitted_from_catalog(self) -> None:
+        cfg = json.loads(json.dumps(CFG))
+        cfg["backends"]["ornith"]["available"] = False
+        cfg["default_backend"] = "qwen38"
+        payload = [item["id"] for item in json.loads(proxy.models_payload(cfg))["data"]]
+        self.assertEqual(payload, ["forge", "feather", "qwen38"])
+        body = proxy.apply_request(cfg, {"model": "feather/ornith"})
+        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
+
+    def test_forge_pin_qwen38_rewrites_tag(self) -> None:
+        cfg = dict(CFG)
+        profiles = dict(cfg["profiles"])
+        forge = dict(profiles["forge"])
+        forge["backend"] = "qwen38"
+        profiles["forge"] = forge
+        cfg["profiles"] = profiles
+        body = proxy.apply_request(cfg, {"model": "forge"})
+        self.assertEqual(body["model"], "qwen3.8:27b")
+        self.assertNotIn("speculation", body)
 
 
 if __name__ == "__main__":

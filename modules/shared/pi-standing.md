@@ -7,4 +7,4 @@
 - `/compact` before huge tool dumps or logs. Quote last 20 lines, not the file.
 - Search with FFF (`grep` in override mode): follow the cursor page; do not dump TODO/FIXME across the repo.
 - One client on the desktop GPU at a time. No Agent Team or parallel Pi on that slot.
-- Long local sessions use lane `forge`. Do not use `qwen38` for long-form.
+- Long local sessions use lane `forge` on Qwen 3.8 mq4-pro. Feather is the same weights with DFlash. Do not advertise 86k/98k as a daily window.

@@ -20,7 +20,7 @@ def load_catalog() -> dict:
     raw = os.environ.get("HIPFIRE_PROFILES_JSON", "")
     if not raw:
         return {
-            "default_backend": "ornith",
+            "default_backend": "qwen38",
             "backends": {},
             "profiles": {
                 "forge": {"display_name": "Forge"},
@@ -47,7 +47,7 @@ def extra_body_from_lane(lane: dict) -> dict:
     if "presence_penalty" in defaults:
         extra["presence_penalty"] = defaults["presence_penalty"]
     spec = defaults.get("speculation", lane.get("speculation"))
-    if spec and spec not in {"dflash-if-capable", "mtp-if-capable"}:
+    if spec and spec not in {"off", "dflash-if-capable", "mtp-if-capable"}:
         extra["speculation"] = spec
     return extra
 
@@ -68,14 +68,16 @@ def catalog_aliases(cfg: dict) -> dict[str, dict]:
     aliases: dict[str, dict] = {}
     lanes = cfg.get("profiles") or cfg.get("lanes") or {}
     backends = cfg.get("backends") or {}
-    default_backend = cfg.get("default_backend") or "ornith"
+    default_backend = cfg.get("default_backend") or "qwen38"
     for lane_id, lane in lanes.items():
         aliases[lane_id] = alias_entry(lane_id, extra_body_from_lane(lane))
-    for backend_id in backends:
+    for backend_id, backend in backends.items():
+        if backend.get("available", True) is False:
+            continue
         aliases[backend_id] = alias_entry(backend_id)
     for lane_id, lane in lanes.items():
-        for backend_id in backends:
-            if backend_id == default_backend:
+        for backend_id, backend in backends.items():
+            if backend_id == default_backend or backend.get("available", True) is False:
                 continue
             name = f"{lane_id}/{backend_id}"
             aliases[name] = alias_entry(name, extra_body_from_lane(lane))
