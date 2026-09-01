@@ -20,7 +20,7 @@ CFG = {
     "default_backend": "ornith",
     "backends": {
         "ornith": {
-            "tag": "ornith-1.5:35b-a3b",
+            "tag": "ornith-1.5:35b-a3b-mq4r",
             "aliases": ["ornith", "ornith-1.5"],
             "speculation": ["off", "mtp"],
             "display_name": "Ornith",
@@ -79,7 +79,7 @@ CFG = {
 class ApplyRequestTests(unittest.TestCase):
     def test_forge_uses_default_backend_and_lane_defaults(self) -> None:
         body = proxy.apply_request(CFG, {"model": "forge"})
-        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
+        self.assertEqual(body["model"], "ornith-1.5:35b-a3b-mq4r")
         self.assertEqual(body["reasoning_effort"], "medium")
         self.assertNotIn("speculation", body)
         self.assertEqual(body["max_tokens"], 16384)
@@ -105,7 +105,7 @@ class ApplyRequestTests(unittest.TestCase):
 
     def test_feather_ornith_composite_is_mtp(self) -> None:
         body = proxy.apply_request(CFG, {"model": "feather/ornith"})
-        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
+        self.assertEqual(body["model"], "ornith-1.5:35b-a3b-mq4r")
         self.assertEqual(body["speculation"], "mtp")
         self.assertEqual(body["reasoning_effort"], "low")
 
@@ -157,7 +157,7 @@ class ApplyRequestTests(unittest.TestCase):
                 "messages": [{"role": "user", "content": "x" * 120_000}],
             },
         )
-        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
+        self.assertEqual(body["model"], "ornith-1.5:35b-a3b-mq4r")
         self.assertLessEqual(body["max_tokens"], 16384)
         self.assertGreater(body["max_tokens"], 0)
         self.assertEqual(body["max_tokens"], 65536 - 60_000 - 1)
@@ -192,7 +192,7 @@ class ApplyRequestTests(unittest.TestCase):
         payload = [item["id"] for item in json.loads(proxy.models_payload(cfg))["data"]]
         self.assertEqual(payload, ["forge", "feather", "qwen38"])
         body = proxy.apply_request(cfg, {"model": "feather/ornith"})
-        self.assertEqual(body["model"], "ornith-1.5:35b-a3b")
+        self.assertEqual(body["model"], "ornith-1.5:35b-a3b-mq4r")
 
     def test_forge_pin_qwen38_rewrites_tag(self) -> None:
         cfg = dict(CFG)

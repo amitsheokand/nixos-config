@@ -3,7 +3,7 @@
 # Public API for Pi / Hermes / Grok / Continue / Zed:
 #   forge / anvil / feather  — generic lanes (thinking, effort, spec policy)
 #   qwen38                   — daily weight id
-#   ornith                   — parked MoE slot (available=false until weights exist)
+#   ornith                   — official MQ4R + Sharp jinja sidecar (forge/ornith)
 #
 # Do not put checkpoint names in AI_MODEL / GROK_LOCAL_MODEL. Default lane is
 # forge; default backend is qwen38 (mq4-pro). Swap `defaultBackend` when the
@@ -31,11 +31,11 @@ rec {
 
   backends = {
     ornith = {
-      tag = "ornith-1.5:35b-a3b";
-      aliases = [ "ornith" "ornith-1.5" "ornith1.5" "ornith-1.5:35b-a3b" ];
+      tag = "ornith-1.5:35b-a3b-mq4r";
+      aliases = [ "ornith" "ornith-1.5" "ornith1.5" "ornith-1.5:35b-a3b" "ornith-1.5:35b-a3b-mq4r" ];
       displayName = "Ornith";
-      description = "Parked MoE slot. Composite routing (forge/ornith) stays implemented; flip available when a checkpoint is on disk.";
-      available = false;
+      description = "Official Ornith 1.5 MQ4R (uniform qt44) with Tiel Sharp v22.4 jinja sidecar. Daily lanes stay on Qwen; pick ornith or forge/ornith to swap.";
+      available = true;
       contextWindow = 49152;
       maxTokens = 16384;
       maxSeq = 65536;
