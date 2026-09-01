@@ -6,6 +6,9 @@ let
   profiles = import ./agent-profiles.nix;
   defaultBackendId = profiles.defaultBackend;
   visibleBackends = lib.filterAttrs (_: backend: backend.available or true) profiles.backends;
+  compactLan = import ./pi-compactor.nix {
+    baseUrl = "http://ai-mac.local:8081/v1";
+  };
 
   piModel = name: profile: {
     id = name;
@@ -78,6 +81,7 @@ let
       supportsUsageInStreaming = true;
       maxTokensField = "max_tokens";
     };
+    extraProviders = { mlx-compact = compactLan.provider; };
     contextWindow = profiles.contextWindow;
     maxTokens = profiles.maxTokens;
     models = piModels;
@@ -101,7 +105,7 @@ let
     );
     GROK_LOCAL_MODEL = profiles.defaultLane;
     GROK_LOCAL_BASE_URL = baseUrl;
-  };
+  } // compactLan.sessionVariables;
 in
 {
   inherit piModels provider piLocalModels piLocalSettings compositeEntries sessionVariables;

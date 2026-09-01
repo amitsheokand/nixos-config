@@ -326,7 +326,7 @@ normal `grok` session — that replaces the cloud catalog).
 
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
-| Mac (`ai-mac`) | `qwen35` | default `mlx-local` / `qwen35` (API id = MLX path). Also `hipfire` over LAN (`/model forge`) | MLX path under `~/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit`; hipfire `http://nixos.local:8080/v1` |
+| Mac (`ai-mac`) | `gemmacoder` | default `mlx-local` / `gemmacoder` when Gemma lane is up (`mlx-lane gemma`). Compactor is login-resident on `:8081`. Also `hipfire` over LAN (`/model forge`) | Gemma: `~/models/gemma-4-12b-coder-fable5-composer2.5-4bit` on demand (`mlx-lane gemma`). Compactor: `:8081` default on (`mlx-lane compact`). hipfire `http://nixos.local:8080/v1` |
 | PC (`nixos`) | `forge` (default), `anvil`, `feather`, `qwen38` | provider `hipfire`, names Forge / Anvil / Feather / Qwen 3.8 | lane ids at `http://127.0.0.1:8080/v1` locally, or `http://nixos.local:8080/v1` on the LAN (proxy → hipfire `:11435`). Daily backend is Qwen 3.8 mq4-pro. Catalog: `modules/shared/agent-profiles.nix` |
 | Laptop (`odie`) | `forge` (LAN) | provider `hipfire` at `http://nixos.local:8080/v1` | same lane ids as the PC |
 | Air (`vaayu`) | `forge` (LAN) | provider `hipfire` at `http://nixos.local:8080/v1`; OpenRouter ox-alpha stays as a Pi extension | same lane ids |
@@ -350,11 +350,12 @@ Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites 
 
 | Piece | Where |
 |-------|--------|
-| Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, pi-fff override grep, …) |
+| Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, pi-fff override grep, pi-cc-compact, …) |
+| Compact model | Mac MLX Compactor on `:8081` (login default). `mlx-lane compact` / `mlx-lane gemma` exclusive. `PI_CC_COMPACT_MODEL`. Never hipfire. |
 | Local model defaults | host HM (MLX + LAN hipfire on Darwin; local hipfire on PC; LAN hipfire on odie/vaayu) |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
-After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` and `/async-compact-now` still work.
+After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` uses **pi-cc-compact** → Mac Compactor (`http://ai-mac.local:8081/v1`, thinking off, 16k). Do not compact on Anvil/hipfire.
 
 **Session knowledge (do not stuff the prompt):**
 - hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via `openai-codex/gpt-5.6-luna` so it does not steal the R9700 slot.
@@ -363,7 +364,7 @@ After `nix run .#build-switch` on each machine, missing `pi install` packages ar
 - Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that).
 - One GPU client at a time. Headroom in front of `:8080` is optional later, not on this path.
 
-Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `qwen35` — mlx-vlm treats unknown ids as a new load and can crash. Keep id = filesystem path, picker name = `qwen35`. Mac MLX is capped (16k context / 2k gen, thinking off) so Pi’s ~5k system prompt does not stall prefill. `/model forge` on Mac/odie/vaayu uses the desktop catalog at `http://nixos.local:8080/v1`. On the PC, Pi `id` is the profile name (`forge` / `anvil` / `feather`); the proxy rewrites it to the hipfire tag. Grok can map picker id → API id without a proxy.
+Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `gemmacoder` — mlx-lm treats unknown ids as a new load and can crash. Keep id = filesystem path, picker name = `gemmacoder`. Mac MLX: 32k context / 4k gen, thinking on (12B coder on 24 GB M4). `/model forge` on Mac/odie/vaayu uses the desktop catalog at `http://nixos.local:8080/v1`. On the PC, Pi `id` is the profile name (`forge` / `anvil` / `feather`); the proxy rewrites it to the hipfire tag. Grok can map picker id → API id without a proxy.
 
 `agent` on PATH is Cursor CLI (`~/.local/bin/agent`). Grok TUI is `grok` only
 (the grok package `agent` alias is stripped).

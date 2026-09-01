@@ -204,6 +204,10 @@ in
 
   fonts.packages = import ../shared/fonts.nix { inherit pkgs; };
 
+  networking.hosts = {
+    "192.168.1.14" = [ "ai-mac" "ai-mac.local" ];
+  };
+
   # Nix daemon settings (hosts may append extra substituters / keys).
   nix = {
     nixPath = [

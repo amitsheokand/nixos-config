@@ -4,7 +4,11 @@ let
   user           = "amitsheokand";
   sharedFiles     = import ../shared/files.nix { inherit config pkgs; };
   additionalFiles = import ./files.nix { inherit user config pkgs; };
-  mlxModel = "/Users/${user}/models/DeepSeek-V4-Pro-Qwen3.5-9B-4bit";
+  mlxMac = import ../shared/mlx-mac.nix { inherit user pkgs; };
+  inherit (mlxMac) mlxModelPath mlxPickerName contextWindow maxTokens;
+  compactPi = import ../shared/pi-compactor.nix {
+    baseUrl = "http://127.0.0.1:8081/v1";
+  };
 in
 {
   users.users.${user} = {
@@ -51,20 +55,22 @@ in
           inherit pkgs lib;
           pi = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
           localSettings = {
-            model = mlxModel;
+            model = mlxModelPath;
             defaultProvider = "mlx-local";
-            defaultModel = mlxModel;
-            defaultThinkingLevel = "off";
+            defaultModel = mlxModelPath;
+            defaultThinkingLevel = "low";
           };
           localModels = {
             providerId = "mlx-local";
-            apiModel = mlxModel;
-            displayName = "qwen35";
-            contextWindow = 16384;
-            maxTokens = 2048;
-            reasoning = false;
+            apiModel = mlxModelPath;
+            displayName = mlxPickerName;
+            inherit contextWindow maxTokens;
+            reasoning = true;
             extraCompat = { maxTokensField = "max_tokens"; };
-            extraProviders = { hipfire = hipfireLan.provider; };
+            extraProviders = {
+              hipfire = hipfireLan.provider;
+              mlx-compact = compactPi.provider;
+            };
           };
         };
       in
@@ -73,12 +79,12 @@ in
           enableNixpkgsReleaseCheck = false;
           sessionVariables = {
             AI_BASE_URL = "http://127.0.0.1:8080/v1";
-            AI_MODEL = mlxModel;
-            AI_CONTEXT_WINDOW = "16384";
-            AI_MAX_TOKENS = "2048";
-            GROK_LOCAL_MODEL = mlxModel;
+            AI_MODEL = mlxModelPath;
+            AI_CONTEXT_WINDOW = toString contextWindow;
+            AI_MAX_TOKENS = toString maxTokens;
+            GROK_LOCAL_MODEL = mlxModelPath;
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
-          } // (piAgent.sessionVariables or {});
+          } // compactPi.sessionVariables // (piAgent.sessionVariables or {});
           sessionPath = (commandCode.home.sessionPath or [])
             ++ (headroom.home.sessionPath or []);
           packages = (pkgs.callPackage ./packages.nix {})
@@ -92,12 +98,12 @@ in
             {
               ".codex/mlx-local.config.toml" = {
                 text = ''
-                  model = "${mlxModel}"
+                  model = "${mlxModelPath}"
                   model_provider = "mlx-local"
-                  model_context_window = 16384
+                  model_context_window = ${toString contextWindow}
 
                   [model_providers.mlx-local]
-                  name = "qwen35"
+                  name = "${mlxPickerName}"
                   base_url = "http://127.0.0.1:8080/v1"
                   wire_api = "responses"
                   requires_openai_auth = false

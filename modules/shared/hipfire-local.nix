@@ -250,7 +250,9 @@ in
     );
     GROK_LOCAL_MODEL = defaultLane;
     GROK_LOCAL_BASE_URL = baseUrl;
-  };
+  } // (import ./pi-compactor.nix {
+    baseUrl = "http://ai-mac.local:8081/v1";
+  }).sessionVariables;
 
   packages = [ proxy serve daemonWatch ];
 

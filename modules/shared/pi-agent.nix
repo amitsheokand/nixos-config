@@ -23,6 +23,7 @@ let
     "npm:@quintinshaw/pi-dynamic-workflows@3.5.1"
     "npm:@narumitw/pi-statusline@0.49.6"
     "npm:pi-async-compaction@0.1.7"
+    "npm:pi-cc-compact@0.1.0"
     "npm:pi-cursor-sdk@0.2.0"
     # Load FFF before pi-tool-display. Override re-registers grep/find;
     # display 0.5.0 skips those names only if FFF already owns them.
