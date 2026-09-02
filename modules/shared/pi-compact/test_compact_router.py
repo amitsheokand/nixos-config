@@ -86,5 +86,22 @@ class BackendOrderTests(unittest.TestCase):
         self.assertEqual(rows[0][2], "/Users/amitsheokand/models/Compactor-Qwen3.5-4B-4bit")
 
 
+class FitBodyTests(unittest.TestCase):
+    def test_clips_huge_user_message(self) -> None:
+        huge = "keep-head " + ("x" * 80_000) + " keep-tail-unique"
+        body = router.fit_body(
+            {"messages": [{"role": "system", "content": "sys"}, {"role": "user", "content": huge}],
+             "max_tokens": 8192},
+            max_input_tokens=4000,
+            max_out=1024,
+        )
+        self.assertEqual(body["max_tokens"], 1024)
+        user = body["messages"][-1]["content"]
+        self.assertIn("keep-head", user)
+        self.assertIn("keep-tail-unique", user)
+        self.assertIn("truncated for compact context", user)
+        self.assertLess(router.estimate_tokens(user), 4000)
+
+
 if __name__ == "__main__":
     unittest.main()

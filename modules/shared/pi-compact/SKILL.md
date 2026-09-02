@@ -16,8 +16,9 @@ different model on a different port.
 1. Pi `session_before_compact` → `pi-cc-compact` (Claude Code 9-section prompt).
 2. `PI_CC_COMPACT_MODEL=compact/compactor` → `127.0.0.1:8091`.
 3. Router tries **Mac MLX Compactor** (`ai-mac.local:8081`, `mlx-lane compact`),
-   then **local tiny** (`127.0.0.1:8092`). Never `:11435`, the hipfire catalog
-   `:8080` on this PC, or Mac Gemma on `:8080`.
+   then **local tiny** (`127.0.0.1:8092`, 32k ctx). Oversize prompts are clipped
+   to fit. Never `:11435`, the hipfire catalog `:8080` on this PC, or Mac Gemma
+   on `:8080`.
 4. Router injects `focus.md` and forces thinking off.
 
 If both backends are down, compact returns 503. Do **not** fall back to Anvil

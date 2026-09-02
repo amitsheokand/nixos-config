@@ -66,6 +66,55 @@ def message_text(content: Any) -> str:
     return str(content or "")
 
 
+def estimate_tokens(text: str) -> int:
+    """Conservative stand-in for Qwen BPE without a tokenizer (~2 chars/token)."""
+    return max(1, (len(text) + 1) // 2)
+
+
+def clip_text(text: str, max_tokens: int) -> str:
+    budget = max(256, max_tokens)
+    if estimate_tokens(text) <= budget:
+        return text
+    max_chars = budget * 2
+    marker = "\n\n[...truncated for compact context...]\n\n"
+    head = min(8000, max(512, max_chars // 5))
+    tail = max_chars - head - len(marker)
+    if tail < 1024:
+        return text[-max_chars:]
+    return text[:head] + marker + text[-tail:]
+
+
+def fit_body(body: dict[str, Any], max_input_tokens: int, max_out: int = 2048) -> dict[str, Any]:
+    """Shrink prompt so llama.cpp / MLX ctx is not exceeded. Never hipfire."""
+    out = dict(body)
+    cap_out = min(int(out.get("max_tokens") or max_out), max_out)
+    out["max_tokens"] = cap_out
+    msgs = [dict(m) if isinstance(m, dict) else m for m in (out.get("messages") or [])]
+    budget = max(512, int(max_input_tokens) - cap_out - 256)
+
+    def total() -> int:
+        return sum(
+            estimate_tokens(message_text(m.get("content")))
+            for m in msgs
+            if isinstance(m, dict)
+        )
+
+    if total() <= budget:
+        out["messages"] = msgs
+        return out
+    for i in range(len(msgs) - 1, -1, -1):
+        msg = msgs[i]
+        if not isinstance(msg, dict) or msg.get("role") != "user":
+            continue
+        others = total() - estimate_tokens(message_text(msg.get("content")))
+        room = max(256, budget - others)
+        msg["content"] = clip_text(message_text(msg.get("content")), room)
+        msgs[i] = msg
+        break
+    out["messages"] = msgs
+    return out
+
+
 def prepare_body(raw: dict[str, Any], focus: str) -> dict[str, Any]:
     body = dict(raw)
     incoming = list(body.get("messages") or [])
@@ -126,17 +175,19 @@ def rewrite_model(body: dict[str, Any], override: str | None) -> dict[str, Any]:
     return out
 
 
-def backends() -> list[tuple[str, str, str | None, float]]:
-    """(name, base, model_override, timeout_s)."""
+def backends() -> list[tuple[str, str, str | None, float, int]]:
+    """(name, base, model_override, timeout_s, max_input_tokens)."""
     primary = os.environ.get("COMPACT_PRIMARY_BASE", "http://ai-mac.local:8081/v1")
     fallback = os.environ.get("COMPACT_FALLBACK_BASE", "http://127.0.0.1:8092/v1")
     primary_model = os.environ.get("COMPACT_PRIMARY_MODEL") or None
     fallback_model = os.environ.get("COMPACT_FALLBACK_MODEL") or None
     primary_t = float(os.environ.get("COMPACT_PRIMARY_TIMEOUT_S", "60"))
     fallback_t = float(os.environ.get("COMPACT_FALLBACK_TIMEOUT_S", "120"))
-    out = [("primary", primary, primary_model, primary_t)]
+    primary_max = int(os.environ.get("COMPACT_PRIMARY_MAX_INPUT_TOKENS", "12000"))
+    fallback_max = int(os.environ.get("COMPACT_FALLBACK_MAX_INPUT_TOKENS", "28000"))
+    out = [("primary", primary, primary_model, primary_t, primary_max)]
     if fallback and fallback != primary:
-        out.append(("fallback", fallback, fallback_model, fallback_t))
+        out.append(("fallback", fallback, fallback_model, fallback_t, fallback_max))
     return out
 
 
@@ -190,11 +241,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         prepared = prepare_body(raw, self.focus)
         errors: list[str] = []
-        for name, base, model_override, timeout in backends():
+        for name, base, model_override, timeout, max_input in backends():
+            fitted = fit_body(rewrite_model(prepared, model_override), max_input)
             try:
-                status, _headers, data = post_chat(
-                    base, rewrite_model(prepared, model_override), timeout
-                )
+                status, _headers, data = post_chat(base, fitted, timeout)
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{name} {base}: {exc}")
                 continue

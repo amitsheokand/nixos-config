@@ -26,6 +26,8 @@ let
       export COMPACT_PRIMARY_TIMEOUT_S="''${COMPACT_PRIMARY_TIMEOUT_S:-60}"
       export COMPACT_FALLBACK_BASE="''${COMPACT_FALLBACK_BASE:-http://127.0.0.1:8092/v1}"
       export COMPACT_FALLBACK_MODEL="''${COMPACT_FALLBACK_MODEL:-qwen3.5-0.8b}"
+      export COMPACT_PRIMARY_MAX_INPUT_TOKENS="''${COMPACT_PRIMARY_MAX_INPUT_TOKENS:-12000}"
+      export COMPACT_FALLBACK_MAX_INPUT_TOKENS="''${COMPACT_FALLBACK_MAX_INPUT_TOKENS:-28000}"
       exec ${python}/bin/python3 ${routerSrc}
     '';
   };
@@ -84,6 +86,7 @@ let
           "COMPACT_TINY_GGUF=${homeDir}/.local/share/pi-compact/Qwen3.5-0.8B-Q8_0.gguf"
           "COMPACT_TINY_DEVICE=Vulkan0"
           "GGML_VK_VISIBLE_DEVICES=0"
+          "COMPACT_TINY_CTX=32768"
         ];
       };
       Install.WantedBy = [ "default.target" ];
@@ -105,6 +108,8 @@ let
           "COMPACT_PRIMARY_TIMEOUT_S=60"
           "COMPACT_FALLBACK_BASE=http://127.0.0.1:8092/v1"
           "COMPACT_FALLBACK_MODEL=qwen3.5-0.8b"
+          "COMPACT_PRIMARY_MAX_INPUT_TOKENS=12000"
+          "COMPACT_FALLBACK_MAX_INPUT_TOKENS=28000"
         ];
       };
       Install.WantedBy = [ "default.target" ];
