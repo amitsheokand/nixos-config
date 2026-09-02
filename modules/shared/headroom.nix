@@ -119,6 +119,9 @@ PY
           LD_LIBRARY_PATH = libPath;
         };
       };
+      zvec_grep = {
+        url = "http://127.0.0.1:7999/mcp";
+      };
     };
   };
 in

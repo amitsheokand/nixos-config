@@ -46,6 +46,7 @@ in
       let
         headroom = import ../shared/headroom.nix { inherit pkgs lib; };
         commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+        zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
         museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
         # Desktop catalog over LAN. Default stays MLX; `/model forge` hits PC.
         hipfireLan = import ../shared/pi-hipfire-catalog.nix {
@@ -88,10 +89,12 @@ in
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
           } // compactPi.sessionVariables // (piAgent.sessionVariables or {});
           sessionPath = (commandCode.home.sessionPath or [])
+            ++ (zvecGrep.home.sessionPath or [])
             ++ (headroom.home.sessionPath or []);
           packages = (pkgs.callPackage ./packages.nix {})
             ++ (headroom.home.packages or [])
             ++ (commandCode.home.packages or [])
+            ++ (zvecGrep.home.packages or [])
             ++ (museSpark.home.packages or [])
             ++ (piAgent.home.packages or []);
           file = lib.mkMerge [
@@ -118,6 +121,7 @@ in
           activation = lib.mkMerge [
             (headroom.home.activation or {})
             (commandCode.home.activation or {})
+            (zvecGrep.home.activation or {})
             (museSpark.home.activation or {})
             piAgent.activation
           ];

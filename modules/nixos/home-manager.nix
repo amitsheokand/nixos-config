@@ -7,6 +7,7 @@ let
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+  zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
   museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
   hipfireEnabled = (osConfig.networking.hostName or "") == "nixos";
   hipfireLocal = if hipfireEnabled
@@ -39,6 +40,7 @@ in
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
+      ++ (zvecGrep.home.packages or [])
       ++ (museSpark.home.packages or [])
       ++ (piAgent.home.packages or [])
       ++ (if hipfireLocal == null then [] else hipfireLocal.packages);
@@ -48,12 +50,14 @@ in
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
+      // (zvecGrep.home.activation or {})
       // (museSpark.home.activation or {})
       // piAgent.activation
       // (if hipfireLocal == null then {} else {
         mergeHipfireCatalogClients = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.catalogMergeScript;
       });
     sessionPath = (commandCode.home.sessionPath or [])
+      ++ (zvecGrep.home.sessionPath or [])
       ++ (headroom.home.sessionPath or []);
     stateVersion = "25.11";
   };
@@ -62,6 +66,7 @@ in
 
   systemd.user.services = (headroom.systemd.user.services or {})
     // (museSpark.systemdUserServices or {})
+    // (zvecGrep.systemdUserServices or {})
     // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
 
   # `systemctl --user mask` leaves ~/.config/systemd/user/*.service -> /dev/null.
@@ -70,6 +75,7 @@ in
   xdg.configFile = lib.mkMerge [
     {
       "systemd/user/muse-spark-proxy.service".force = true;
+      "systemd/user/zvec-grep.service".force = true;
     }
     (lib.mkIf hipfireEnabled {
       "systemd/user/hipfire-serve.service".force = true;

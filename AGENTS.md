@@ -233,6 +233,7 @@ Claude Code / Codex / prime-agent are **not** installed from `llm-agents.nix`.
 | Grok | `grokCli` (`agents.grok` minus `agent`) | same |
 | Muse Code | `muse-code-package.nix` (`muse`) | same |
 | Command Code | HM `modules/shared/command-code.nix` | same |
+| zvec-grep (`zg`) | HM `modules/shared/zvec-grep.nix` (npm `@zvec/zvec-grep`) | same |
 | Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
 
 **Muse Spark** is two products with **different bills**:
@@ -258,6 +259,50 @@ muse --version
 grok --version
 command -v agent   # must stay Cursor (~/.local/bin/agent)
 ```
+
+## zvec-grep (`zg`)
+
+Local hybrid search ([zvec-grep](https://github.com/zvec-ai/zvec-grep)):
+ripgrep + BM25 + vectors. npm `@zvec/zvec-grep@0.2.1` into `~/.local`.
+User systemd `zvec-grep` (`zg server run`, `http://127.0.0.1:7999/mcp`).
+Each workspace keeps its own index under `<root>/.zvec-grep`. The MCP
+search tool takes an absolute `root` — there is no one tree that covers
+code and docs if they live in sibling repos.
+
+**Advait** is two indexes (do **not** index `~/work`; skip `third_party`):
+
+| Tree | Root | Why |
+|------|------|-----|
+| Code | `~/work/advait` | crates / apps / tools. Exclude `third_party/**` (Chromium-sized). |
+| Docs | `~/work/advait-docs` | Canonical docs (`advait-os/docs`). In-repo `docs/` / `plans/` are stubs. |
+
+```sh
+zg --version
+systemctl --user status zvec-grep   # Linux; Darwin: launchctl
+zg-index-advait                    # both roots, local/potion-code-16m-v2
+cd ~/work/advait && zg query --human "where is authentication handled?"
+cd ~/work/advait-docs && zg query --human "boot policy"
+```
+
+Agents: pass `root` `/home/amitsheokand/work/advait` or
+`/home/amitsheokand/work/advait-docs` (Mac: `/Users/amitsheokand/work/...`).
+Optional `--follow` only if docs are symlinked into the code tree.
+
+MCP clients (activation merge; restart the agent after first rebuild):
+
+| Client | How |
+|-------|-----|
+| Cursor | `~/.cursor/mcp.json` (`headroom.nix`, next to Headroom) |
+| OpenCode | `zg install --target opencode` |
+| Pi | `pi-mcp-adapter` + `~/.pi/agent/mcp.json` (native Pi has no MCP). Cursor-SDK Pi already sees Cursor's `mcp.json`. |
+| Hermes | `mcp_servers.zvec_grep` in `~/.hermes/config.yaml` |
+| Grok | `[mcp_servers.zvec_grep]` in `~/.grok/config.toml` |
+| Muse | `mcp_servers.zvec_grep` streamable HTTP, `mode=optional` |
+| Zed | `context_servers.zvec_grep` URL (does not clobber hipfire/meta) |
+
+Local embeddings only (`local/potion-code-16m-v2`). Index is **not**
+built at activation — run `zg-index-advait` once per machine, then
+when the tree changes a lot.
 
 ## Git clients (all hosts)
 

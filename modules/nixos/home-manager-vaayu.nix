@@ -10,6 +10,7 @@ let
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+  zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
   museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
   hipfireLan = import ../shared/pi-hipfire-catalog.nix {
     inherit lib;
@@ -32,6 +33,7 @@ in
       // (piAgent.sessionVariables or {});
     packages = (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
+      ++ (zvecGrep.home.packages or [])
       ++ (museSpark.home.packages or [])
       ++ (piAgent.home.packages or []);
     file = shared-files
@@ -39,9 +41,11 @@ in
       // (headroom.home.file or {});
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
+      // (zvecGrep.home.activation or {})
       // (museSpark.home.activation or {})
       // piAgent.activation;
     sessionPath = (commandCode.home.sessionPath or [])
+      ++ (zvecGrep.home.sessionPath or [])
       ++ (headroom.home.sessionPath or []);
     stateVersion = "25.11";
   };
@@ -49,10 +53,12 @@ in
   programs = shared-programs // { gpg.enable = true; };
 
   systemd.user.services = (headroom.systemd.user.services or {})
-    // (museSpark.systemdUserServices or {});
+    // (museSpark.systemdUserServices or {})
+    // (zvecGrep.systemdUserServices or {});
 
   xdg.configFile = {
     "systemd/user/muse-spark-proxy.service".force = true;
+    "systemd/user/zvec-grep.service".force = true;
   };
 
   services.gpg-agent = {
