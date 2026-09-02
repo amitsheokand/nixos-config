@@ -26,19 +26,19 @@ Generic lanes (stable; default backend is Ornith):
 Do not use qwen38 / forge/qwen38 for long sessions (27B dense; GPU died ~94k filled).
 
 Optional weight ids (swap the resident checkpoint):
-  • ornith  — Ornith 1.5 35B-A3B (default backend)
+  • fuse  — Fuse-2 MoE k=2 (no thinking; native template)
   • qwen38  — Qwen 3.8 27B dense
   • forge/qwen38 — daily lane on Qwen (explicit swap)
 
 Open Continue in Cursor (sidebar) and pick Forge / Anvil / Feather.
-Do not set AI_MODEL=qwen38 unless you intend to swap off Ornith.
+Do not set AI_MODEL=qwen38 unless you intend to swap off Qwen.
 
 Optional (Cursor Agent ON the local endpoint — cloud picker unavailable
 while Override is ON):
   1. Expose ${base} via Cloudflare Tunnel / ngrok HTTPS
   2. Settings → Models → OpenAI API Key = local
   3. Override OpenAI Base URL = https://<tunnel>/v1
-  4. Add custom model ids: forge, anvil, feather, ornith, qwen38
+  4. Add custom model ids: forge, anvil, feather, fuse, qwen38
   5. Turn Override OFF before returning to cloud Grok/Composer/Claude
 
 Health:

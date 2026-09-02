@@ -278,11 +278,18 @@ code and docs if they live in sibling repos.
 
 ```sh
 zg --version
-systemctl --user status zvec-grep   # Linux; Darwin: launchctl
-zg-index-advait                    # both roots, local/potion-code-16m-v2
+systemctl --user status zvec-grep zvec-grep-refresh   # Linux; Darwin: launchctl
+zg-index-advait                    # first bootstrap (both roots)
+zg-refresh-advait                  # manual incremental (both roots)
 cd ~/work/advait && zg query --human "where is authentication handled?"
 cd ~/work/advait-docs && zg query --human "boot policy"
 ```
+
+**Refresh policy:** `zg-refresh-advait` runs on **login** (`zvec-grep-refresh`
+systemd/launchd) and after **`git commit`** in `~/work/advait` or
+`~/work/advait-docs` (post-commit hook). Both use `zg index --mode direct` so
+the MCP server stays up. First machine still needs `zg-index-advait` once.
+Log: `~/.cache/zvec-grep-refresh.log`.
 
 Agents: pass `root` `/home/amitsheokand/work/advait` or
 `/home/amitsheokand/work/advait-docs` (Mac: `/Users/amitsheokand/work/...`).
@@ -300,9 +307,20 @@ MCP clients (activation merge; restart the agent after first rebuild):
 | Muse | `mcp_servers.zvec_grep` streamable HTTP, `mode=optional` |
 | Zed | `context_servers.zvec_grep` URL (does not clobber hipfire/meta) |
 
-Local embeddings only (`local/potion-code-16m-v2`). Index is **not**
-built at activation — run `zg-index-advait` once per machine, then
-when the tree changes a lot.
+Local embeddings only (**`local/jina-embeddings-v2-base-code`**). Device:
+**Vulkan on the iGPU** on every Linux host (odie / vaayu / nixos desktop). The
+desktop’s **Radeon AI PRO R9700 XT is headless** — hipfire/ROCm only; zvec-grep
+does not use it. **Metal** on Mac (MLX stays for Pi compact / Gemma).
+
+**Bootstrap / model migration:**
+
+```sh
+ZG_REBUILD=1 zg-index-advait    # rebuild Advait indexes to Jina
+ZG_REBUILD=1 zg-index-hipfire   # rebuild hipfire index
+```
+
+**Incremental:** automatic on login + post-commit via `zg-refresh-advait` (HM
+`modules/shared/zvec-grep.nix`).
 
 ## Git clients (all hosts)
 
@@ -412,11 +430,11 @@ PC local profiles (names stay if the checkpoint changes):
 | `forge` | Composer | on (medium, 4096-token cap; old think stripped) | greedy AR | **daily on Qwen 3.8 mq4-pro**, 48k window, Pi auto-compacts |
 | `anvil` | Grok | on (xhigh, 8192-token cap; old think stripped) | xhigh | **hard long-form on Qwen 3.8**, same 48k compact window |
 | `qwen38` | — | raw backend | none injected | explicit Qwen 3.8 weight |
-| `ornith` | — | raw backend | none injected | Ornith 1.5 MQ4R + Sharp. `forge/ornith` swaps the GPU off Qwen |
+| `fuse` | — | lane, thinking off | none injected | Fuse-2 MoE k=2 (native template). `fuse-2-moe` is the raw backend id; `forge/fuse` is unsupported (forge thinking breaks it) |
 
 Long sessions stay on **Qwen 3.8 mq4-pro** (`forge` / `anvil` / `feather`). Advertised windows stay 32k (feather) / 48k (forge/anvil). hipfire `memory.max_seq=65536` is the product fail-closed ceiling. An isolated 86k/98k probe is a temp project, not a catalog size. Pi compaction (`pi-async-compaction` + `compaction.enabled`) fires from ~60% of the advertised window.
 
-Default `AI_MODEL` / `GROK_LOCAL_MODEL` is the **lane** `forge`, never a checkpoint name. `/model ornith` or `/model forge/ornith` swaps the desktop GPU to Ornith MQ4R (Sharp template); `/model forge` stays Qwen.
+Default `AI_MODEL` / `GROK_LOCAL_MODEL` is the **lane** `forge`, never a checkpoint name. `/model fuse` swaps the desktop GPU to Fuse-2 MoE (no thinking); `/model forge` stays Qwen.
 
 Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites `~/.hipfire/config.toml`. The desktop uses `modules/shared/hipfire-local.nix` (existing cargo binaries + user config). After `build-switch`: `systemctl --user start hipfire-serve hipfire-profile-proxy hipfire-daemon-watch` (WantedBy default.target). Serve binds **127.0.0.1:11435**; LAN clients use the catalog at `:8080` (clamp `max_tokens`, inject think caps, HTTP 413 on oversize). hipfire itself refuses to bump `memory.max_seq`. The watch unit restarts serve if `/health` is up but `daemon.pid` is dead or zombie (the 2026-08-28 failure mode). Hermes gets `/model forge`, `/model anvil`, `/model feather`, plus backend aliases; the Nous default provider is unchanged. Cursor Agent stays on cloud Grok/Composer; Continue / `cursor-local-help` use the named profiles. Zed gets `language_models.openai_compatible.hipfire` without changing `agent.default_model`.
 

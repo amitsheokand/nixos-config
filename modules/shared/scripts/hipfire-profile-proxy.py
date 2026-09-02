@@ -7,7 +7,8 @@ those fields. Explicit client fields win.
 
 Model ids:
   forge / anvil / feather   lanes on the catalog default backend
-  forge/ornith              optional MoE swap (kept for a later checkpoint)
+  fuse                      non-thinking lane on the Fuse-2 MoE backend
+  forge/fuse                UNSUPPORTED (forge thinking breaks Fuse); use fuse
   qwen38                    raw backend — no lane defaults
 
 Unknown ids return HTTP 400. Prompts that cannot fit `max_seq` return HTTP 413.
