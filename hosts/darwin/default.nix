@@ -1,9 +1,14 @@
-{ config, pkgs, llm-agents-nix, ... }:
+{ config, pkgs, lib, llm-agents-nix, ... }:
 let
   user = "amitsheokand";
   agents = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system};
+  grokCli = pkgs.runCommand "grok-cli" { } ''
+    mkdir -p $out/bin
+    ln -s ${agents.grok}/bin/grok $out/bin/grok
+  '';
   mlxMac = import ../../modules/shared/mlx-mac.nix { inherit user pkgs; };
   mlxCompact = import ../../modules/shared/mlx-compactor.nix { inherit user pkgs; };
+  museSpark = import ../../modules/shared/muse-spark.nix { inherit pkgs lib; };
 in
 {
   imports = [
@@ -38,8 +43,9 @@ in
   # Inbound SSH on the LAN (System Settings → Sharing → Remote Login equivalent).
   services.openssh.enable = true;
 
-  # Agent CLIs from llm-agents.nix: pi + OpenCode + Hermes (Cursor via Homebrew/nixpkgs).
-  # Claude/Codex/Grok/prime-agent omitted. OpenCode GUI = cask opencode-desktop.
+  # Agent CLIs from llm-agents.nix: pi + OpenCode + Hermes + Grok (`grok` only).
+  # Cursor via Homebrew/nixpkgs. Claude/Codex/prime-agent omitted.
+  # Muse Code is a pinned Meta binary. OpenCode GUI = cask opencode-desktop.
   environment.systemPackages =
     (import ../../modules/darwin/packages.nix { inherit pkgs; })
     ++ [
@@ -47,12 +53,15 @@ in
       agents.opencode
       agents.hermes-agent
       agents.hermes-desktop
+      grokCli
+      museSpark.museCode
       pkgs.nh
       (import ../../modules/shared/mlx-lane.nix { inherit pkgs; })
     ];
 
   # Grok /model picker: keep cloud grok-* and add local Gemma 4 MLX.
-  environment.etc."grok/managed_config.toml".text = mlxMac.grokLocal;
+  environment.etc."grok/managed_config.toml".text =
+    mlxMac.grokLocal + museSpark.grokToml;
 
   # Gemma 12B coder on :8080 — on demand (`mlx-lane gemma`). Not at login.
   launchd.user.agents.mlx-lm-server = {
@@ -75,6 +84,9 @@ in
       StandardErrorPath = "/tmp/mlx-lm-compact_${user}.err.log";
     };
   };
+
+  # Muse Spark Chat Completions: uniquify reused tool_call_id `call_0`.
+  launchd.user.agents.muse-spark-proxy = museSpark.launchdAgents.muse-spark-proxy;
 
   system = {
     # Turn off NIX_PATH warnings now that we're using flakes

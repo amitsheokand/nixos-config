@@ -10,6 +10,7 @@ let
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+  museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
   hipfireLan = import ../shared/pi-hipfire-catalog.nix {
     inherit lib;
     baseUrl = "http://nixos.local:8080/v1";
@@ -31,12 +32,14 @@ in
       // (piAgent.sessionVariables or {});
     packages = (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
+      ++ (museSpark.home.packages or [])
       ++ (piAgent.home.packages or []);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {});
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
+      // (museSpark.home.activation or {})
       // piAgent.activation;
     sessionPath = (commandCode.home.sessionPath or [])
       ++ (headroom.home.sessionPath or []);
@@ -45,7 +48,12 @@ in
 
   programs = shared-programs // { gpg.enable = true; };
 
-  systemd.user.services = headroom.systemd.user.services or {};
+  systemd.user.services = (headroom.systemd.user.services or {})
+    // (museSpark.systemdUserServices or {});
+
+  xdg.configFile = {
+    "systemd/user/muse-spark-proxy.service".force = true;
+  };
 
   services.gpg-agent = {
     enable = true;

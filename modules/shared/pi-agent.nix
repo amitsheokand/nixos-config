@@ -59,14 +59,24 @@ let
     if localModels == null then null
     else import ./pi-local-models.nix ({ inherit pkgs; } // localModels);
 
-  # Declarative Pi extensions (OpenRouter ox-alpha, …). Key stays in
-  # ~/.config/openrouter.env (sourced by zsh); never commit secrets here.
+  # Declarative Pi extensions (OpenRouter ox-alpha, Muse Spark, …).
+  # Keys stay in ~/.config/{openrouter,meta}.env (sourced by zsh).
+  # Muse Spark is Chat Completions here — encrypted reasoning is not replayed;
+  # prefer `muse` or OpenCode @ai-sdk/openai for multi-turn Spark.
   piExtensions = [
     ./pi-extensions/openrouter-ox-alpha.ts
+    ./pi-extensions/muse-spark.ts
   ];
 
-  syncPiExtensions = lib.concatMapStrings (ext: ''
-    install -m 0644 ${ext} "$HOME/.pi/agent/extensions/$(basename ${ext})"
+  # Store paths are HASH-filename.ts. Install under the real basename so a
+  # content change does not leave the old HASH-* file loaded beside the new one
+  # (Pi loads every *.ts; last registerProvider wins, and the old Meta URL
+  # sorted after the proxy URL).
+  syncPiExtensions = ''
+    rm -f "$HOME/.pi/agent/extensions/"*-muse-spark.ts \
+          "$HOME/.pi/agent/extensions/"*-openrouter-ox-alpha.ts
+  '' + lib.concatMapStrings (ext: ''
+    install -m 0644 ${ext} "$HOME/.pi/agent/extensions/${baseNameOf (toString ext)}"
   '') piExtensions;
 
   # npm:pi-tool-display@0.5.0 → pi-tool-display

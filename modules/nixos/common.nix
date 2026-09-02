@@ -6,6 +6,12 @@
 
 let
   agents = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system};
+  # llm-agents grok also ships `agent`, which would shadow Cursor CLI.
+  grokCli = pkgs.runCommand "grok-cli" { } ''
+    mkdir -p $out/bin
+    ln -s ${agents.grok}/bin/grok $out/bin/grok
+  '';
+  museCode = pkgs.callPackage ../shared/muse-code-package.nix { };
 in
 {
   # Hardware platform default (hosts may override).
@@ -177,8 +183,9 @@ in
   };
 
   # Core packages present on every host (hosts add their own extras).
-  # Agent CLIs from llm-agents.nix: pi + OpenCode + Hermes.
-  # Cursor is pkgs.code-cursor / cask. Claude / Codex / Grok / prime-agent omitted.
+  # Agent CLIs from llm-agents.nix: pi + OpenCode + Hermes + Grok (`grok` only).
+  # Cursor is pkgs.code-cursor / cask. Claude / Codex / prime-agent omitted.
+  # Muse Code is a pinned Meta binary (not in llm-agents.nix).
   # Command Code (npm `cmd`) via HM modules/shared/command-code.nix.
   # OpenCode GUI: pkgs.opencode-desktop (CLI comes from agents.opencode).
   # Git: gh/glab (nixpkgs); GitButler GUI+CLI from llm-agents.nix (newer than nixpkgs).
@@ -192,6 +199,8 @@ in
     agents.opencode
     agents.hermes-agent
     agents.hermes-desktop
+    grokCli
+    museCode
     agents.gitbutler
     agents.but
     opencode-desktop

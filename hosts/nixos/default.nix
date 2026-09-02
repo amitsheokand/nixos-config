@@ -2,6 +2,7 @@
 
 let
   hipfireLocal = import ../../modules/shared/hipfire-local.nix { inherit pkgs lib user; };
+  museSpark = import ../../modules/shared/muse-spark.nix { inherit pkgs lib; };
 in
 {
   imports = [
@@ -111,7 +112,8 @@ in
 
   # Grok /model picker: keep cloud grok-* and add catalog lanes/backends.
   # Do not set GROK_MODELS_BASE_URL — that replaces the cloud catalog.
-  environment.etc."grok/managed_config.toml".text = hipfireLocal.grokToml;
+  environment.etc."grok/managed_config.toml".text =
+    hipfireLocal.grokToml + museSpark.grokToml;
 
   # Desktop GPU uses amdgpu; GNOME fractional-scaling overrides.
   # https://discourse.nixos.org/t/how-to-set-fractional-scaling-via-nix-configuration-for-gnome-wayland/56774

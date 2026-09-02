@@ -214,12 +214,14 @@ Current user: `amitsheokand`
 ## Agent CLIs (base install)
 
 Shared NixOS (`common.nix`) and Darwin ship **`pi`**, **OpenCode CLI**,
-**Hermes Agent**, and **Hermes Desktop** from
+**Hermes Agent**, **Hermes Desktop**, and **Grok** (`grok` only — the
+llm-agents `agent` symlink is stripped so Cursor CLI keeps `agent`) from
 [`llm-agents.nix`](https://github.com/numtide/llm-agents.nix),
-plus **Command Code** (`cmd` via npm → `~/.local`).
+plus **Command Code** (`cmd` via npm → `~/.local`) and **Muse Code**
+(`muse` from [`muse-code-package.nix`](modules/shared/muse-code-package.nix)).
 **Cursor** comes from `pkgs.code-cursor` (NixOS) or Homebrew/nix on Darwin.
 **OpenCode GUI** is separate: `pkgs.opencode-desktop` (NixOS) / cask `opencode-desktop` (Darwin).
-Claude Code / Codex / Grok / prime-agent are **not** installed from `llm-agents.nix`.
+Claude Code / Codex / prime-agent are **not** installed from `llm-agents.nix`.
 
 | Tool | NixOS | Darwin |
 |------|-------|--------|
@@ -228,8 +230,34 @@ Claude Code / Codex / Grok / prime-agent are **not** installed from `llm-agents.
 | OpenCode GUI | `pkgs.opencode-desktop` | Homebrew cask `opencode-desktop` |
 | Hermes Agent | `agents.hermes-agent` (`hermes`) | same |
 | Hermes Desktop | `agents.hermes-desktop` | same |
+| Grok | `grokCli` (`agents.grok` minus `agent`) | same |
+| Muse Code | `muse-code-package.nix` (`muse`) | same |
 | Command Code | HM `modules/shared/command-code.nix` | same |
 | Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
+
+**Muse Spark** is two products with **different bills**:
+
+| Path | Auth | Bill |
+|------|------|------|
+| **Muse Code** (`muse`) + browser `/login` | Meta account OAuth | **Subscription** (flat monthly). Only this CLI. |
+| Pi / OpenCode / Hermes / Grok / Zed `openai_compatible` + `MODEL_API_KEY` | extra Model API key | **Pay-as-you-go per token** |
+
+Do **not** export `META_API_KEY` / `MODEL_API_KEY` in the shell if you want the subscription. Those env vars always win over the account session. Extra keys you create in the [Model API dashboard](https://dev.meta.ai/) are PAYG; the subscription credential is attached during Muse Code account onboarding and is **Muse Code only** ([subscriptions](https://ai.developer.meta.com/docs/muse-code/subscriptions)).
+
+Hipfire/`forge` stays the local default.
+
+```sh
+muse          # /login → Sign in with your browser (not "paste an API key")
+# keep Pi on /model forge — Spark in Pi is PAYG
+```
+
+`muse-spark-proxy` (`:8082`) and `~/.config/meta.env` are **PAYG only**. Do not start the proxy or source that file unless you intend token billing. Spark reuses `tool_call_id=call_0`; the proxy exists only for that Chat Completions bug.
+
+```sh
+muse --version
+grok --version
+command -v agent   # must stay Cursor (~/.local/bin/agent)
+```
 
 ## Git clients (all hosts)
 

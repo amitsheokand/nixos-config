@@ -74,6 +74,11 @@ let name = "Amit Sheokand";
       fi
 
       # === Local secrets (gitignored, never committed) ===
+      # OpenRouter stays in the environment. Do **not** source ~/.config/meta.env
+      # here: META_API_KEY / MODEL_API_KEY are Model API pay-as-you-go and
+      # always override Muse Code's browser/account subscription session.
+      # Spark subscription = `muse` then `/login` (browser). PAYG keys stay
+      # in meta.env for muse-spark-proxy only.
       if [[ -f "$HOME/.config/openrouter.env" ]]; then
         source "$HOME/.config/openrouter.env"
       fi

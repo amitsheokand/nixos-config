@@ -46,6 +46,7 @@ in
       let
         headroom = import ../shared/headroom.nix { inherit pkgs lib; };
         commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+        museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
         # Desktop catalog over LAN. Default stays MLX; `/model forge` hits PC.
         hipfireLan = import ../shared/pi-hipfire-catalog.nix {
           inherit lib;
@@ -91,6 +92,7 @@ in
           packages = (pkgs.callPackage ./packages.nix {})
             ++ (headroom.home.packages or [])
             ++ (commandCode.home.packages or [])
+            ++ (museSpark.home.packages or [])
             ++ (piAgent.home.packages or []);
           file = lib.mkMerge [
             sharedFiles
@@ -116,6 +118,7 @@ in
           activation = lib.mkMerge [
             (headroom.home.activation or {})
             (commandCode.home.activation or {})
+            (museSpark.home.activation or {})
             piAgent.activation
           ];
           stateVersion = "23.11";

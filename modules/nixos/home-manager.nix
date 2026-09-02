@@ -7,6 +7,7 @@ let
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
+  museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
   hipfireEnabled = (osConfig.networking.hostName or "") == "nixos";
   hipfireLocal = if hipfireEnabled
     then import ../shared/hipfire-local.nix { inherit pkgs lib user; }
@@ -38,6 +39,7 @@ in
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
+      ++ (museSpark.home.packages or [])
       ++ (piAgent.home.packages or [])
       ++ (if hipfireLocal == null then [] else hipfireLocal.packages);
     file = shared-files
@@ -46,6 +48,7 @@ in
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
+      // (museSpark.home.activation or {})
       // piAgent.activation
       // (if hipfireLocal == null then {} else {
         mergeHipfireCatalogClients = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.catalogMergeScript;
@@ -58,20 +61,26 @@ in
   programs = shared-programs // { gpg.enable = true; };
 
   systemd.user.services = (headroom.systemd.user.services or {})
+    // (museSpark.systemdUserServices or {})
     // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
 
   # `systemctl --user mask` leaves ~/.config/systemd/user/*.service -> /dev/null.
   # HM then refuses to clobber those links and activation fails. Force overwrite
   # so a leftover mask cannot block nixos-rebuild.
-  xdg.configFile = lib.mkIf hipfireEnabled {
-    "systemd/user/hipfire-serve.service".force = true;
-    "systemd/user/hipfire-daemon-watch.service".force = true;
-    "systemd/user/pi-compact-router.service".force = true;
-    "systemd/user/pi-compact-tiny.service".force = true;
-    # Live `systemctl --user enable` left these wants links; HM must overwrite them.
-    "systemd/user/default.target.wants/pi-compact-router.service".force = true;
-    "systemd/user/default.target.wants/pi-compact-tiny.service".force = true;
-  };
+  xdg.configFile = lib.mkMerge [
+    {
+      "systemd/user/muse-spark-proxy.service".force = true;
+    }
+    (lib.mkIf hipfireEnabled {
+      "systemd/user/hipfire-serve.service".force = true;
+      "systemd/user/hipfire-daemon-watch.service".force = true;
+      "systemd/user/pi-compact-router.service".force = true;
+      "systemd/user/pi-compact-tiny.service".force = true;
+      # Live `systemctl --user enable` left these wants links; HM must overwrite them.
+      "systemd/user/default.target.wants/pi-compact-router.service".force = true;
+      "systemd/user/default.target.wants/pi-compact-tiny.service".force = true;
+    })
+  ];
 
   # GPG agent with pinentry for passphrase prompts
   services.gpg-agent = {
