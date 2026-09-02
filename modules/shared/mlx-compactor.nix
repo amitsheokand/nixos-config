@@ -10,14 +10,30 @@ let
   adapterRepo = "schneewolflabs/Compactor-Qwen3.5-4B";
   baseHfRepo = "Lazarus-Ai/ReAligned-Qwen3.5-4B";
   adapterPath = "/Users/${user}/models/Compactor-Qwen3.5-4B-adapter";
+  adapterMlxPath = "/Users/${user}/models/Compactor-Qwen3.5-4B-adapter-mlx";
   baseMlxPath = "/Users/${user}/models/ReAligned-Qwen3.5-4B-4bit";
-  baseHfPath = "/Users/${user}/models/ReAligned-Qwen3.5-4B-hf";
-  mergedHfPath = "/Users/${user}/models/Compactor-Qwen3.5-4B-merged-hf";
   fusedPath = "/Users/${user}/models/Compactor-Qwen3.5-4B-4bit";
   compactPort = 8081;
   contextWindow = 16384;
   maxTokens = 4096;
   promptCacheBytes = 2000000000;
+  # python -m mlx_lm.server reloads the module and drops a .pth monkeypatch.
+  mlxCompactServe = pkgs.writeText "mlx-compact-serve.py" ''
+import sys
+import mlx_lm.server as s
+
+_orig = s.ModelProvider.__init__
+
+def _init(self, cli_args, *args, **kwargs):
+    _orig(self, cli_args, *args, **kwargs)
+    self._model_map["compactor"] = cli_args.model
+    self._adapter_map["compactor"] = getattr(cli_args, "adapter_path", None)
+    self._draft_model_map["compactor"] = None
+
+s.ModelProvider.__init__ = _init
+sys.argv[0] = "mlx_lm.server"
+s.main()
+  '';
   mlxLmCompactServer = pkgs.writeShellApplication {
     name = "mlx-lm-compact";
     runtimeInputs = [
@@ -38,45 +54,22 @@ let
         exit 1
       fi
 
-      site_packages="$("$venv/bin/python" - <<'PY'
-import site
-paths = site.getsitepackages()
-print(paths[0] if paths else site.getusersitepackages())
-PY
-)"
-      cat > "$site_packages/mlx_compact_alias.py" <<'EOF'
-import os
-if os.environ.get("MLX_COMPACT_MODEL_PATH"):
-    try:
-        import mlx_lm.server as _s
-        _orig = _s.ModelProvider.__init__
-
-        def _init(self, cli_args, *args, **kwargs):
-            _orig(self, cli_args, *args, **kwargs)
-            self._model_map["compactor"] = cli_args.model
-            self._adapter_map["compactor"] = getattr(cli_args, "adapter_path", None)
-            self._draft_model_map["compactor"] = None
-
-        _s.ModelProvider.__init__ = _init
-    except Exception:
-        pass
-EOF
-      echo import mlx_compact_alias > "$site_packages/mlx_compact_alias.pth"
-
       if [[ ! -f "$fused_path/config.json" ]]; then
         echo "preparing Compactor MLX weights -> $fused_path" >&2
         "$venv/bin/python" - <<'PY'
+import json
 import os
+import shutil
 import subprocess
 import sys
 from huggingface_hub import snapshot_download
+from safetensors.numpy import load_file, save_file
 
 adapter_repo = "${adapterRepo}"
 base_hf = "${baseHfRepo}"
 adapter_path = "${adapterPath}"
+adapter_mlx = "${adapterMlxPath}"
 base_mlx = "${baseMlxPath}"
-base_hf_path = "${baseHfPath}"
-merged_hf = "${mergedHfPath}"
 fused_path = "${fusedPath}"
 py = sys.executable
 
@@ -87,11 +80,49 @@ def run(args):
     print("+", " ".join(args), flush=True)
     return subprocess.call(args)
 
+def peft_to_mlx(src, dst):
+    """PEFT adapter_model.safetensors -> mlx-lm adapters.safetensors."""
+    with open(os.path.join(src, "adapter_config.json")) as f:
+        peft = json.load(f)
+    rank = int(peft["r"])
+    alpha = float(peft["lora_alpha"])
+    os.makedirs(dst, exist_ok=True)
+    with open(os.path.join(dst, "adapter_config.json"), "w") as f:
+        json.dump({
+            "fine_tune_type": "lora",
+            "num_layers": 32,
+            "lora_parameters": {
+                "rank": rank,
+                "scale": alpha / rank,
+                "dropout": float(peft.get("lora_dropout") or 0),
+                "keys": [
+                    "self_attn.q_proj",
+                    "self_attn.k_proj",
+                    "self_attn.v_proj",
+                    "self_attn.o_proj",
+                    "mlp.gate_proj",
+                    "mlp.up_proj",
+                    "mlp.down_proj",
+                ],
+            },
+        }, f)
+    raw = load_file(os.path.join(src, "adapter_model.safetensors"))
+    out = {}
+    prefix = "base_model.model.model.language_model.layers."
+    for name, tensor in raw.items():
+        if not name.startswith(prefix):
+            print("skip unexpected adapter key", name, flush=True)
+            continue
+        rest = name[len(prefix):]
+        rest = rest.replace(".lora_A.weight", ".lora_a").replace(".lora_B.weight", ".lora_b")
+        mlx_name = "language_model.model.layers." + rest
+        out[mlx_name] = tensor.T.copy()
+    save_file(out, os.path.join(dst, "adapters.safetensors"))
+    print("wrote", len(out), "mlx adapter tensors ->", dst, flush=True)
+
 if not os.path.isfile(os.path.join(base_mlx, "config.json")):
     if os.path.isdir(base_mlx):
-        import shutil
         shutil.rmtree(base_mlx)
-    os.makedirs(base_mlx, exist_ok=True)
     rc = run([
         py, "-m", "mlx_lm.convert",
         "--hf-path", base_hf,
@@ -100,41 +131,21 @@ if not os.path.isfile(os.path.join(base_mlx, "config.json")):
     ])
     if rc != 0:
         print("mlx_lm.convert of base failed", flush=True)
+        raise SystemExit(rc)
 
-if os.path.isfile(os.path.join(base_mlx, "config.json")):
-    rc = run([
-        py, "-m", "mlx_lm.fuse",
-        "--model", base_mlx,
-        "--adapter-path", adapter_path,
-        "--save-path", fused_path,
-    ])
-    if rc == 0 and os.path.isfile(os.path.join(fused_path, "config.json")):
-        print("fused LoRA into", fused_path, flush=True)
-        raise SystemExit(0)
-
-print("PEFT merge fallback (CPU, one-shot)", flush=True)
-run([py, "-m", "pip", "install", "--no-cache-dir", "peft", "torch"])
-os.makedirs(base_hf_path, exist_ok=True)
-os.makedirs(merged_hf, exist_ok=True)
-snapshot_download(repo_id=base_hf, local_dir=base_hf_path)
-import torch
-try:
-    from transformers import AutoModelForImageTextToText as AutoModel
-except Exception:
-    from transformers import AutoModelForCausalLM as AutoModel
-from peft import PeftModel
-
-model = AutoModel.from_pretrained(base_hf_path, torch_dtype=torch.float32, device_map="cpu")
-model = PeftModel.from_pretrained(model, adapter_path)
-model = model.merge_and_unload()
-model.save_pretrained(merged_hf)
+peft_to_mlx(adapter_path, adapter_mlx)
+if os.path.isdir(fused_path):
+    shutil.rmtree(fused_path)
 rc = run([
-    py, "-m", "mlx_lm.convert",
-    "--hf-path", merged_hf,
-    "--mlx-path", fused_path,
-    "-q", "--q-bits", "4",
+    py, "-m", "mlx_lm.fuse",
+    "--model", base_mlx,
+    "--adapter-path", adapter_mlx,
+    "--save-path", fused_path,
 ])
-raise SystemExit(0 if rc == 0 else rc)
+if rc == 0 and os.path.isfile(os.path.join(fused_path, "config.json")):
+    print("fused LoRA into", fused_path, flush=True)
+    raise SystemExit(0)
+raise SystemExit(rc if rc != 0 else 1)
 PY
       fi
 
@@ -148,7 +159,7 @@ PY
       max_tokens="''${MLX_LM_COMPACT_MAX_TOKENS:-${toString maxTokens}}"
       prompt_cache_bytes="''${MLX_LM_COMPACT_PROMPT_CACHE_BYTES:-${toString promptCacheBytes}}"
 
-      exec "$venv/bin/python" -m mlx_lm.server \
+      exec "$venv/bin/python" ${mlxCompactServe} \
         --host 0.0.0.0 \
         --port ${toString compactPort} \
         --model "$fused_path" \
