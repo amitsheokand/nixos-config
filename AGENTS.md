@@ -336,7 +336,7 @@ PC local profiles (names stay if the checkpoint changes):
 | Profile | Cursor analogue | Thinking | Effort | Use |
 |---------|-----------------|----------|--------|-----|
 | `feather` | — | on (low, 512-token cap) | greedy; **DFlash on Qwen 3.8** | short/fast, **32k** window, 8k gen |
-| `forge` | Composer | on (medium, 2048-token cap; old think stripped) | medium | **daily on Qwen 3.8 mq4-pro**, AR, 48k window, Pi auto-compacts |
+| `forge` | Composer | on (medium, 4096-token cap; old think stripped) | greedy AR | **daily on Qwen 3.8 mq4-pro**, 48k window, Pi auto-compacts |
 | `anvil` | Grok | on (xhigh, 8192-token cap; old think stripped) | xhigh | **hard long-form on Qwen 3.8**, same 48k compact window |
 | `qwen38` | — | raw backend | none injected | explicit Qwen 3.8 weight |
 | `ornith` | — | raw backend | none injected | Ornith 1.5 MQ4R + Sharp. `forge/ornith` swaps the GPU off Qwen |

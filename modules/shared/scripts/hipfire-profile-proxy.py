@@ -124,9 +124,9 @@ def apply_lane_defaults(
     spec = resolve_speculation(
         defaults.pop("speculation", lane.get("speculation")), backend
     )
-    # Omit "off": hipfire serve reloads (and unloads the DFlash draft) when
-    # the selector changes. AR lanes inherit the resident default.
-    if spec and spec != "off" and "speculation" not in body:
+    # Always pin the selector. Omitting "off" left AR lanes on a resident
+    # DFlash draft (models.toml dflash=auto) after Anvil/Feather.
+    if "speculation" not in body:
         body["speculation"] = spec
     for key, value in defaults.items():
         if key == "chat_template_kwargs":

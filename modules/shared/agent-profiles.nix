@@ -61,7 +61,7 @@ rec {
   profiles = {
     forge = {
       displayName = "Forge";
-      description = "Daily long session on Qwen 3.8: thinking on, medium, 4096-token think cap. Compact before ~40k.";
+      description = "Daily long session on Qwen 3.8: thinking on, medium, 4096-token think cap, greedy AR. Compact before ~40k.";
       backend = "qwen38";
       thinking = true;
       effort = "medium";
@@ -69,6 +69,8 @@ rec {
       preserveThinking = false;
       contextWindow = 49152;
       maxTokens = 16384;
+      temperature = 0;
+      presencePenalty = 0;
       speculation = "off";
       thinkingLevelMap = {
         off = null;

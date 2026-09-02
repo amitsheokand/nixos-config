@@ -47,6 +47,8 @@ CFG = {
             "defaults": {
                 "reasoning_effort": "medium",
                 "max_think_tokens": 4096,
+                "temperature": 0,
+                "presence_penalty": 0,
                 "chat_template_kwargs": {
                     "enable_thinking": True,
                     "preserve_thinking": False,
@@ -81,9 +83,11 @@ class ApplyRequestTests(unittest.TestCase):
         body = proxy.apply_request(CFG, {"model": "forge"})
         self.assertEqual(body["model"], "ornith-1.5:35b-a3b-mq4r")
         self.assertEqual(body["reasoning_effort"], "medium")
-        self.assertNotIn("speculation", body)
+        self.assertEqual(body["speculation"], "off")
         self.assertEqual(body["max_tokens"], 16384)
         self.assertEqual(body["max_think_tokens"], 4096)
+        self.assertEqual(body["temperature"], 0)
+        self.assertEqual(body["presence_penalty"], 0)
         self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
         self.assertFalse(body["chat_template_kwargs"]["preserve_thinking"])
 
@@ -162,7 +166,9 @@ class ApplyRequestTests(unittest.TestCase):
     def test_composite_forge_qwen_keeps_lane_defaults(self) -> None:
         body = proxy.apply_request(CFG, {"model": "forge/qwen38"})
         self.assertEqual(body["model"], "qwen3.8:27b")
-        self.assertNotIn("speculation", body)
+        self.assertEqual(body["speculation"], "off")
+        self.assertEqual(body["temperature"], 0)
+        self.assertEqual(body["presence_penalty"], 0)
 
     def test_qwen38_alias_does_not_inject_lane_defaults(self) -> None:
         body = proxy.apply_request(CFG, {"model": "qwen38"})
@@ -248,7 +254,7 @@ class ApplyRequestTests(unittest.TestCase):
         cfg["profiles"] = profiles
         body = proxy.apply_request(cfg, {"model": "forge"})
         self.assertEqual(body["model"], "qwen3.8:27b")
-        self.assertNotIn("speculation", body)
+        self.assertEqual(body["speculation"], "off")
 
 
 if __name__ == "__main__":
