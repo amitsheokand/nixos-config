@@ -36,7 +36,7 @@ rec {
       displayName = "Ornith";
       description = "Official Ornith 1.5 MQ4R (uniform qt44) with Tiel Sharp v22.4 jinja sidecar. Daily lanes stay on Qwen; pick ornith or forge/ornith to swap.";
       available = true;
-      contextWindow = 49152;
+      contextWindow = 65536;
       maxTokens = 16384;
       maxSeq = 65536;
       kvMode = "q8";
@@ -61,11 +61,11 @@ rec {
   profiles = {
     forge = {
       displayName = "Forge";
-      description = "Daily long session on Qwen 3.8: thinking on, medium, 2048-token think cap. Compact before ~40k.";
+      description = "Daily long session on Qwen 3.8: thinking on, medium, 4096-token think cap. Compact before ~40k.";
       backend = "qwen38";
       thinking = true;
       effort = "medium";
-      maxThinkTokens = 2048;
+      maxThinkTokens = 4096;
       preserveThinking = false;
       contextWindow = 49152;
       maxTokens = 16384;
@@ -82,7 +82,7 @@ rec {
     };
     anvil = {
       displayName = "Anvil";
-      description = "Hard long-form on Qwen 3.8: thinking on, xhigh, 8192-token think cap. Same compact window as forge.";
+      description = "Hard long-form on Qwen 3.8: thinking on, xhigh, 8192-token think cap, DFlash. Same compact window as forge.";
       backend = "qwen38";
       thinking = true;
       effort = "xhigh";
@@ -90,7 +90,9 @@ rec {
       preserveThinking = false;
       contextWindow = 49152;
       maxTokens = 16384;
-      speculation = "off";
+      temperature = 0;
+      presencePenalty = 0;
+      speculation = "dflash-if-capable";
       thinkingLevelMap = {
         off = null;
         minimal = null;

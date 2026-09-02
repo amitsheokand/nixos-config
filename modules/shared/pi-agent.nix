@@ -167,7 +167,7 @@ in
       '';
 
       # policy-only hermes: compact policy, no MEMORY.md injection, flush via
-      # GPT-5.6 Luna so compact does not spawn a second job on the desktop GPU.
+      # compact/compactor (Mac MLX then local tiny) so it does not steal the R9700.
       syncHermesMemory = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''
         mkdir -p "$HOME/.pi/agent/pi-hermes-memory"
         install -m 0600 ${hermesMemoryConfig} "$HOME/.pi/agent/hermes-memory-config.json"

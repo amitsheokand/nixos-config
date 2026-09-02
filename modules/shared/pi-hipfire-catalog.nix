@@ -29,8 +29,8 @@ let
         displayName = "${lane.displayName} (${backend.displayName})";
         description = "Lane ${laneId} on ${backend.displayName}.";
         contextWindow = lib.min
-          (lane.contextWindow or profiles.contextWindow)
-          (backend.contextWindow or profiles.contextWindow);
+          (backend.contextWindow or profiles.contextWindow)
+          (backend.maxSeq or 65536);
         maxTokens = lib.min
           (lane.maxTokens or profiles.maxTokens)
           (backend.maxTokens or profiles.maxTokens);
@@ -81,7 +81,11 @@ let
       supportsUsageInStreaming = true;
       maxTokensField = "max_tokens";
     };
-    extraProviders = { mlx-compact = compactLan.provider; };
+    extraProviders = {
+      mlx-compact = compactLan.provider;
+      # Same server; hermes `compact/compactor` works on odie/vaayu/Mac.
+      compact = compactLan.provider;
+    };
     contextWindow = profiles.contextWindow;
     maxTokens = profiles.maxTokens;
     models = piModels;

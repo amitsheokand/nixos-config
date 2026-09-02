@@ -148,6 +148,24 @@ def split_composite(model: str) -> tuple[str, str] | None:
     return lane_id, backend_id
 
 
+def advertised_context(
+    lane: dict[str, Any] | None, backend: dict[str, Any] | None
+) -> int | None:
+    """Pi/Grok compaction window. Composites follow the backend (weights),
+    not min(lane, backend) — forge's 49k Qwen-safe window must not shrink Ornith."""
+    seq = _as_int(backend.get("max_seq")) if isinstance(backend, dict) else None
+    win = None
+    if isinstance(backend, dict):
+        win = _as_int(backend.get("context_window"))
+    if win is None and isinstance(lane, dict):
+        win = _as_int(lane.get("context_window"))
+    if win is None:
+        return seq
+    if seq is not None:
+        return min(win, seq)
+    return win
+
+
 def _as_int(value: Any) -> int | None:
     if isinstance(value, bool) or value is None:
         return None
@@ -370,8 +388,7 @@ def catalog_ids(cfg: dict[str, Any]) -> list[dict[str, Any]]:
                         backend.get("display_name", backend_id),
                     ),
                     "description": "Lane %s on backend %s." % (lane_id, backend_id),
-                    "context_window": lane.get("context_window")
-                    or backend.get("context_window"),
+                    "context_window": advertised_context(lane, backend),
                 }
             )
     if not backends_of(cfg) and cfg.get("backend_model"):

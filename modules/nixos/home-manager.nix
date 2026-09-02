@@ -66,6 +66,11 @@ in
   xdg.configFile = lib.mkIf hipfireEnabled {
     "systemd/user/hipfire-serve.service".force = true;
     "systemd/user/hipfire-daemon-watch.service".force = true;
+    "systemd/user/pi-compact-router.service".force = true;
+    "systemd/user/pi-compact-tiny.service".force = true;
+    # Live `systemctl --user enable` left these wants links; HM must overwrite them.
+    "systemd/user/default.target.wants/pi-compact-router.service".force = true;
+    "systemd/user/default.target.wants/pi-compact-tiny.service".force = true;
   };
 
   # GPG agent with pinentry for passphrase prompts

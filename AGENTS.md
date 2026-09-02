@@ -352,14 +352,14 @@ Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites 
 | Piece | Where |
 |-------|--------|
 | Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, pi-fff override grep, pi-cc-compact, …) |
-| Compact model | Mac MLX Compactor on `:8081` (login default). `mlx-lane compact` / `mlx-lane gemma` exclusive. `PI_CC_COMPACT_MODEL`. Never hipfire. |
+| Compact model | Mac MLX Compactor on `:8081` (login default). `mlx-lane compact` / `mlx-lane gemma` exclusive. PC router `:8091` → Mac `:8081`, then local tiny. `PI_CC_COMPACT_MODEL`. Never hipfire. |
 | Local model defaults | host HM (MLX + LAN hipfire on Darwin; local hipfire on PC; LAN hipfire on odie/vaayu) |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
-After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` uses **pi-cc-compact** → Mac Compactor (`http://ai-mac.local:8081/v1`, thinking off, 16k). Do not compact on Anvil/hipfire.
+After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` uses **pi-cc-compact**. Mac talks to Compactor on `:8081` (`mlx-compact/compactor`, thinking off, 16k). The GPU host uses `compact/compactor` via `:8091` (Mac `:8081`, then local 0.8B on iGPU). `PI_ASYNC_PREFIX_COMPACTION=0` on the GPU host so background compact does not share Anvil's hipfire queue. Do not compact on Anvil/hipfire.
 
 **Session knowledge (do not stuff the prompt):**
-- hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via `openai-codex/gpt-5.6-luna` so it does not steal the R9700 slot.
+- hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via `compact/compactor` so it does not steal the R9700 slot.
 - Rewind with `/tree`, do not resume a long leaf. New chat per task.
 - `/compact` before huge tool dumps. Quote last 20 log lines, not the file.
 - Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that).

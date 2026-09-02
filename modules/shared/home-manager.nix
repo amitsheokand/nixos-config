@@ -66,6 +66,13 @@ let name = "Amit Sheokand";
       # === PATH Setup ===
       export PATH="$HOME/.local/bin:$PATH"
 
+      # systemd environment.d is not inherited by Zed/Ghostty terminals.
+      if [[ -f "$HOME/.config/environment.d/50-pi-compact.conf" ]]; then
+        set -a
+        source "$HOME/.config/environment.d/50-pi-compact.conf"
+        set +a
+      fi
+
       # === Local secrets (gitignored, never committed) ===
       if [[ -f "$HOME/.config/openrouter.env" ]]; then
         source "$HOME/.config/openrouter.env"

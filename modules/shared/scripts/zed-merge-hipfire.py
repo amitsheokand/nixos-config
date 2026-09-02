@@ -62,8 +62,8 @@ def available_models(cfg: dict) -> list[dict]:
                         lane.get("display_name", lane_id),
                         backend.get("display_name", backend_id),
                     ),
-                    "max_tokens": lane.get("context_window")
-                    or backend.get("context_window")
+                    "max_tokens": backend.get("context_window")
+                    or lane.get("context_window")
                     or 49152,
                     "max_output_tokens": lane.get("max_tokens") or 16384,
                 }

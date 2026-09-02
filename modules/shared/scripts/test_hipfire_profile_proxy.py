@@ -24,7 +24,7 @@ CFG = {
             "aliases": ["ornith", "ornith-1.5"],
             "speculation": ["off", "mtp"],
             "display_name": "Ornith",
-            "context_window": 49152,
+            "context_window": 65536,
             "max_tokens": 16384,
             "max_seq": 65536,
         },
@@ -43,10 +43,10 @@ CFG = {
             "display_name": "Forge",
             "context_window": 49152,
             "max_tokens": 16384,
-            "max_think_tokens": 2048,
+            "max_think_tokens": 4096,
             "defaults": {
                 "reasoning_effort": "medium",
-                "max_think_tokens": 2048,
+                "max_think_tokens": 4096,
                 "chat_template_kwargs": {
                     "enable_thinking": True,
                     "preserve_thinking": False,
@@ -83,7 +83,7 @@ class ApplyRequestTests(unittest.TestCase):
         self.assertEqual(body["reasoning_effort"], "medium")
         self.assertNotIn("speculation", body)
         self.assertEqual(body["max_tokens"], 16384)
-        self.assertEqual(body["max_think_tokens"], 2048)
+        self.assertEqual(body["max_think_tokens"], 4096)
         self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
         self.assertFalse(body["chat_template_kwargs"]["preserve_thinking"])
 
@@ -121,6 +121,43 @@ class ApplyRequestTests(unittest.TestCase):
         body = proxy.apply_request(cfg, {"model": "feather"})
         self.assertEqual(body["model"], "qwen3.8:27b")
         self.assertEqual(body["speculation"], "dflash")
+
+    def test_anvil_on_qwen_is_dflash_with_neutral_sampling(self) -> None:
+        cfg = json.loads(json.dumps(CFG))
+        cfg["default_backend"] = "qwen38"
+        cfg["profiles"]["anvil"] = {
+            "display_name": "Anvil",
+            "description": "test",
+            "backend": "qwen38",
+            "context_window": 49152,
+            "max_tokens": 16384,
+            "speculation": "dflash-if-capable",
+            "defaults": {
+                "chat_template_kwargs": {
+                    "enable_thinking": True,
+                    "preserve_thinking": False,
+                },
+                "max_tokens": 16384,
+                "reasoning_effort": "xhigh",
+                "max_think_tokens": 8192,
+                "temperature": 0,
+                "presence_penalty": 0,
+                "speculation": "dflash-if-capable",
+            },
+            "max_think_tokens": 8192,
+        }
+        cfg["backends"]["qwen38"] = {
+            "tag": "qwen3.8:27b-mq4-pro",
+            "aliases": ["qwen38"],
+            "speculation": ["off", "dflash", "mtp"],
+        }
+        body = proxy.apply_request(cfg, {"model": "anvil"})
+        self.assertEqual(body["model"], "qwen3.8:27b-mq4-pro")
+        self.assertEqual(body["speculation"], "dflash")
+        self.assertEqual(body["reasoning_effort"], "xhigh")
+        self.assertEqual(body["max_think_tokens"], 8192)
+        self.assertEqual(body["temperature"], 0)
+        self.assertEqual(body["presence_penalty"], 0)
 
     def test_composite_forge_qwen_keeps_lane_defaults(self) -> None:
         body = proxy.apply_request(CFG, {"model": "forge/qwen38"})
@@ -182,8 +219,8 @@ class ApplyRequestTests(unittest.TestCase):
 
     def test_small_max_tokens_is_floored_for_thinking(self) -> None:
         body = proxy.apply_request(CFG, {"model": "forge", "max_tokens": 32})
-        self.assertEqual(body["max_think_tokens"], 2048)
-        self.assertEqual(body["max_tokens"], 2048 + proxy.THINK_ANSWER_ROOM)
+        self.assertEqual(body["max_think_tokens"], 4096)
+        self.assertEqual(body["max_tokens"], 4096 + proxy.THINK_ANSWER_ROOM)
 
     def test_unavailable_backend_is_omitted_from_catalog(self) -> None:
         cfg = json.loads(json.dumps(CFG))
@@ -193,6 +230,14 @@ class ApplyRequestTests(unittest.TestCase):
         self.assertEqual(payload, ["forge", "feather", "qwen38"])
         body = proxy.apply_request(cfg, {"model": "feather/ornith"})
         self.assertEqual(body["model"], "ornith-1.5:35b-a3b-mq4r")
+
+    def test_forge_ornith_advertises_backend_window(self) -> None:
+        payload = json.loads(proxy.models_payload(CFG))["data"]
+        by_id = {item["id"]: item for item in payload}
+        self.assertEqual(by_id["forge"]["context_window"], 49152)
+        self.assertEqual(by_id["ornith"]["context_window"], 65536)
+        self.assertEqual(by_id["forge/qwen38"]["context_window"], 32768)
+        self.assertEqual(by_id["feather/ornith"]["context_window"], 65536)
 
     def test_forge_pin_qwen38_rewrites_tag(self) -> None:
         cfg = dict(CFG)

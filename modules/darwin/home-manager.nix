@@ -70,6 +70,7 @@ in
             extraProviders = {
               hipfire = hipfireLan.provider;
               mlx-compact = compactPi.provider;
+              compact = compactPi.provider;
             };
           };
         };

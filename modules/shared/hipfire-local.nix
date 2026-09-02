@@ -12,6 +12,7 @@
 
 let
   profiles = import ./agent-profiles.nix;
+  compact = import ./pi-compact.nix { inherit pkgs lib user; };
   homeDir = "/home/${user}";
   hipfireRoot = "${homeDir}/dev/hipfire";
   hipfireBin = "${hipfireRoot}/target/release/hipfire";
@@ -196,6 +197,10 @@ let
   catalogMergeScript = ''
     rm -f "$HOME/.config/systemd/user/hipfire-serve.service.d/ornith-ar.conf"
     rm -f "$HOME/.config/systemd/user/hipfire-profile-proxy.service.d/ornith-ar.conf"
+    mkdir -p "$HOME/.pi/agent/skills/pi-compact-focus"
+    mkdir -p "$HOME/.local/share/pi-compact"
+    install -m 0644 ${./pi-compact/SKILL.md} "$HOME/.pi/agent/skills/pi-compact-focus/SKILL.md"
+    install -m 0644 ${./pi-compact/focus.md} "$HOME/.pi/agent/compact-focus.md"
   '' + hermesMergeScript + zedMergeScript + continueMergeScript;
 
   daemonWatch = pkgs.writeShellApplication {
@@ -250,16 +255,19 @@ in
     );
     GROK_LOCAL_MODEL = defaultLane;
     GROK_LOCAL_BASE_URL = baseUrl;
-  } // (import ./pi-compactor.nix {
-    baseUrl = "http://ai-mac.local:8081/v1";
-  }).sessionVariables;
+    # compact.sessionVariables last so PC uses compact/compactor (:8091),
+    # not mlx-compact/compactor (direct Mac, no tiny fallback).
+  } // compact.sessionVariables;
 
-  packages = [ proxy serve daemonWatch ];
+  packages = [ proxy serve daemonWatch ] ++ compact.packages;
 
   piLocalSettings = catalog.piLocalSettings;
-  piLocalModels = catalog.piLocalModels;
+  piLocalModels = catalog.piLocalModels // {
+    extraProviders = (catalog.piLocalModels.extraProviders or {})
+      // compact.extraProvider;
+  };
 
-  systemdUserServices = {
+  systemdUserServices = compact.systemdUserServices // {
     hipfire-serve = {
       Unit = {
         Description = "hipfire serve (local cargo build, existing ~/.hipfire config)";
@@ -277,6 +285,9 @@ in
           "HIP_VISIBLE_DEVICES=0"
           "HIPFIRE_QWEN_MTP=0"
           "HIPFIRE_DFLASH_MODE=auto"
+          # After think-cap closes </think>, allow this many answer tokens
+          # before hard EOS (default 768 was cutting forge/ornith mid-reply).
+          "HIPFIRE_POST_LATCH_ANSWER_TOKENS=2048"
         ];
       };
       Install.WantedBy = [ "default.target" ];
