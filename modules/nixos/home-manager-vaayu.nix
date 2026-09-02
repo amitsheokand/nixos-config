@@ -38,7 +38,8 @@ in
       ++ (piAgent.home.packages or []);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
-      // (headroom.home.file or {});
+      // (headroom.home.file or {})
+      // (zvecGrep.home.file or {});
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
       // (zvecGrep.home.activation or {})

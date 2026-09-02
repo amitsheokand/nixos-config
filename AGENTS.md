@@ -296,7 +296,7 @@ MCP clients (activation merge; restart the agent after first rebuild):
 | OpenCode | `zg install --target opencode` |
 | Pi | `pi-mcp-adapter` + `~/.pi/agent/mcp.json` (native Pi has no MCP). Cursor-SDK Pi already sees Cursor's `mcp.json`. |
 | Hermes | `mcp_servers.zvec_grep` in `~/.hermes/config.yaml` |
-| Grok | `[mcp_servers.zvec_grep]` in `~/.grok/config.toml` |
+| Grok | `[mcp_servers.zvec_grep]` in `~/.grok/config.toml`; global rules in `~/.grok/rules/zvec-grep.md` (Grok CLI + Grok Bot) |
 | Muse | `mcp_servers.zvec_grep` streamable HTTP, `mode=optional` |
 | Zed | `context_servers.zvec_grep` URL (does not clobber hipfire/meta) |
 

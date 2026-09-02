@@ -47,6 +47,7 @@ in
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
+      // (zvecGrep.home.file or {})
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})

@@ -101,6 +101,7 @@ in
             sharedFiles
             additionalFiles
             (headroom.home.file or {})
+            (zvecGrep.home.file or {})
             {
               ".codex/mlx-local.config.toml" = {
                 text = ''

@@ -56,9 +56,34 @@ let
       fi
     '';
   };
+  indexHipfire = pkgs.writeShellApplication {
+    name = "zg-index-hipfire";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      set -euo pipefail
+      zg="''${ZG:-$HOME/.local/bin/zg}"
+      root="''${HIPFIRE:-$HOME/dev/hipfire}"
+      embed="''${ZG_EMBEDDING:-local/potion-code-16m-v2}"
+      if [[ ! -x "$zg" ]]; then
+        echo "zg-index-hipfire: zg not found at $zg" >&2
+        exit 1
+      fi
+      if [[ ! -d "$root" ]]; then
+        echo "zg-index-hipfire: missing $root" >&2
+        exit 1
+      fi
+      exec "$zg" index "$root" --embedding "$embed" \
+        -g '!target/**' -g '!**/*.gguf' -g '!**/*.safetensors'
+    '';
+  };
 in
 {
-  home.packages = [ nodejs indexAdvait ];
+  home.packages = [ nodejs indexAdvait indexHipfire ];
+
+  home.file = {
+    ".grok/rules/zvec-grep.md".source = ./grok-rules/zvec-grep.md;
+    ".grok/prompts/local-helper.md".source = ./grok-prompts/local-helper.md;
+  };
 
   home.sessionPath = [ "$HOME/.local/bin" ];
 
