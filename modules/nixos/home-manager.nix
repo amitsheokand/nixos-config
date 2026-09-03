@@ -9,6 +9,7 @@ let
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
   zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
   museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
+  mtpTorch = import ../shared/mtp-torch.nix { inherit pkgs lib; };
   hipfireEnabled = (osConfig.networking.hostName or "") == "nixos";
   hipfireLocal = if hipfireEnabled
     then import ../shared/hipfire-local.nix { inherit pkgs lib user; }
@@ -37,13 +38,15 @@ in
       then hipfireLan.sessionVariables
       else hipfireLocal.sessionVariables)
       // (piAgent.sessionVariables or {})
-      // (zvecGrep.home.sessionVariables or {});
+      // (zvecGrep.home.sessionVariables or {})
+      // (mtpTorch.home.sessionVariables or {});
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
       ++ (zvecGrep.home.packages or [])
       ++ (museSpark.home.packages or [])
       ++ (piAgent.home.packages or [])
+      ++ (mtpTorch.home.packages or [])
       ++ (if hipfireLocal == null then [] else hipfireLocal.packages);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
