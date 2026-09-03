@@ -3,7 +3,7 @@
 # Does not import hipfire's NixOS module (that rebuilds the Rust workspace and
 # overwrites ~/.hipfire/config.toml). Uses the locally built binaries and the
 # existing user config. Catalog lives in ./agent-profiles.nix:
-#   lanes (forge/anvil/feather) vs backends (qwen38 daily; ornith MQ4R via forge/ornith).
+#   lanes (forge/anvil/feather/fuse) vs backends (qwen38 daily; fuse-2-moe via fuse).
 {
   pkgs,
   lib,

@@ -4,6 +4,10 @@ Local hybrid search (ripgrep + BM25 + vectors) via MCP `zvec_grep_search` on
 `http://127.0.0.1:7999/mcp` (`zvec-grep` user service). Every call needs an
 **absolute `root`** for the workspace index under `<root>/.zvec-grep/`.
 
+Embedding: **`local/jina-embeddings-v2-base-code`** (768-d, 8k-token chunks).
+Linux: **Vulkan on the iGPU** (not the headless R9700 XT — that is hipfire only).
+Mac: **Metal** (MLX for Pi compact / Gemma chat).
+
 ## Indexed workspaces
 
 | Tree | Linux `root` | macOS `root` |
@@ -30,7 +34,7 @@ when good enough.
 ## Re-index after large changes
 
 ```sh
-zg-index-advait                              # both Advait roots
-zg index ~/dev/hipfire -g '!target/**' ...   # hipfire
-zg index <root> --embedding local/potion-code-16m-v2
+zg-refresh-advait                 # incremental (login + post-commit too)
+ZG_REBUILD=1 zg-index-advait      # full rebuild both Advait roots
+ZG_REBUILD=1 zg-index-hipfire     # full rebuild hipfire
 ```

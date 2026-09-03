@@ -87,7 +87,8 @@ in
             AI_MAX_TOKENS = toString maxTokens;
             GROK_LOCAL_MODEL = mlxModelPath;
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
-          } // compactPi.sessionVariables // (piAgent.sessionVariables or {});
+          } // compactPi.sessionVariables // (piAgent.sessionVariables or {})
+            // (zvecGrep.home.sessionVariables or {});
           sessionPath = (commandCode.home.sessionPath or [])
             ++ (zvecGrep.home.sessionPath or [])
             ++ (headroom.home.sessionPath or []);

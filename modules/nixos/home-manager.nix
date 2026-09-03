@@ -36,7 +36,8 @@ in
     sessionVariables = (if hipfireLocal == null
       then hipfireLan.sessionVariables
       else hipfireLocal.sessionVariables)
-      // (piAgent.sessionVariables or {});
+      // (piAgent.sessionVariables or {})
+      // (zvecGrep.home.sessionVariables or {});
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])

@@ -30,7 +30,8 @@ in
     username = "${user}";
     homeDirectory = "/home/${user}";
     sessionVariables = hipfireLan.sessionVariables
-      // (piAgent.sessionVariables or {});
+      // (piAgent.sessionVariables or {})
+      // (zvecGrep.home.sessionVariables or {});
     packages = (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
       ++ (zvecGrep.home.packages or [])
