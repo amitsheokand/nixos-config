@@ -72,10 +72,14 @@ in
 
   programs = shared-programs // { gpg.enable = true; };
 
-  systemd.user.services = (headroom.systemd.user.services or {})
-    // (museSpark.systemdUserServices or {})
-    // (zvecGrep.systemdUserServices or {})
-    // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
+  systemd.user = {
+    services = (headroom.systemd.user.services or {})
+      // (museSpark.systemdUserServices or {})
+      // (zvecGrep.systemdUserServices or {})
+      // (piAgent.systemdUserServices or {})
+      // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
+    timers = piAgent.systemdUserTimers or {};
+  };
 
   # `systemctl --user mask` leaves ~/.config/systemd/user/*.service -> /dev/null.
   # HM then refuses to clobber those links and activation fails. Force overwrite
@@ -86,6 +90,8 @@ in
       "systemd/user/zvec-grep.service".force = true;
       "systemd/user/zvec-grep-refresh.service".force = true;
       "systemd/user/default.target.wants/zvec-grep-refresh.service".force = true;
+      "systemd/user/overflow-pick.service".force = true;
+      "systemd/user/overflow-pick.timer".force = true;
     }
     (lib.mkIf hipfireEnabled {
       "systemd/user/hipfire-serve.service".force = true;

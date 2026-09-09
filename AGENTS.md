@@ -348,7 +348,8 @@ sudo nixos-rebuild switch --flake .#vaayu --impure
 reboot
 ```
 
-Then copy `~/.config/openrouter.env` from another machine for Pi `stealth/ox-alpha`.
+Then copy `~/.config/openrouter.env` from another machine for Pi overflow
+(`overflow-assign`).
 On the Air, `ssh-keygen -t ed25519` and append `~/.ssh/id_ed25519.pub` to [`modules/shared/ssh-keys.nix`](modules/shared/ssh-keys.nix).
 
 ## LAN SSH + deploy
@@ -414,9 +415,9 @@ normal `grok` session — that replaces the cloud catalog).
 
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
-| Mac (`ai-mac`) | `gemmacoder` | default `mlx-local` / `gemmacoder` when Gemma lane is up (`mlx-lane gemma`). Compactor is login-resident on `:8081`. Also `hipfire` over LAN (`/model forge`) | Gemma: `~/models/gemma-4-12b-coder-fable5-composer2.5-4bit` on demand (`mlx-lane gemma`). Compactor: `:8081` default on (`mlx-lane compact`). hipfire `http://nixos.local:8080/v1` |
-| PC (`nixos`) | `forge` (default), `anvil`, `feather`, `qwen38` | provider `hipfire`, names Forge / Anvil / Feather / Qwen 3.8 | lane ids at `http://127.0.0.1:8080/v1` locally, or `http://nixos.local:8080/v1` on the LAN (proxy → hipfire `:11435`). Daily backend is Qwen 3.8 mq4-pro. Catalog: `modules/shared/agent-profiles.nix` |
-| Air (`vaayu`) | `forge` (LAN) | provider `hipfire` at `http://nixos.local:8080/v1`; OpenRouter ox-alpha stays as a Pi extension | same lane ids |
+| Mac (`ai-mac`) | `longctx` (default MiniCPM5-2B `:8080`), `gemmacoder` when `mlx-lane gemma` | default `mlx-local` / `longctx`. Compactor `:8081`. `/model forge` → PC hipfire | MiniCPM aliases `longctx`/`minicpm`. Gemma path on demand. Compact `compactor`. hipfire `http://nixos.local:8080/v1` |
+| PC (`nixos`) | `forge` (Grok default), `anvil`, `feather`, `qwen38` | default **`longctx`** (Mac MiniCPM over LAN). `/model forge` for Qwen 3.8 | longctx at `http://ai-mac.local:8080/v1`; lanes at `http://127.0.0.1:8080/v1` (proxy → hipfire `:11435`). Catalog: `modules/shared/agent-profiles.nix` |
+| Air (`vaayu`) | `forge` (LAN) | default `longctx` (Mac); `/model forge` desktop catalog; cloud overflow via `~/.pi/agent/overflow.md` | same ids |
 
 PC local profiles (names stay if the checkpoint changes):
 
@@ -430,17 +431,22 @@ PC local profiles (names stay if the checkpoint changes):
 
 Long sessions stay on **Qwen 3.8 mq4-pro** (`forge` / `anvil` / `feather`). Advertised windows stay 32k (feather) / 48k (forge/anvil). hipfire `memory.max_seq=65536` is the product fail-closed ceiling. An isolated 86k/98k probe is a temp project, not a catalog size. Pi compaction (`pi-async-compaction` + `compaction.enabled`) fires from ~60% of the advertised window.
 
-Default `AI_MODEL` / `GROK_LOCAL_MODEL` is the **lane** `forge`, never a checkpoint name. `/model fuse` swaps the desktop GPU to Fuse-2 MoE (no thinking); `/model forge` stays Qwen.
+Default `AI_MODEL` / `GROK_LOCAL_MODEL` on the **PC** is the hipfire **lane** `forge`, never a checkpoint name. **Pi** defaults to `longctx` (MiniCPM on the Mac) so opening `pi` does not steal the GPU. `/model fuse` swaps the desktop GPU to Fuse-2 MoE (no thinking); `/model forge` stays Qwen.
 
 Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites `~/.hipfire/config.toml`. The desktop uses `modules/shared/hipfire-local.nix` (existing cargo binaries + user config). After `build-switch`: `systemctl --user start hipfire-serve hipfire-profile-proxy hipfire-daemon-watch` (WantedBy default.target). Serve binds **127.0.0.1:11435**; LAN clients use the catalog at `:8080` (clamp `max_tokens`, inject think caps, HTTP 413 on oversize). hipfire itself refuses to bump `memory.max_seq`. The watch unit restarts serve if `/health` is up but `daemon.pid` is dead or zombie (the 2026-08-28 failure mode). Hermes gets `/model forge`, `/model anvil`, `/model feather`, plus backend aliases; the Nous default provider is unchanged. Cursor Agent stays on cloud Grok/Composer; Continue / `cursor-local-help` use the named profiles. Zed gets `language_models.openai_compatible.hipfire` without changing `agent.default_model`.
 
 ### Shared Pi agent (Mac / PC / vaayu)
 
+Pi is the hub. Cursor (`pi-cursor-sdk`) and Muse Code Power (`pi-muse-bridge`,
+pin `muse-code/muse-spark-1.3`) run **inside Pi**. Usage ladder:
+`modules/shared/pi-stack.md` → `~/.pi/agent/stack.md`. Grok Bot is not the
+coordinator seat. Rakazo is not packaged.
+
 | Piece | Where |
 |-------|--------|
-| Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, pi-fff override grep, pi-cc-compact, …) |
-| Compact model | Mac MLX Compactor on `:8081` (login default). `mlx-lane compact` / `mlx-lane gemma` exclusive. PC router `:8091` → Mac `:8081`, then local tiny. `PI_CC_COMPACT_MODEL`. Never hipfire. |
-| Local model defaults | host HM (MLX + LAN hipfire on Darwin; local hipfire on PC; LAN hipfire on vaayu) |
+| Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, muse-bridge 0.3.0, tool-display, statusline, pi-fff, pi-cc-compact, …) |
+| Compact model | Mac MLX Compactor on `:8081` (login). Fits with MiniCPM `:8080`. `mlx-lane gemma` is exclusive (stops both). PC router `:8091` → Mac `:8081`, then local tiny. `PI_CC_COMPACT_MODEL`. Never hipfire. |
+| Local model defaults | MiniCPM `longctx` (Mac `:8080`, LAN on PC/vaayu). `/model forge` for Qwen 3.8. Gemma on demand. |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` uses **pi-cc-compact**. Mac talks to Compactor on `:8081` (`mlx-compact/compactor`, thinking off, 16k). The GPU host uses `compact/compactor` via `:8091` (Mac `:8081`, then local 0.8B on iGPU). `PI_ASYNC_PREFIX_COMPACTION=0` on the GPU host so background compact does not share Anvil's hipfire queue. Do not compact on Anvil/hipfire.
@@ -449,10 +455,10 @@ After `nix run .#build-switch` on each machine, missing `pi install` packages ar
 - hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via `compact/compactor` so it does not steal the R9700 slot.
 - Rewind with `/tree`, do not resume a long leaf. New chat per task.
 - `/compact` before huge tool dumps. Quote last 20 log lines, not the file.
-- Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that).
+- Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that). Ladder: `~/.pi/agent/stack.md` (always refreshed). Cloud **executor**: `overflow-assign` → `~/.pi/agent/overflow.md` (OpenRouter / Zen / Hermes / `cmd`; do not re-rank mid-day; reviewers are Muse + Cursor Grok in Pi).
 - One GPU client at a time. Headroom in front of `:8080` is optional later, not on this path.
 
-Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `gemmacoder` — mlx-lm treats unknown ids as a new load and can crash. Keep id = filesystem path, picker name = `gemmacoder`. Mac MLX: 32k context / 4k gen, thinking on (12B coder on 24 GB M4). `/model forge` on Mac/vaayu uses the desktop catalog at `http://nixos.local:8080/v1`. On the PC, Pi `id` is the profile name (`forge` / `anvil` / `feather`); the proxy rewrites it to the hipfire tag. Grok can map picker id → API id without a proxy.
+Pi `id` is sent to the server. mlx-lm treats unknown ids as a new checkpoint and can crash. MiniCPM aliases `longctx` / `minicpm` on `:8080`. Do **not** send `gemmacoder` to MiniCPM. Gemma still uses the filesystem path when `mlx-lane gemma` owns `:8080`. `/model forge` on Mac/vaayu uses the desktop catalog at `http://nixos.local:8080/v1`. On the PC, hipfire ids are lane names (`forge` / `anvil` / `feather`); the proxy rewrites them to the hipfire tag.
 
 `agent` on PATH is Cursor CLI (`~/.local/bin/agent`). Grok TUI is `grok` only
 (the grok package `agent` alias is stripped).

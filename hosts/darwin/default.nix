@@ -7,9 +7,11 @@ let
     ln -s ${agents.grok}/bin/grok $out/bin/grok
   '';
   mlxMac = import ../../modules/shared/mlx-mac.nix { inherit user pkgs; };
+  mlxMinicpm = import ../../modules/shared/mlx-minicpm.nix { inherit user pkgs; };
   mlxCompact = import ../../modules/shared/mlx-compactor.nix { inherit user pkgs; };
   museSpark = import ../../modules/shared/muse-spark.nix { inherit pkgs lib; };
   zvecGrep = import ../../modules/shared/zvec-grep.nix { inherit pkgs lib; };
+  overflowPick = import ../../modules/shared/overflow-pick.nix { inherit pkgs lib; };
 in
 {
   imports = [
@@ -60,11 +62,22 @@ in
       (import ../../modules/shared/mlx-lane.nix { inherit pkgs; })
     ];
 
-  # Grok /model picker: keep cloud grok-* and add local Gemma 4 MLX.
+  # Grok /model picker: cloud grok-* plus MiniCPM longctx (default :8080) and Gemma.
   environment.etc."grok/managed_config.toml".text =
-    mlxMac.grokLocal + museSpark.grokToml;
+    mlxMinicpm.grokLocal + mlxMac.grokLocal + museSpark.grokToml;
 
-  # Gemma 12B coder on :8080 — on demand (`mlx-lane gemma`). Not at login.
+  # MiniCPM5-2B longctx on :8080 — login-resident. Fits with compact :8081.
+  launchd.user.agents.mlx-lm-minicpm = {
+    command = "${mlxMinicpm.mlxLmMinicpmServer}/bin/mlx-lm-minicpm";
+    serviceConfig = {
+      KeepAlive = true;
+      RunAtLoad = true;
+      StandardOutPath = "/tmp/mlx-lm-minicpm_${user}.out.log";
+      StandardErrorPath = "/tmp/mlx-lm-minicpm_${user}.err.log";
+    };
+  };
+
+  # Gemma 12B coder on :8080 — on demand (`mlx-lane gemma`). Stops MiniCPM.
   launchd.user.agents.mlx-lm-server = {
     command = "${mlxMac.mlxLmServer}/bin/mlx-lm-server";
     serviceConfig = {
@@ -90,6 +103,7 @@ in
   launchd.user.agents.muse-spark-proxy = museSpark.launchdAgents.muse-spark-proxy;
 
   launchd.user.agents.zvec-grep = zvecGrep.launchdAgents.zvec-grep;
+  launchd.user.agents.overflow-pick = overflowPick.launchdAgents.overflow-pick;
 
   system = {
     # Turn off NIX_PATH warnings now that we're using flakes

@@ -1,8 +1,8 @@
-# Mac MLX local model — single source of truth for ai-mac.
+# Mac MLX Gemma 4 12B coder — on-demand lane (`mlx-lane gemma`).
 #
-# Gemma 4 12B coder via mlx-lm. On demand (`mlx-lane gemma`); Compactor is
-# the login-resident lane. Weights under ~/models/. Pi/Grok/Codex use the
-# filesystem path as the API model id.
+# Exclusive with MiniCPM longctx on :8080. Compactor stays on :8081 and is
+# stopped when this lane starts (24 GB). Weights under ~/models/.
+# Pi/Grok/Codex use the filesystem path as the API model id for Gemma.
 { user, pkgs }:
 
 let

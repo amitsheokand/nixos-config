@@ -58,20 +58,14 @@
       };
       mkApp = scriptName: system: {
         type = "app";
-        program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin scriptName ''
-          #!/usr/bin/env bash
-          PATH=${nixpkgs.legacyPackages.${system}.git}/bin:$PATH
-          echo "Running ${scriptName} for ${system}"
-          exec ${self}/apps/${system}/${scriptName} "$@"
-        '')}/bin/${scriptName}";
+        # Run the tree script directly. Wrapping with writeScriptBin pulls
+        # flake nixpkgs stdenv; a broken daemon narinfo cache then tries to
+        # bootstrap tinycc instead of substituting cache.nixos.org.
+        program = "${self}/apps/${system}/${scriptName}";
       };
       mkSharedApp = scriptName: system: {
         type = "app";
-        program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin scriptName ''
-          #!/usr/bin/env bash
-          PATH=${nixpkgs.legacyPackages.${system}.git}/bin:${nixpkgs.legacyPackages.${system}.openssh}/bin:$PATH
-          exec ${self}/apps/shared/${scriptName} "$@"
-        '')}/bin/${scriptName}";
+        program = "${self}/apps/shared/${scriptName}";
       };
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;

@@ -2,11 +2,12 @@
 
 pkgs.stdenv.mkDerivation rec {
   pname = "grok-bot";
-  version = "0.20.0";
+  version = "0.36.0";
+  commit = "9465f3ae75550511296fabbb7a4b6fc8afe9e408";
 
   src = pkgs.fetchurl {
-    url = "https://downloads.cursor.com/grokbot/stable/ca2c2b6f79b6130a4822d8189711b0f79f9d4661/linux/x64/Grok_Bot_${version}.deb";
-    hash = "sha256-Z6brYWSrIzpcXU1QZl762iy6rp8i763oXpNKZf37sg0=";
+    url = "https://downloads.cursor.com/grokbot/stable/${commit}/linux/x64/grok-bot_${version}_amd64.deb";
+    hash = "sha256-lItBd2Z9mgORXBruSX58VDhwU5PagIOmrwF3KIUS0H4=";
   };
 
   nativeBuildInputs = with pkgs; [
@@ -75,9 +76,11 @@ pkgs.stdenv.mkDerivation rec {
     # Setuid chrome-sandbox is unusable on NixOS; drop the bit and disable sandbox.
     chmod 755 $out/opt/grok-bot/chrome-sandbox
 
-    # 0.20.0 ships grok-bot.desktop directly; rewrite its absolute launcher path.
-    substituteInPlace $out/share/applications/grok-bot.desktop \
-      --replace-fail '"/opt/Grok Bot/grok-bot" %U' 'grok-bot %U'
+    # Older debs used an absolute /opt path in Exec=; 0.36+ ships grok-bot on PATH.
+    if grep -q '"/opt/Grok Bot/grok-bot"' $out/share/applications/grok-bot.desktop; then
+      substituteInPlace $out/share/applications/grok-bot.desktop \
+        --replace-fail '"/opt/Grok Bot/grok-bot" %U' 'grok-bot %U'
+    fi
 
     makeWrapper $out/opt/grok-bot/grok-bot $out/bin/grok-bot \
       --prefix LD_LIBRARY_PATH : ${

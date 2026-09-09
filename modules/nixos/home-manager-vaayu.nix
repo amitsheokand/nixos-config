@@ -1,7 +1,7 @@
 # Slim Home Manager for Asahi MacBook Air (vaayu).
 # Shell/git/tmux + Headroom + Pi. GPU inference is on the desktop catalog
-# at http://nixos.local:8080/v1 (forge/anvil/feather). OpenRouter stays as
-# a Pi extension. No ROCm / ai-tools.
+# at http://nixos.local:8080/v1 (forge/anvil/feather). OpenRouter overflow
+# is assigned daily (`overflow-assign`). No ROCm / ai-tools.
 { config, pkgs, lib, inputs, ... }:
 
 let
@@ -20,7 +20,8 @@ let
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
-    # OpenRouter ox-alpha stays via extension. `/model forge` hits desktop LAN.
+    # OpenRouter overflow is assigned daily (`overflow-assign`), not a pinned
+    # model. `/model forge` hits desktop LAN.
     localSettings = hipfireLan.piLocalSettings;
     localModels = hipfireLan.piLocalModels;
   };
@@ -57,15 +58,21 @@ in
 
   programs = shared-programs // { gpg.enable = true; };
 
-  systemd.user.services = (headroom.systemd.user.services or {})
-    // (museSpark.systemdUserServices or {})
-    // (zvecGrep.systemdUserServices or {});
+  systemd.user = {
+    services = (headroom.systemd.user.services or {})
+      // (museSpark.systemdUserServices or {})
+      // (zvecGrep.systemdUserServices or {})
+      // (piAgent.systemdUserServices or {});
+    timers = piAgent.systemdUserTimers or {};
+  };
 
   xdg.configFile = {
     "systemd/user/muse-spark-proxy.service".force = true;
     "systemd/user/zvec-grep.service".force = true;
     "systemd/user/zvec-grep-refresh.service".force = true;
     "systemd/user/default.target.wants/zvec-grep-refresh.service".force = true;
+    "systemd/user/overflow-pick.service".force = true;
+    "systemd/user/overflow-pick.timer".force = true;
   };
 
   services.gpg-agent = {

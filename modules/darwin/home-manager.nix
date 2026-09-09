@@ -4,8 +4,7 @@ let
   user           = "amitsheokand";
   sharedFiles     = import ../shared/files.nix { inherit config pkgs; };
   additionalFiles = import ./files.nix { inherit user config pkgs; };
-  mlxMac = import ../shared/mlx-mac.nix { inherit user pkgs; };
-  inherit (mlxMac) mlxModelPath mlxPickerName contextWindow maxTokens;
+  mlxMinicpm = import ../shared/mlx-minicpm.nix { inherit user pkgs; };
   compactPi = import ../shared/pi-compactor.nix {
     baseUrl = "http://127.0.0.1:8081/v1";
   };
@@ -58,17 +57,18 @@ in
           inherit pkgs lib;
           pi = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
           localSettings = {
-            model = mlxModelPath;
+            model = "longctx";
             defaultProvider = "mlx-local";
-            defaultModel = mlxModelPath;
+            defaultModel = "longctx";
             defaultThinkingLevel = "low";
           };
           localModels = {
             providerId = "mlx-local";
-            apiModel = mlxModelPath;
-            displayName = mlxPickerName;
-            inherit contextWindow maxTokens;
-            reasoning = true;
+            apiModel = "longctx";
+            displayName = "MiniCPM5-2B longctx";
+            contextWindow = mlxMinicpm.contextWindow;
+            maxTokens = mlxMinicpm.maxTokens;
+            reasoning = false;
             extraCompat = { maxTokensField = "max_tokens"; };
             extraProviders = {
               hipfire = hipfireLan.provider;
@@ -84,10 +84,10 @@ in
           enableNixpkgsReleaseCheck = false;
           sessionVariables = {
             AI_BASE_URL = "http://127.0.0.1:8080/v1";
-            AI_MODEL = mlxModelPath;
-            AI_CONTEXT_WINDOW = toString contextWindow;
-            AI_MAX_TOKENS = toString maxTokens;
-            GROK_LOCAL_MODEL = mlxModelPath;
+            AI_MODEL = "longctx";
+            AI_CONTEXT_WINDOW = toString mlxMinicpm.contextWindow;
+            AI_MAX_TOKENS = toString mlxMinicpm.maxTokens;
+            GROK_LOCAL_MODEL = "longctx";
             GROK_LOCAL_BASE_URL = "http://127.0.0.1:8080/v1";
           } // compactPi.sessionVariables // (piAgent.sessionVariables or {})
             // (zvecGrep.home.sessionVariables or {});
@@ -108,12 +108,12 @@ in
             {
               ".codex/mlx-local.config.toml" = {
                 text = ''
-                  model = "${mlxModelPath}"
+                  model = "longctx"
                   model_provider = "mlx-local"
-                  model_context_window = ${toString contextWindow}
+                  model_context_window = ${toString mlxMinicpm.contextWindow}
 
                   [model_providers.mlx-local]
-                  name = "${mlxPickerName}"
+                  name = "MiniCPM5-2B longctx"
                   base_url = "http://127.0.0.1:8080/v1"
                   wire_api = "responses"
                   requires_openai_auth = false

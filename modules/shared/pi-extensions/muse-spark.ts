@@ -1,4 +1,9 @@
-// Register Meta Model API Muse Spark as a Pi provider.
+// PAYG Meta Model API — NOT loaded into Pi.
+//
+// Pi uses Muse Code Power via npm:pi-muse-bridge (`muse login`,
+// muse-code/muse-spark-1.3). This file remains for optional Chat Completions
+// clients that deliberately start muse-spark-proxy (:8082) with MODEL_API_KEY.
+// Home-manager deletes copies under ~/.pi/agent/extensions/ on activation.
 //
 // Key from MODEL_API_KEY or META_API_KEY (sourced from ~/.config/meta.env).
 // Never hardcode the key — this file is committed.

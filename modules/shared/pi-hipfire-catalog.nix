@@ -9,6 +9,9 @@ let
   compactLan = import ./pi-compactor.nix {
     baseUrl = "http://ai-mac.local:8081/v1";
   };
+  longctxLan = import ./pi-longctx.nix {
+    baseUrl = "http://ai-mac.local:8080/v1";
+  };
 
   piModel = name: profile: {
     id = name;
@@ -85,6 +88,7 @@ let
       mlx-compact = compactLan.provider;
       # Same server; hermes `compact/compactor` works on vaayu/Mac.
       compact = compactLan.provider;
+      longctx = longctxLan.provider;
     };
     contextWindow = profiles.contextWindow;
     maxTokens = profiles.maxTokens;
@@ -92,10 +96,10 @@ let
   };
 
   piLocalSettings = {
-    defaultProvider = "hipfire";
-    defaultModel = profiles.defaultLane;
-    model = profiles.defaultLane;
-    defaultThinkingLevel = "medium";
+    defaultProvider = "longctx";
+    defaultModel = "longctx";
+    model = "longctx";
+    defaultThinkingLevel = "low";
   };
 
   sessionVariables = {

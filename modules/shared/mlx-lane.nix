@@ -1,5 +1,8 @@
 # Exclusive MLX lane switcher for 24 GB M4.
-# Compactor (LAN compact :8081) vs Gemma coder (:8080) — never both.
+#
+# MiniCPM5-2B longctx (:8080, login-resident) can share RAM with Compactor
+# (:8081). Gemma 12B coder (:8080, on demand) is exclusive — stop MiniCPM
+# and compact first.
 { pkgs }:
 
 pkgs.writeShellApplication {
@@ -8,8 +11,10 @@ pkgs.writeShellApplication {
     set -euo pipefail
     uid="$(id -u)"
     domain="gui/''${uid}"
+    minicpm="org.nixos.mlx-lm-minicpm"
     gemma="org.nixos.mlx-lm-server"
     compact="org.nixos.mlx-lm-compact"
+    plist_minicpm="$HOME/Library/LaunchAgents/''${minicpm}.plist"
     plist_gemma="$HOME/Library/LaunchAgents/''${gemma}.plist"
     plist_compact="$HOME/Library/LaunchAgents/''${compact}.plist"
 
@@ -46,8 +51,10 @@ pkgs.writeShellApplication {
     lane_status() {
       local name="$1" port="$2" label="$3" log="$4"
       printf '%s :%s  ' "$name" "$port"
-      if http_up "$port"; then
+      if http_up "$port" && is_running "$label"; then
         echo UP
+      elif http_up "$port"; then
+        echo "UP (other process on :$port)"
       elif is_running "$label"; then
         echo "starting — $log"
       else
@@ -56,8 +63,21 @@ pkgs.writeShellApplication {
     }
 
     case "''${1:-status}" in
+      minicpm|longctx)
+        echo "lane: minicpm longctx (stop gemma; compact may stay)"
+        stop_label "$gemma"
+        if http_up 8080 && is_running "$minicpm"; then
+          echo "minicpm already UP"
+          exit 0
+        fi
+        if is_running "$minicpm"; then
+          echo "minicpm already running (load). log: /tmp/mlx-lm-minicpm_amitsheokand.err.log"
+          exit 0
+        fi
+        ensure_label "$minicpm" "$plist_minicpm"
+        ;;
       compact)
-        echo "lane: compact (stop gemma)"
+        echo "lane: compact (stop gemma; minicpm may stay)"
         stop_label "$gemma"
         if http_up 8081; then
           echo "compact already UP"
@@ -70,7 +90,8 @@ pkgs.writeShellApplication {
         ensure_label "$compact" "$plist_compact"
         ;;
       gemma)
-        echo "lane: gemma (stop compact — LAN /compact waits)"
+        echo "lane: gemma (stop minicpm + compact — LAN /compact and longctx wait)"
+        stop_label "$minicpm"
         stop_label "$compact"
         if http_up 8080; then
           echo "gemma already UP"
@@ -83,11 +104,12 @@ pkgs.writeShellApplication {
         ensure_label "$gemma" "$plist_gemma"
         ;;
       status)
+        lane_status minicpm 8080 "$minicpm" /tmp/mlx-lm-minicpm_amitsheokand.err.log
         lane_status compact 8081 "$compact" /tmp/mlx-lm-compact_amitsheokand.err.log
         lane_status gemma 8080 "$gemma" /tmp/mlx-lm_amitsheokand.err.log
         ;;
       *)
-        echo "usage: mlx-lane compact|gemma|status" >&2
+        echo "usage: mlx-lane minicpm|longctx|compact|gemma|status" >&2
         exit 1
         ;;
     esac

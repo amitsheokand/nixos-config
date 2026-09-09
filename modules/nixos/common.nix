@@ -12,6 +12,11 @@ let
     ln -s ${agents.grok}/bin/grok $out/bin/grok
   '';
   museCode = pkgs.callPackage ../shared/muse-code-package.nix { };
+  repairNixBinaryCache = pkgs.writeShellApplication {
+    name = "repair-nix-binary-cache";
+    runtimeInputs = [ pkgs.sqlite pkgs.coreutils pkgs.gnugrep pkgs.systemd ];
+    text = builtins.readFile ../shared/scripts/repair-nix-binary-cache.sh;
+  };
 in
 {
   # Hardware platform default (hosts may override).
@@ -170,6 +175,10 @@ in
             command = "${pkgs.nh}/bin/nh";
             options = [ "NOPASSWD" ];
           }
+          {
+            command = "${lib.getExe repairNixBinaryCache}";
+            options = [ "NOPASSWD" ];
+          }
         ];
         groups = [ "wheel" ];
       }
@@ -201,6 +210,7 @@ in
     agents.hermes-desktop
     grokCli
     museCode
+    repairNixBinaryCache
     agents.gitbutler
     agents.but
     opencode-desktop
@@ -215,6 +225,20 @@ in
 
   networking.hosts = {
     "192.168.1.14" = [ "ai-mac" "ai-mac.local" ];
+  };
+
+  # nixos-rebuild must not bounce the uplink. 2026-09-09 a switch started
+  # NetworkManager-dispatcher and dropped the network until reboot.
+  systemd.services = lib.mkIf config.networking.networkmanager.enable {
+    NetworkManager = {
+      restartIfChanged = false;
+      stopIfChanged = false;
+      reloadIfChanged = true;
+    };
+    NetworkManager-dispatcher.restartIfChanged = false;
+    iwd = lib.mkIf (config.networking.networkmanager.wifi.backend == "iwd") {
+      restartIfChanged = false;
+    };
   };
 
   # Nix daemon settings (hosts may append extra substituters / keys).
@@ -248,5 +272,12 @@ in
 
     # Generation GC is programs.nh.clean (keeps 3 gens / 7d). Store hardlinks:
     optimise.automatic = true;
+  };
+
+  # Daemon narinfo sqlite lives in /root/.cache/nix. If it is malformed,
+  # substituters fail open and Nix tries to bootstrap stdenv from tinycc.
+  system.activationScripts.repairNixBinaryCache = {
+    deps = [ "users" ];
+    text = "${lib.getExe repairNixBinaryCache} --no-restart";
   };
 }
