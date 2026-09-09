@@ -1,5 +1,5 @@
 # Pi provider payload for the hipfire catalog proxy (lanes + backends).
-# Desktop uses 127.0.0.1; Mac/odie/vaayu use http://nixos.local:8080/v1.
+# Desktop uses 127.0.0.1; Mac/vaayu use http://nixos.local:8080/v1.
 { lib, baseUrl }:
 
 let
@@ -83,7 +83,7 @@ let
     };
     extraProviders = {
       mlx-compact = compactLan.provider;
-      # Same server; hermes `compact/compactor` works on odie/vaayu/Mac.
+      # Same server; hermes `compact/compactor` works on vaayu/Mac.
       compact = compactLan.provider;
     };
     contextWindow = profiles.contextWindow;

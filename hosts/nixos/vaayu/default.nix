@@ -15,7 +15,7 @@
   nixpkgs.hostPlatform = lib.mkForce "aarch64-linux";
 
   # ESP is managed by Asahi m1n1/U-Boot — never touch EFI variables.
-  # 499 MiB ESP: keep 2 kernels (same as odie).
+  # 499 MiB ESP: keep 2 kernels.
   boot.loader.efi.canTouchEfiVariables = lib.mkForce false;
   boot.loader.systemd-boot.configurationLimit = lib.mkForce 2;
 

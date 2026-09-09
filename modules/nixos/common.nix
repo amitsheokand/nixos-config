@@ -1,4 +1,4 @@
-# Shared NixOS base imported by every Linux host (nixos, garfield, odie).
+# Shared NixOS base imported by every Linux host (nixos, garfield).
 # Host files keep only what's genuinely host-specific: hostname/networking,
 # GPU drivers + kernel, hardware-configuration.nix, timezone, stateVersion,
 # and host-only packages/services. Everything identical across hosts lives here.
@@ -132,7 +132,7 @@ in
   };
 
   # systemd-boot on EFI (hosts pick kernelPackages / kernelParams).
-  # Keep few ESP copies so small Asahi/Windows ESPs cannot fill (odie forces 2).
+  # Keep few ESP copies so small Asahi/Windows ESPs cannot fill.
   boot.loader = {
     systemd-boot = {
       enable             = true;
@@ -226,7 +226,7 @@ in
       allowed-users       = [ "${user}" ];
       trusted-users       = [ "@admin" "${user}" "root" ];
       auto-optimise-store = true;
-      # Auto-GC when the volume is tight (odies /boot + root have filled before).
+      # Auto-GC when the volume is tight (vaayu /boot + root have filled before).
       min-free            = 2 * 1024 * 1024 * 1024;
       max-free            = 10 * 1024 * 1024 * 1024;
       substituters        = [

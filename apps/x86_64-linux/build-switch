@@ -45,7 +45,7 @@ if [ -n "$HOST" ]; then
   echo -e "${YELLOW}Building for named host: $HOST${NC}"
 else
   # No override: prefer a named config matching this machine's hostname
-  # (e.g. garfield, odie), otherwise fall back to the platform-generic config.
+  # (e.g. garfield), otherwise fall back to the platform-generic config.
   HOSTNAME=$(hostname -s 2>/dev/null || hostname)
   CONFIGS=$(nix eval --raw .#nixosConfigurations \
     --apply 'cfgs: builtins.concatStringsSep " " (builtins.attrNames cfgs)' 2>/dev/null)

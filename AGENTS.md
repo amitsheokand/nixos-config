@@ -29,10 +29,9 @@ flake.nix (entry point)
     │
     ├── NixOS (Linux)
     │   ├── hosts/nixos/default.nix       (desktop PC)
-    │   ├── hosts/nixos/odie/             (x86_64 laptop)
     │   ├── hosts/nixos/vaayu/            (M1 Air Asahi, aarch64)
     │   └── modules/nixos/
-    │       ├── home-manager.nix          (desktop/odie GNOME)
+    │       ├── home-manager.nix          (desktop GNOME)
     │       ├── home-manager-vaayu.nix    (Air: slim HM + Pi/OpenRouter)
     │       ├── packages.nix              (nixos-specific packages)
     │       └── secrets.nix               (agenix secrets)
@@ -77,7 +76,6 @@ flake.nix (entry point)
 |------|---------|----------|
 | `hosts/darwin/default.nix` | macOS system settings (keyboard, dock position, etc.) | macOS |
 | `hosts/nixos/default.nix` | Desktop PC (AMD, Sunshine) | NixOS |
-| `hosts/nixos/odie/` | x86_64 laptop | NixOS |
 | `hosts/nixos/vaayu/` | MacBook Air M1 Asahi (minimal GNOME) | NixOS aarch64 |
 
 ### Files & Dotfiles
@@ -172,7 +170,7 @@ system.defaults = {
 |---------|---------|
 | `nix run .#build` | Build without applying (test) |
 | `nix run .#build-switch` | Build and apply configuration |
-| `nix run .#deploy-lan` | `git pull` + `nixos-rebuild switch` on nixos/odie/vaayu over SSH |
+| `nix run .#deploy-lan` | `git pull` + `nixos-rebuild switch` on nixos/vaayu over SSH |
 | `nix flake update` | Update all dependencies |
 
 ## Important Notes
@@ -308,7 +306,7 @@ MCP clients (activation merge; restart the agent after first rebuild):
 | Zed | `context_servers.zvec_grep` URL (does not clobber hipfire/meta) |
 
 Local embeddings only (**`local/jina-embeddings-v2-base-code`**). Device:
-**Vulkan on the iGPU** on every Linux host (odie / vaayu / nixos desktop). The
+**Vulkan on the iGPU** on every Linux host (vaayu / nixos desktop). The
 desktop’s **Radeon AI PRO R9700 XT is headless** — hipfire/ROCm only; zvec-grep
 does not use it. **Metal** on Mac (MLX stays for Pi compact / Gemma).
 
@@ -355,18 +353,17 @@ On the Air, `ssh-keygen -t ed25519` and append `~/.ssh/id_ed25519.pub` to [`modu
 
 ## LAN SSH + deploy
 
-Pubkeys for Mac / desktop / odie live in [`modules/shared/ssh-keys.nix`](modules/shared/ssh-keys.nix) (`authorized_keys` on every host). Server host keys (so this Mac can `ssh odie` without TOFU) live in [`modules/shared/ssh-host-keys.nix`](modules/shared/ssh-host-keys.nix) → `~/.ssh/known_hosts.lan` plus NixOS `programs.ssh.knownHosts`. Aliases: `ssh odie`, `ssh nixos`, `ssh vaayu`, `ssh ai-mac`.
+Pubkeys for Mac / desktop live in [`modules/shared/ssh-keys.nix`](modules/shared/ssh-keys.nix) (`authorized_keys` on every host). Server host keys (so this Mac can `ssh nixos` without TOFU) live in [`modules/shared/ssh-host-keys.nix`](modules/shared/ssh-host-keys.nix) → `~/.ssh/known_hosts.lan` plus NixOS `programs.ssh.knownHosts`. Aliases: `ssh nixos`, `ssh vaayu`, `ssh ai-mac`.
 
 From Mac (after this generation is on the boxes):
 
 ```sh
 nix run .#deploy-lan           # all NixOS hosts
-nix run .#deploy-lan -- odie   # one host
 nh os switch                   # local NixOS (after clone)
 nh darwin switch               # local Mac (Determinate Nix)
 ```
 
-NixOS QoL: `programs.nh` auto-cleans generations older than 7d (keep 3), systemd-boot `configurationLimit = 3` (odie + vaayu = 2 gens, vaayu nh keep 2 / 3d), `boot.tmp.cleanOnBoot`, store `min-free` auto-GC.
+NixOS QoL: `programs.nh` auto-cleans generations older than 7d (keep 3), systemd-boot `configurationLimit = 3` (vaayu = 2 gens, vaayu nh keep 2 / 3d), `boot.tmp.cleanOnBoot`, store `min-free` auto-GC.
 
 ## Headroom (context compression)
 
@@ -419,7 +416,6 @@ normal `grok` session — that replaces the cloud catalog).
 |------|---------------|-------------|-------------|
 | Mac (`ai-mac`) | `gemmacoder` | default `mlx-local` / `gemmacoder` when Gemma lane is up (`mlx-lane gemma`). Compactor is login-resident on `:8081`. Also `hipfire` over LAN (`/model forge`) | Gemma: `~/models/gemma-4-12b-coder-fable5-composer2.5-4bit` on demand (`mlx-lane gemma`). Compactor: `:8081` default on (`mlx-lane compact`). hipfire `http://nixos.local:8080/v1` |
 | PC (`nixos`) | `forge` (default), `anvil`, `feather`, `qwen38` | provider `hipfire`, names Forge / Anvil / Feather / Qwen 3.8 | lane ids at `http://127.0.0.1:8080/v1` locally, or `http://nixos.local:8080/v1` on the LAN (proxy → hipfire `:11435`). Daily backend is Qwen 3.8 mq4-pro. Catalog: `modules/shared/agent-profiles.nix` |
-| Laptop (`odie`) | `forge` (LAN) | provider `hipfire` at `http://nixos.local:8080/v1` | same lane ids as the PC |
 | Air (`vaayu`) | `forge` (LAN) | provider `hipfire` at `http://nixos.local:8080/v1`; OpenRouter ox-alpha stays as a Pi extension | same lane ids |
 
 PC local profiles (names stay if the checkpoint changes):
@@ -438,13 +434,13 @@ Default `AI_MODEL` / `GROK_LOCAL_MODEL` is the **lane** `forge`, never a checkpo
 
 Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites `~/.hipfire/config.toml`. The desktop uses `modules/shared/hipfire-local.nix` (existing cargo binaries + user config). After `build-switch`: `systemctl --user start hipfire-serve hipfire-profile-proxy hipfire-daemon-watch` (WantedBy default.target). Serve binds **127.0.0.1:11435**; LAN clients use the catalog at `:8080` (clamp `max_tokens`, inject think caps, HTTP 413 on oversize). hipfire itself refuses to bump `memory.max_seq`. The watch unit restarts serve if `/health` is up but `daemon.pid` is dead or zombie (the 2026-08-28 failure mode). Hermes gets `/model forge`, `/model anvil`, `/model feather`, plus backend aliases; the Nous default provider is unchanged. Cursor Agent stays on cloud Grok/Composer; Continue / `cursor-local-help` use the named profiles. Zed gets `language_models.openai_compatible.hipfire` without changing `agent.default_model`.
 
-### Shared Pi agent (Mac / PC / odie / vaayu)
+### Shared Pi agent (Mac / PC / vaayu)
 
 | Piece | Where |
 |-------|--------|
 | Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, tool-display, statusline, pi-fff override grep, pi-cc-compact, …) |
 | Compact model | Mac MLX Compactor on `:8081` (login default). `mlx-lane compact` / `mlx-lane gemma` exclusive. PC router `:8091` → Mac `:8081`, then local tiny. `PI_CC_COMPACT_MODEL`. Never hipfire. |
-| Local model defaults | host HM (MLX + LAN hipfire on Darwin; local hipfire on PC; LAN hipfire on odie/vaayu) |
+| Local model defaults | host HM (MLX + LAN hipfire on Darwin; local hipfire on PC; LAN hipfire on vaayu) |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` uses **pi-cc-compact**. Mac talks to Compactor on `:8081` (`mlx-compact/compactor`, thinking off, 16k). The GPU host uses `compact/compactor` via `:8091` (Mac `:8081`, then local 0.8B on iGPU). `PI_ASYNC_PREFIX_COMPACTION=0` on the GPU host so background compact does not share Anvil's hipfire queue. Do not compact on Anvil/hipfire.
@@ -456,7 +452,7 @@ After `nix run .#build-switch` on each machine, missing `pi install` packages ar
 - Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that).
 - One GPU client at a time. Headroom in front of `:8080` is optional later, not on this path.
 
-Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `gemmacoder` — mlx-lm treats unknown ids as a new load and can crash. Keep id = filesystem path, picker name = `gemmacoder`. Mac MLX: 32k context / 4k gen, thinking on (12B coder on 24 GB M4). `/model forge` on Mac/odie/vaayu uses the desktop catalog at `http://nixos.local:8080/v1`. On the PC, Pi `id` is the profile name (`forge` / `anvil` / `feather`); the proxy rewrites it to the hipfire tag. Grok can map picker id → API id without a proxy.
+Pi `id` is sent to the server. Do **not** set Mac Pi `id` to `gemmacoder` — mlx-lm treats unknown ids as a new load and can crash. Keep id = filesystem path, picker name = `gemmacoder`. Mac MLX: 32k context / 4k gen, thinking on (12B coder on 24 GB M4). `/model forge` on Mac/vaayu uses the desktop catalog at `http://nixos.local:8080/v1`. On the PC, Pi `id` is the profile name (`forge` / `anvil` / `feather`); the proxy rewrites it to the hipfire tag. Grok can map picker id → API id without a proxy.
 
 `agent` on PATH is Cursor CLI (`~/.local/bin/agent`). Grok TUI is `grok` only
 (the grok package `agent` alias is stripped).

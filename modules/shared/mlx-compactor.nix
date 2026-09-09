@@ -2,7 +2,7 @@
 #
 # Weights: Lazarus-Ai/ReAligned-Qwen3.5-4B + LoRA schneewolflabs/Compactor-Qwen3.5-4B,
 # fused to ~/models/Compactor-Qwen3.5-4B-4bit. Thinking off. 16k window.
-# LAN: 0.0.0.0:8081 for Pi on nixos/odie/vaayu (http://ai-mac.local:8081/v1).
+# LAN: 0.0.0.0:8081 for Pi on nixos/vaayu (http://ai-mac.local:8081/v1).
 { user, pkgs }:
 
 let

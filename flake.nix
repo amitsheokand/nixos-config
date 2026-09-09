@@ -182,31 +182,7 @@
             ];
           };
 
-          odie = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = inputs // { inherit user; };
-            modules = [
-              disko.nixosModules.disko
-              chaotic.nixosModules.default
-              agenix.nixosModules.default
-              home-manager.nixosModules.home-manager {
-                home-manager = {
-                  useGlobalPkgs = true;
-                  useUserPackages = true;
-                  backupFileExtension = "hm-backup";
-                  users.${user} = { config, pkgs, lib, osConfig, ... }:
-                    import ./modules/nixos/home-manager.nix { inherit config pkgs lib inputs osConfig; };
-                };
-              }
-              # Cursor IDE from nixpkgs
-              ({ pkgs, ... }: {
-                environment.systemPackages = [ pkgs.code-cursor ];
-              })
-              ./hosts/nixos/odie
-            ];
-          };
-
-          # MacBook Air M1 (Asahi) — minimal GNOME + Cursor + Pi.
+           # MacBook Air M1 (Asahi) — minimal GNOME + Cursor + Pi.
           # First rebuilds need --impure so Asahi can read vendor firmware from the ESP.
           vaayu = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";

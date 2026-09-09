@@ -35,7 +35,7 @@ fi
 echo -e "${YELLOW}Cleaning up old system generations and boot files (${FLAKE_TARGET})...${NC}"
 
 # Drop generations older than 1 day. Boot copies are capped by configurationLimit
-# (vaayu/odie = 2, others = 3).
+# (vaayu = 2, others = 3).
 echo -e "${YELLOW}Removing old system generations...${NC}"
 sudo nix-collect-garbage --delete-older-than 1d
 

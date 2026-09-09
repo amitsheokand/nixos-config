@@ -10,7 +10,7 @@
 # Incremental refresh: login (systemd/launchd) + post-commit in advait/advait-docs.
 #
 # Embedding: Jina code (deeper than Potion). Linux → Vulkan on the **iGPU**
-# (odie Intel, vaayu Asahi, nixos desktop integrated). hipfire stays on the
+# (vaayu Asahi, nixos desktop integrated). hipfire stays on the
 # headless Radeon AI PRO R9700 (ROCm). macOS → Metal (MLX lanes for Pi/Grok).
 # After switching models: ZG_REBUILD=1 zg-index-advait
 { pkgs, lib, ... }:

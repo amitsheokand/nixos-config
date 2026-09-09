@@ -386,7 +386,6 @@ let name = "Amit Sheokand";
     ];
     matchBlocks = {
       "nixos" = { hostname = "nixos.local"; user = "amitsheokand"; };
-      "odie" = { hostname = "odie.local"; user = "amitsheokand"; };
       "vaayu" = { hostname = "vaayu.local"; user = "amitsheokand"; };
       "vaayu-2" = { hostname = "vaayu-2.local"; user = "amitsheokand"; };
       "ai-mac" = { hostname = "ai-mac.local"; user = "amitsheokand"; };

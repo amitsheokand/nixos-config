@@ -1,4 +1,4 @@
-# Shared Pi coding-agent config for every host (Mac, nixos desktop, odie).
+# Shared Pi coding-agent config for every host (Mac, nixos desktop).
 #
 # Declares packages + UI prefs in ~/.pi/agent/settings.json and ensures npm
 # packages are installed on Home Manager activation. Host-specific model
@@ -15,7 +15,7 @@
 let
   nodejs = pkgs.nodejs_22;
 
-  # Keep in sync across Mac / PC / odie. Pin versions for reproducible installs.
+  # Keep in sync across Mac / PC. Pin versions for reproducible installs.
   packages = [
     "npm:@tintinweb/pi-subagents@0.15.0"
     "npm:@narumitw/pi-goal@0.50.0"

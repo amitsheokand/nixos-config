@@ -151,7 +151,6 @@ in
     block = (
         f"{begin}\n"
         "192.168.1.15\tnixos nixos.local\n"
-        "192.168.1.16\todie odie.local\n"
         "192.168.1.18\tvaayu vaayu.local\n"
         f"{end}\n"
     )

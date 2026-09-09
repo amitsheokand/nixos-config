@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # Pull + switch this flake on every LAN NixOS box from the current machine.
 # Usage: nix run .#deploy-lan
-#        nix run .#deploy-lan -- odie vaayu
+#        nix run .#deploy-lan -- vaayu
 set -euo pipefail
 
 USER_NAME="${USER:-amitsheokand}"
 
 declare -A FLAKE_ATTR=(
   [nixos.local]=nixos
-  [odie.local]=odie
   [vaayu.local]=vaayu
 )
 
@@ -45,16 +44,15 @@ deploy_one() {
     "
 }
 
-hosts=("nixos.local" "odie.local" "vaayu.local")
+hosts=("nixos.local" "vaayu.local")
 if [[ $# -gt 0 ]]; then
   hosts=()
   for name in "$@"; do
     case "$name" in
       nixos|desktop) hosts+=("nixos.local") ;;
-      odie) hosts+=("odie.local") ;;
       vaayu|air) hosts+=("vaayu.local") ;;
       *.local) hosts+=("$name") ;;
-      *) echo "unknown host: $name (use nixos|odie|vaayu)" >&2; exit 1 ;;
+      *) echo "unknown host: $name (use nixos|vaayu)" >&2; exit 1 ;;
     esac
   done
 fi
