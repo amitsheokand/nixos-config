@@ -12,6 +12,7 @@ let
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
   zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
   museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
+  oneGrep = import ../shared/one-grep.nix { inherit pkgs; };
   hipfireLan = import ../shared/pi-hipfire-catalog.nix {
     inherit lib;
     baseUrl = "http://nixos.local:8080/v1";
@@ -25,6 +26,8 @@ let
   };
 in
 {
+  imports = [ oneGrep ];
+
   home = {
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
@@ -61,6 +64,8 @@ in
   xdg.configFile = {
     "systemd/user/muse-spark-proxy.service".force = true;
     "systemd/user/zvec-grep.service".force = true;
+    "systemd/user/zvec-grep-refresh.service".force = true;
+    "systemd/user/default.target.wants/zvec-grep-refresh.service".force = true;
   };
 
   services.gpg-agent = {

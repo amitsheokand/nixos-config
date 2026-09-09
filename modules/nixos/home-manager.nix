@@ -9,6 +9,7 @@ let
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
   zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
   museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
+  oneGrep = import ../shared/one-grep.nix { inherit pkgs; };
   mtpTorch = import ../shared/mtp-torch.nix { inherit pkgs lib; };
   hipfireEnabled = (osConfig.networking.hostName or "") == "nixos";
   hipfireLocal = if hipfireEnabled
@@ -30,6 +31,8 @@ let
   };
 in
 {
+  imports = [ oneGrep ];
+
   home = {
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
@@ -81,6 +84,8 @@ in
     {
       "systemd/user/muse-spark-proxy.service".force = true;
       "systemd/user/zvec-grep.service".force = true;
+      "systemd/user/zvec-grep-refresh.service".force = true;
+      "systemd/user/default.target.wants/zvec-grep-refresh.service".force = true;
     }
     (lib.mkIf hipfireEnabled {
       "systemd/user/hipfire-serve.service".force = true;

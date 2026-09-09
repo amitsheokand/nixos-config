@@ -48,6 +48,7 @@ in
         commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
         zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
         museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
+        oneGrep = import ../shared/one-grep.nix { inherit pkgs; };
         # Desktop catalog over LAN. Default stays MLX; `/model forge` hits PC.
         hipfireLan = import ../shared/pi-hipfire-catalog.nix {
           inherit lib;
@@ -78,6 +79,7 @@ in
         };
       in
       {
+        imports = [ oneGrep ];
         home = {
           enableNixpkgsReleaseCheck = false;
           sessionVariables = {
