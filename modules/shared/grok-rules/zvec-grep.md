@@ -10,12 +10,12 @@ Local hybrid search (ripgrep + BM25 + vectors) via MCP `zvec_grep_search` on
 | --- | --- | --- |
 | Nix / agents config | `/home/amitsheokand/dev/nixos-config` | `/Users/amitsheokand/dev/nixos-config` |
 | hipfire | `/home/amitsheokand/dev/hipfire` | `/Users/amitsheokand/dev/hipfire` |
-| Advait code | `/home/amitsheokand/work/advait` | `/Users/amitsheokand/work/advait` |
-| Advait docs | `/home/amitsheokand/work/advait-docs` | `/Users/amitsheokand/work/advait-docs` |
+| Code workspace | `/home/amitsheokand/work/code` | `/Users/amitsheokand/work/code` |
+| Docs workspace | `/home/amitsheokand/work/docs` | `/Users/amitsheokand/work/docs` |
 
-Advait code and docs are **separate indexes**. Do not search docs when the
-question is about crates/tools, and vice versa. Never index `~/work` or
-`third_party/**`.
+Code and docs are **separate indexes** (override with `ZG_CODE_ROOT` /
+`ZG_DOCS_ROOT`). Do not search docs when the question is about crates/tools,
+and vice versa. Never index `~/work` as a whole or `third_party/**`.
 
 ## When to use
 
@@ -30,7 +30,7 @@ when good enough.
 ## Re-index after large changes
 
 ```sh
-zg-index-advait                              # both Advait roots
+zg-index-workspaces                          # code + docs roots
 zg index ~/dev/hipfire -g '!target/**' ...   # hipfire
 zg index <root> --embedding local/potion-code-16m-v2
 ```

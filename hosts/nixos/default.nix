@@ -66,11 +66,13 @@ in
       options = [ "fmask=0077" "dmask=0077" ];
     };
 
-    # 120 G Kingston SSD — scratch/offload for advait's vendor/ and build caches,
+    # 120 G Kingston SSD — scratch/offload for vendor/ and build caches,
     # keeping them off the near-full root NVMe. `nofail` so a missing/unplugged
     # disk never blocks boot; short device timeout avoids a 90 s stall.
-    "/mnt/advait-scratch" = {
-      device = "/dev/disk/by-label/advait-scratch";
+    # Mount/label genericized; UUID not discoverable from this Mac checkout.
+    # If by-label fails after rebuild, e2label the disk to scratch or use by-uuid.
+    "/mnt/scratch" = {
+      device = "/dev/disk/by-label/scratch";
       fsType = "ext4";
       options = [ "nofail" "x-systemd.device-timeout=5s" ];
     };

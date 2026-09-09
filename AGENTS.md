@@ -269,23 +269,23 @@ Each workspace keeps its own index under `<root>/.zvec-grep`. The MCP
 search tool takes an absolute `root` — there is no one tree that covers
 code and docs if they live in sibling repos.
 
-**Advait** is two indexes (do **not** index `~/work`; skip `third_party`):
+**Workspaces** are separate indexes (do **not** index `~/work` as a whole; skip `third_party`):
 
 | Tree | Root | Why |
 |------|------|-----|
-| Code | `~/work/advait` | crates / apps / tools. Exclude `third_party/**` (Chromium-sized). |
-| Docs | `~/work/advait-docs` | Canonical docs (`advait-os/docs`). In-repo `docs/` / `plans/` are stubs. |
+| Code | `$ZG_CODE_ROOT` (default `~/work/code`) | crates / apps / tools. Exclude `third_party/**` when present. |
+| Docs | `$ZG_DOCS_ROOT` (default `~/work/docs`) | Canonical docs sibling. In-repo `docs/` / `plans/` may be stubs. |
 
 ```sh
 zg --version
 systemctl --user status zvec-grep   # Linux; Darwin: launchctl
-zg-index-advait                    # both roots, local/potion-code-16m-v2
-cd ~/work/advait && zg query --human "where is authentication handled?"
-cd ~/work/advait-docs && zg query --human "boot policy"
+zg-index-workspaces                # both roots, local/potion-code-16m-v2
+cd "${ZG_CODE_ROOT:-$HOME/work/code}" && zg query --human "where is authentication handled?"
+cd "${ZG_DOCS_ROOT:-$HOME/work/docs}" && zg query --human "boot policy"
 ```
 
-Agents: pass `root` `/home/amitsheokand/work/advait` or
-`/home/amitsheokand/work/advait-docs` (Mac: `/Users/amitsheokand/work/...`).
+Agents: pass absolute `root` for the code or docs workspace
+(Linux `/home/amitsheokand/work/...`, Mac `/Users/amitsheokand/work/...`).
 Optional `--follow` only if docs are symlinked into the code tree.
 
 MCP clients (activation merge; restart the agent after first rebuild):
@@ -301,7 +301,7 @@ MCP clients (activation merge; restart the agent after first rebuild):
 | Zed | `context_servers.zvec_grep` URL (does not clobber hipfire/meta) |
 
 Local embeddings only (`local/potion-code-16m-v2`). Index is **not**
-built at activation — run `zg-index-advait` once per machine, then
+built at activation — run `zg-index-workspaces` once per machine, then
 when the tree changes a lot.
 
 ## Git clients (all hosts)

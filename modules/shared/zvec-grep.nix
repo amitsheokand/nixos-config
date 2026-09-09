@@ -6,10 +6,10 @@
 # (`zg install` has no targets for those).
 # Server: user systemd / Darwin launchd (`zg server run` on 127.0.0.1:7999).
 #
-# Index per workspace (not at activation). Advait is two roots:
-#   zg-index-advait
-#   # or: zg index ~/work/advait --embedding local/potion-code-16m-v2 -g '!third_party/**'
-#   #      zg index ~/work/advait-docs --embedding local/potion-code-16m-v2
+# Index per workspace (not at activation). Typical layout is two roots:
+#   zg-index-workspaces
+#   # or: zg index ~/work/code --embedding local/potion-code-16m-v2 -g '!third_party/**'
+#   #      zg index ~/work/docs --embedding local/potion-code-16m-v2
 { pkgs, lib, ... }:
 
 let
@@ -22,36 +22,36 @@ let
   npm = "${nodejs}/bin/npm";
   pkg = "@zvec/zvec-grep@0.2.1";
   zgBin = "${homeDir}/.local/bin/zg";
-  indexAdvait = pkgs.writeShellApplication {
-    name = "zg-index-advait";
+  indexWorkspaces = pkgs.writeShellApplication {
+    name = "zg-index-workspaces";
     runtimeInputs = [ pkgs.coreutils ];
     text = ''
       set -euo pipefail
       zg="''${ZG:-$HOME/.local/bin/zg}"
-      code="''${ADVAIT:-$HOME/work/advait}"
-      docs="''${ADVAIT_DOCS:-$HOME/work/advait-docs}"
+      code="''${ZG_CODE_ROOT:-$HOME/work/code}"
+      docs="''${ZG_DOCS_ROOT:-$HOME/work/docs}"
       embed="''${ZG_EMBEDDING:-local/potion-code-16m-v2}"
       if [[ ! -x "$zg" ]]; then
-        echo "zg-index-advait: zg not found at $zg" >&2
+        echo "zg-index-workspaces: zg not found at $zg" >&2
         exit 1
       fi
       indexed=0
       if [[ -d "$code" ]]; then
-        echo "zg-index-advait: $code (exclude third_party)"
+        echo "zg-index-workspaces: $code (exclude third_party)"
         "$zg" index "$code" --embedding "$embed" -g '!third_party/**'
         indexed=1
       else
-        echo "zg-index-advait: skip missing $code" >&2
+        echo "zg-index-workspaces: skip missing $code" >&2
       fi
       if [[ -d "$docs" ]]; then
-        echo "zg-index-advait: $docs"
+        echo "zg-index-workspaces: $docs"
         "$zg" index "$docs" --embedding "$embed"
         indexed=1
       else
-        echo "zg-index-advait: skip missing $docs" >&2
+        echo "zg-index-workspaces: skip missing $docs" >&2
       fi
       if [[ "$indexed" -eq 0 ]]; then
-        echo "zg-index-advait: nothing to index" >&2
+        echo "zg-index-workspaces: nothing to index" >&2
         exit 1
       fi
     '';
@@ -78,7 +78,7 @@ let
   };
 in
 {
-  home.packages = [ nodejs indexAdvait indexHipfire ];
+  home.packages = [ nodejs indexWorkspaces indexHipfire ];
 
   home.file = {
     ".grok/rules/zvec-grep.md".source = ./grok-rules/zvec-grep.md;

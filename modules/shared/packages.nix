@@ -4,7 +4,7 @@ let
 in
 with pkgs; [
   # === Rust Development ===
-  # NOTE: rustc/cargo come from the advait flake's devShell (oxalica rust-overlay,
+  # NOTE: rustc/cargo come from the project flake's devShell (oxalica rust-overlay,
   # pinned toolchain) via `nix develop -c`. No system-wide rustup — it only
   # duplicated the flake toolchain and drifted ~8 G of ~/.rustup + ~/.cargo state.
   # The cargo-* helpers below are invoked inside the devshell, where cargo is on PATH.
