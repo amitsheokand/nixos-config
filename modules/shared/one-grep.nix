@@ -1,23 +1,31 @@
 # one-grep — local-first hybrid workspace search (BM25 + ONNX embeddings + MCP).
 # Imports the vendored Home Manager module (`one-grep-module.nix`, from
-# one-grep @ 1f215f9) and points it at `pkgs.one-grep` from
-# `overlays/one-grep.nix`. OSS-safe: no product names, hostnames, or absolute
-# home paths — MCP config paths are the module's relative defaults.
-# (A relative `path:../one-grep` flake input was rejected: `nix flake lock`
-# absolutizes it into flake.lock, leaking the private home path.)
+# one-grep @ 1f215f9) and registers one-grep with every agent harness so NixOS
+# (incl. vaayu) and Darwin share one wiring instead of hand-editing
+# ~/.cursor/mcp.json, ~/.pi/agent/mcp.json, etc.
 #
-# NOTE: `enable = false` until the binary is installable from this repo.
-# one-grep has no public remote yet, so `pkgs.one-grep` builds only from the
-# sibling checkout (`../one-grep`, impure). Flip to `true` once the source is
-# fetchable (public remote → flake input or fetchFromGitHub for `src`).
-{ pkgs }:
+# OSS-safe: no product names, hostnames, or absolute home paths — the command
+# is derived from `config.home.homeDirectory`.
+#
+# Binary: one-grep is not in nixpkgs and has no public remote yet, so wiring
+# targets the location the CLI's own `install` prefers, `~/.local/bin/one-grep`
+# (cargo build, copy, or symlink). `pkgs.one-grep` (overlays/one-grep.nix) still
+# exists for hosts that build from a sibling checkout: set `package` and
+# `installPackage = true` there.
+#
+# `checkCommand = true` keeps activation harmless on hosts that do not have the
+# binary yet: MCP entries are only written when the command is executable.
+{ config, ... }:
 
 {
   imports = [ ./one-grep-module.nix ];
 
   programs.one-grep = {
-    enable = false;
-    package = pkgs.one-grep;
+    enable = true;
+    package = null;
+    installPackage = false;
+    command = "${config.home.homeDirectory}/.local/bin/one-grep";
+    checkCommand = true;
     mcp = {
       cursor.enable = true;
       opencode.enable = true;

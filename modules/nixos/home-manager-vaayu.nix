@@ -12,7 +12,7 @@ let
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
   zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
   museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
-  oneGrep = import ../shared/one-grep.nix { inherit pkgs; };
+  oneGrep = import ../shared/one-grep.nix { inherit config; };
   hipfireLan = import ../shared/pi-hipfire-catalog.nix {
     inherit lib;
     baseUrl = "http://nixos.local:8080/v1";

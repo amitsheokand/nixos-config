@@ -320,6 +320,36 @@ ZG_REBUILD=1 zg-index-hipfire   # rebuild hipfire index
 **Incremental:** automatic on login + post-commit via `zg-refresh-advait` (HM
 `modules/shared/zvec-grep.nix`).
 
+## one-grep (local hybrid search)
+
+`one-grep` is a local-first hybrid search (ripgrep + BM25 + ONNX embeddings +
+MCP) whose wiring is shared across hosts, so NixOS (incl. vaayu) and Darwin get
+the same MCP registration instead of hand-editing client configs.
+
+| Piece | Path |
+|-------|------|
+| HM wiring | `modules/shared/one-grep.nix` |
+| Vendored module | `modules/shared/one-grep-module.nix` (from one-grep @ `1f215f9`) |
+| Package overlay | `overlays/one-grep.nix` (`pkgs.one-grep`, vendored package) |
+| Imported by | `modules/nixos/home-manager.nix`, `modules/nixos/home-manager-vaayu.nix`, `modules/darwin/home-manager.nix` |
+
+It registers `one-grep` for Cursor, OpenCode, Pi, Muse, Hermes, and Command
+Code (stdio `one-grep serve --stdio`), upserting only the `one-grep` entry so
+peers in the same file survive. The command resolves to
+`~/.local/bin/one-grep` (the path `one-grep install` prefers) and
+`checkCommand = true` skips registration with a warning when it is missing, so
+a host without the binary gets no dead MCP entries.
+
+one-grep is not in nixpkgs and has no public remote yet, so `pkgs.one-grep`
+builds only from a sibling `../one-grep` checkout (impure). A host that has the
+checkout can opt in with `programs.one-grep.package = pkgs.one-grep;` plus
+`installPackage = true`.
+
+To activate: put the binary at `~/.local/bin/one-grep` (cargo build or copy),
+`nix run .#build-switch`, then restart the agent. Non-declarative alternative on
+any host: `one-grep install --target <t>` for `opencode`, `cursor`, `pi`,
+`muse`, `hermes`, `command-code`.
+
 ## Git clients (all hosts)
 
 | Tool | Source | Notes |
