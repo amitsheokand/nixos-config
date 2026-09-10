@@ -5,7 +5,7 @@
 - Put durable facts in git resume files or `memory_*` tools, not the prompt.
 - Never set hermes `memoryMode` to legacy-inject.
 - `/compact` before huge tool dumps or logs. Quote last 20 lines, not the file. Compact uses `compact/compactor` (Mac MLX, then local tiny) — never hipfire/Anvil.
-- Search with FFF (`grep` in override mode): follow the cursor page; do not dump TODO/FIXME across the repo. Semantic/hybrid: zvec-grep MCP (`zvec_grep`).
+- Search with FFF (`grep` in override mode): follow the cursor page; do not dump TODO/FIXME across the repo. Semantic/hybrid: one-grep MCP (`search` / `rg`).
 - One client on the desktop GPU at a time. No Agent Team or parallel Pi on that slot.
 - Default local model is `longctx` (MiniCPM5-2B on the Mac). Escalate to `forge` / `anvil` on Qwen 3.8 only when the packet needs it. Usage ladder: `~/.pi/agent/stack.md`.
 - At work start: `overflow-assign`. Use `~/.pi/agent/overflow.md` for the free

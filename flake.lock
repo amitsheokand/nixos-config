@@ -445,6 +445,26 @@
         "type": "github"
       }
     },
+    "open-grep": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789057132,
+        "narHash": "sha256-016pE7Vm1mMfncR0GyK+JwrU1XARrynHBeuYab2jasA=",
+        "owner": "amitsheokand",
+        "repo": "open-grep",
+        "rev": "b26529b4af9b9f247605a898210a095c39fbbfc5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amitsheokand",
+        "repo": "open-grep",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "agenix": "agenix",
@@ -459,7 +479,8 @@
         "homebrew-core": "homebrew-core",
         "llm-agents-nix": "llm-agents-nix",
         "nix-homebrew": "nix-homebrew",
-        "nixpkgs": "nixpkgs_3"
+        "nixpkgs": "nixpkgs_3",
+        "open-grep": "open-grep"
       }
     },
     "systems": {

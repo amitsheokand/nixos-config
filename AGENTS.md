@@ -231,7 +231,8 @@ Claude Code / Codex / prime-agent are **not** installed from `llm-agents.nix`.
 | Grok | `grokCli` (`agents.grok` minus `agent`) | same |
 | Muse Code | `muse-code-package.nix` (`muse`) | same |
 | Command Code | HM `modules/shared/command-code.nix` | same |
-| zvec-grep (`zg`) | HM `modules/shared/zvec-grep.nix` (npm `@zvec/zvec-grep`) | same |
+| one-grep | flake input `github:amitsheokand/open-grep` (`pkgs.one-grep`) | same |
+| zvec-grep (`zg`) | Linux fallback; Darwin launchd **off** | npm `@zvec/zvec-grep` |
 | Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
 
 **Muse Spark** is two products with **different bills**:
@@ -258,97 +259,45 @@ grok --version
 command -v agent   # must stay Cursor (~/.local/bin/agent)
 ```
 
-## zvec-grep (`zg`)
+## one-grep (agent hybrid search)
 
-Local hybrid search ([zvec-grep](https://github.com/zvec-ai/zvec-grep)):
-ripgrep + BM25 + vectors. npm `@zvec/zvec-grep@0.2.1` into `~/.local`.
-User systemd `zvec-grep` (`zg server run`, `http://127.0.0.1:7999/mcp`).
-Each workspace keeps its own index under `<root>/.zvec-grep`. The MCP
-search tool takes an absolute `root` — there is no one tree that covers
-code and docs if they live in sibling repos.
-
-**Advait** is two indexes (do **not** index `~/work`; skip `third_party`):
-
-| Tree | Root | Why |
-|------|------|-----|
-| Code | `~/work/advait` | crates / apps / tools. Exclude `third_party/**` (Chromium-sized). |
-| Docs | `~/work/advait-docs` | Canonical docs (`advait-os/docs`). In-repo `docs/` / `plans/` are stubs. |
-
-```sh
-zg --version
-systemctl --user status zvec-grep zvec-grep-refresh   # Linux; Darwin: launchctl
-zg-index-advait                    # first bootstrap (both roots)
-zg-refresh-advait                  # manual incremental (both roots)
-cd ~/work/advait && zg query --human "where is authentication handled?"
-cd ~/work/advait-docs && zg query --human "boot policy"
-```
-
-**Refresh policy:** `zg-refresh-advait` runs on **login** (`zvec-grep-refresh`
-systemd/launchd) and after **`git commit`** in `~/work/advait` or
-`~/work/advait-docs` (post-commit hook). Both use `zg index --mode direct` so
-the MCP server stays up. First machine still needs `zg-index-advait` once.
-Log: `~/.cache/zvec-grep-refresh.log`.
-
-Agents: pass `root` `/home/amitsheokand/work/advait` or
-`/home/amitsheokand/work/advait-docs` (Mac: `/Users/amitsheokand/work/...`).
-Optional `--follow` only if docs are symlinked into the code tree.
-
-MCP clients (activation merge; restart the agent after first rebuild):
-
-| Client | How |
-|-------|-----|
-| Cursor | `~/.cursor/mcp.json` (`headroom.nix`, next to Headroom) |
-| OpenCode | `zg install --target opencode` |
-| Pi | `pi-mcp-adapter` + `~/.pi/agent/mcp.json` (native Pi has no MCP). Cursor-SDK Pi already sees Cursor's `mcp.json`. |
-| Hermes | `mcp_servers.zvec_grep` in `~/.hermes/config.yaml` |
-| Grok | `[mcp_servers.zvec_grep]` in `~/.grok/config.toml`; global rules in `~/.grok/rules/zvec-grep.md` (Grok CLI + Grok Bot) |
-| Muse | `mcp_servers.zvec_grep` streamable HTTP, `mode=optional` |
-| Zed | `context_servers.zvec_grep` URL (does not clobber hipfire/meta) |
-
-Local embeddings only (**`local/jina-embeddings-v2-base-code`**). Device:
-**Vulkan on the iGPU** on every Linux host (vaayu / nixos desktop). The
-desktop’s **Radeon AI PRO R9700 XT is headless** — hipfire/ROCm only; zvec-grep
-does not use it. **Metal** on Mac (MLX stays for Pi compact / Gemma).
-
-**Bootstrap / model migration:**
-
-```sh
-ZG_REBUILD=1 zg-index-advait    # rebuild Advait indexes to Jina
-ZG_REBUILD=1 zg-index-hipfire   # rebuild hipfire index
-```
-
-**Incremental:** automatic on login + post-commit via `zg-refresh-advait` (HM
-`modules/shared/zvec-grep.nix`).
-
-## one-grep (local hybrid search)
-
-`one-grep` is a local-first hybrid search (ripgrep + BM25 + ONNX embeddings +
-MCP) whose wiring is shared across hosts, so NixOS (incl. vaayu) and Darwin get
-the same MCP registration instead of hand-editing client configs.
+`one-grep` is the **agent** hybrid search (ripgrep + BM25 + ONNX, stdio MCP).
+Source: [github.com/amitsheokand/open-grep](https://github.com/amitsheokand/open-grep)
+(CLI name `one-grep`; Nix also installs an `open-grep` alias). Every host
+installs the flake package via Home Manager — no cargo symlink required.
 
 | Piece | Path |
 |-------|------|
+| Flake input | `open-grep` → `github:amitsheokand/open-grep` |
 | HM wiring | `modules/shared/one-grep.nix` |
-| Vendored module | `modules/shared/one-grep-module.nix` (from one-grep @ `1f215f9`) |
-| Package overlay | `overlays/one-grep.nix` (`pkgs.one-grep`, vendored package) |
-| Imported by | `modules/nixos/home-manager.nix`, `modules/nixos/home-manager-vaayu.nix`, `modules/darwin/home-manager.nix` |
+| Extra clients | `modules/shared/scripts/one-grep-extra-clients.py` (Grok + Zed + strip `zvec_grep`) |
+| Agent rules | `modules/shared/grok-rules/one-grep.md` |
 
-It registers `one-grep` for Cursor, OpenCode, Pi, Muse, Hermes, and Command
-Code (stdio `one-grep serve --stdio`), upserting only the `one-grep` entry so
-peers in the same file survive. The command resolves to
-`~/.local/bin/one-grep` (the path `one-grep install` prefers) and
-`checkCommand = true` skips registration with a warning when it is missing, so
-a host without the binary gets no dead MCP entries.
+Activation upserts stdio `one-grep serve --stdio` and, because the Nix binary
+is always present, **removes `zvec_grep`**. Restart the agent after switch.
 
-one-grep is not in nixpkgs and has no public remote yet, so `pkgs.one-grep`
-builds only from a sibling `../one-grep` checkout (impure). A host that has the
-checkout can opt in with `programs.one-grep.package = pkgs.one-grep;` plus
-`installPackage = true`.
+Tools (absolute `root` required; index in `<root>/.onegrep/`):
 
-To activate: put the binary at `~/.local/bin/one-grep` (cargo build or copy),
-`nix run .#build-switch`, then restart the agent. Non-declarative alternative on
-any host: `one-grep install --target <t>` for `opencode`, `cursor`, `pi`,
-`muse`, `hermes`, `command-code`.
+| Tool | Use |
+|------|-----|
+| `search` | architecture, call chains, unknown wording (hybrid) |
+| `rg` | exact symbol, literal, regex |
+
+```sh
+command -v one-grep
+one-grep index ~/work/advait && one-grep embed ~/work/advait
+one-grep index ~/work/advait-docs && one-grep embed ~/work/advait-docs
+# skip third_party; do not index ~/work as one tree
+```
+
+Apply: `nix run .#build-switch` locally, `nix run .#deploy-lan` for NixOS
+boxes, `nh darwin switch` on the Mac. Then **restart the agent**. First index
+each workspace once; `search` falls back to BM25 if `embed` has not been run.
+
+## zvec-grep (`zg`, leftover CLI)
+
+npm `@zvec/zvec-grep` remains installed on Linux for the old `zg` CLI. Agent
+MCP is **one-grep**. Darwin does not start launchd `zvec-grep`.
 
 ## Git clients (all hosts)
 

@@ -1,4 +1,4 @@
-{ config, pkgs, lib, home-manager, llm-agents-nix, ... }:
+{ config, pkgs, lib, home-manager, llm-agents-nix, open-grep, ... }:
 
 let
   user           = "amitsheokand";
@@ -47,7 +47,7 @@ in
         commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
         zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
         museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
-        oneGrep = import ../shared/one-grep.nix { inherit config; };
+        oneGrep = import ../shared/one-grep.nix { inherit config pkgs lib open-grep; };
         # Desktop catalog over LAN. Default stays MLX; `/model forge` hits PC.
         hipfireLan = import ../shared/pi-hipfire-catalog.nix {
           inherit lib;

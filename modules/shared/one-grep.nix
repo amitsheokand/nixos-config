@@ -1,31 +1,24 @@
-# one-grep — local-first hybrid workspace search (BM25 + ONNX embeddings + MCP).
-# Imports the vendored Home Manager module (`one-grep-module.nix`, from
-# one-grep @ 1f215f9) and registers one-grep with every agent harness so NixOS
-# (incl. vaayu) and Darwin share one wiring instead of hand-editing
-# ~/.cursor/mcp.json, ~/.pi/agent/mcp.json, etc.
+# one-grep from github:amitsheokand/open-grep (CLI name stays `one-grep`).
+# Installs the Nix package on every host and registers MCP (stdio) so agents
+# do not depend on a cargo symlink at ~/.local/bin/one-grep.
 #
-# OSS-safe: no product names, hostnames, or absolute home paths — the command
-# is derived from `config.home.homeDirectory`.
-#
-# Binary: one-grep is not in nixpkgs and has no public remote yet, so wiring
-# targets the location the CLI's own `install` prefers, `~/.local/bin/one-grep`
-# (cargo build, copy, or symlink). `pkgs.one-grep` (overlays/one-grep.nix) still
-# exists for hosts that build from a sibling checkout: set `package` and
-# `installPackage = true` there.
-#
-# `checkCommand = true` keeps activation harmless on hosts that do not have the
-# binary yet: MCP entries are only written when the command is executable.
-{ config, ... }:
+# Grok + Zed are not in the upstream HM module. Extra activation registers those
+# and strips leftover zvec_grep HTTP entries once the binary exists.
+{ config, pkgs, lib, open-grep, ... }:
 
+let
+  pkg = open-grep.packages.${pkgs.stdenv.hostPlatform.system}.one-grep;
+  oneGrepBin = "${pkg}/bin/one-grep";
+in
 {
-  imports = [ ./one-grep-module.nix ];
+  imports = [ open-grep.homeManagerModules.one-grep ];
 
   programs.one-grep = {
     enable = true;
-    package = null;
-    installPackage = false;
-    command = "${config.home.homeDirectory}/.local/bin/one-grep";
-    checkCommand = true;
+    package = pkg;
+    installPackage = true;
+    command = oneGrepBin;
+    checkCommand = false;
     mcp = {
       cursor.enable = true;
       opencode.enable = true;
@@ -35,4 +28,12 @@
       commandCode.enable = true;
     };
   };
+
+  home.file.".grok/rules/one-grep.md".source = ./grok-rules/one-grep.md;
+
+  home.activation.oneGrepExtraClients = lib.hm.dag.entryAfter [ "oneGrepMcp" "installZvecGrep" ] ''
+    export ONE_GREP=${lib.escapeShellArg oneGrepBin}
+    ${pkgs.python3}/bin/python3 ${./scripts/one-grep-extra-clients.py} || \
+      echo "one-grep: WARNING Grok/Zed merge or zvec strip failed" >&2
+  '';
 }

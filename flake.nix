@@ -40,14 +40,21 @@
       url = "github:nix-community/nixos-apple-silicon";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    open-grep = {
+      url = "github:amitsheokand/open-grep";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { self, darwin, llm-agents-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic, apple-silicon } @inputs:
+  outputs = { self, darwin, llm-agents-nix, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, flake-utils, disko, agenix, chaotic, apple-silicon, open-grep } @inputs:
     let
       user = "amitsheokand";
       linuxSystems = [ "x86_64-linux" ];
       linuxAppSystems = linuxSystems ++ [ "aarch64-linux" ];
       darwinSystems = [ "aarch64-darwin" ];
       forAllSystems = f: nixpkgs.lib.genAttrs (linuxAppSystems ++ darwinSystems) f;
+      openGrepOverlay = { ... }: {
+        nixpkgs.overlays = [ inputs.open-grep.overlays.default ];
+      };
       devShell = system: let pkgs = nixpkgs.legacyPackages.${system}; in {
         default = with pkgs; mkShell {
           nativeBuildInputs = with pkgs; [ bashInteractive git age age-plugin-yubikey ];
@@ -102,6 +109,7 @@
           inherit system;
           specialArgs = inputs // { inherit user; };
           modules = [
+            openGrepOverlay
             home-manager.darwinModules.home-manager
             nix-homebrew.darwinModules.nix-homebrew
             {
@@ -128,6 +136,7 @@
             inherit system;
             specialArgs = inputs // { inherit user; };
             modules = [
+              openGrepOverlay
               disko.nixosModules.disko
               chaotic.nixosModules.default
               agenix.nixosModules.default
@@ -156,6 +165,7 @@
             system = "x86_64-linux";
             specialArgs = inputs // { inherit user; };
             modules = [
+              openGrepOverlay
               disko.nixosModules.disko
               chaotic.nixosModules.default
               agenix.nixosModules.default
@@ -182,6 +192,7 @@
             system = "aarch64-linux";
             specialArgs = inputs // { inherit user; };
             modules = [
+              openGrepOverlay
               apple-silicon.nixosModules.apple-silicon-support
               agenix.nixosModules.default
               home-manager.nixosModules.home-manager {

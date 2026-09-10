@@ -1,10 +1,7 @@
 # zvec-grep (`zg`) — local-first hybrid search (ripgrep + BM25 + vectors).
 # npm: @zvec/zvec-grep → ~/.local. Not in nixpkgs.
-# MCP for Cursor is declared in headroom.nix (single writer of ~/.cursor/mcp.json).
-# OpenCode is configured on activation via `zg install`.
-# Pi / Hermes / Grok / Muse / Zed are merged by zvec-grep-merge-clients.py
-# (`zg install` has no targets for those).
-# Server: user systemd / Darwin launchd (`zg server run` on 127.0.0.1:7999).
+# Agent MCP is one-grep (stdio) on every host. This module keeps the zg CLI
+# and Advait index helpers only; it does not register zvec_grep MCP.
 #
 # Index per workspace. Advait is two roots (see zg-index-advait / zg-refresh-advait).
 # Incremental refresh: login (systemd/launchd) + post-commit in advait/advait-docs.
@@ -22,7 +19,6 @@ let
     then "/Users/${user}"
     else "/home/${user}";
   nodejs = pkgs.nodejs_22;
-  python = pkgs.python3.withPackages (ps: [ ps.pyyaml ]);
   util-linux = pkgs.util-linux;
   npm = "${nodejs}/bin/npm";
   pkg = "@zvec/zvec-grep@0.2.1";
@@ -227,8 +223,9 @@ in
   home.packages = [ nodejs indexAdvait indexHipfire refreshAdvait postCommitHook ];
 
   home.file = {
-    ".grok/rules/zvec-grep.md".source = ./grok-rules/zvec-grep.md;
     ".grok/prompts/local-helper.md".source = ./grok-prompts/local-helper.md;
+  } // lib.optionalAttrs (!isDarwin) {
+    ".grok/rules/zvec-grep.md".source = ./grok-rules/zvec-grep.md;
   };
 
   home.sessionPath = [ "$HOME/.local/bin" ];
@@ -246,13 +243,6 @@ in
       echo "zvec-grep: installing ${pkg} into ~/.local"
       ${npm} install -g --prefix "$HOME/.local" ${pkg} || \
         echo "zvec-grep: WARNING npm install failed (network?)" >&2
-    fi
-    if [[ -x ${lib.escapeShellArg zgBin} ]]; then
-      export ZVEC_GREP_INSTALL_SKIP_SERVER=1
-      ${lib.escapeShellArg zgBin} install --target opencode --yes || \
-        echo "zvec-grep: WARNING OpenCode MCP merge failed" >&2
-      ${python}/bin/python3 ${./scripts/zvec-grep-merge-clients.py} || \
-        echo "zvec-grep: WARNING Pi/Hermes/Grok/Muse/Zed MCP merge failed" >&2
     fi
   '';
 

@@ -10,7 +10,6 @@ let
   mlxMinicpm = import ../../modules/shared/mlx-minicpm.nix { inherit user pkgs; };
   mlxCompact = import ../../modules/shared/mlx-compactor.nix { inherit user pkgs; };
   museSpark = import ../../modules/shared/muse-spark.nix { inherit pkgs lib; };
-  zvecGrep = import ../../modules/shared/zvec-grep.nix { inherit pkgs lib; };
   overflowPick = import ../../modules/shared/overflow-pick.nix { inherit pkgs lib; };
 in
 {
@@ -102,7 +101,6 @@ in
   # Muse Spark Chat Completions: uniquify reused tool_call_id `call_0`.
   launchd.user.agents.muse-spark-proxy = museSpark.launchdAgents.muse-spark-proxy;
 
-  launchd.user.agents.zvec-grep = zvecGrep.launchdAgents.zvec-grep;
   launchd.user.agents.overflow-pick = overflowPick.launchdAgents.overflow-pick;
 
   system = {

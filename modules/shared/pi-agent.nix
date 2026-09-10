@@ -26,7 +26,7 @@ let
     "npm:pi-cc-compact@0.1.0"
     "npm:pi-cursor-sdk@0.2.0"
     # Native Pi has no MCP. Adapter exposes one proxy tool; config is
-    # ~/.pi/agent/mcp.json from zvec-grep-merge-clients.py.
+    # ~/.pi/agent/mcp.json from programs.one-grep (stdio).
     "npm:pi-mcp-adapter@2.32.1"
     # Load FFF before pi-tool-display. Override re-registers grep/find;
     # display 0.5.0 skips those names only if FFF already owns them.
