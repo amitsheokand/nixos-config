@@ -249,6 +249,7 @@ TUI can attach to every host over LAN SSH (`herdr machine add`).
 | Server | user systemd `herdr-server` (NixOS) / launchd `herdr-server` (Darwin) |
 | Worktrees | nixpkgs `worktrunk` (`wt`) + plugin `disintegrator/trunkr` |
 | Pi in panes | plugin `nixos-config.pi-worktree` on `worktree.created`; `prefix+shift+i` |
+| Idle callback | plugin `nixos-config.agent-idle` on `pane.agent_status_changed` |
 | Phone / iPad | plugin `0cv/herdr-mobile-relay` PWA, or `ssh <host>` then `herdr` |
 
 Happier is **not** the phone/iPad path. Leave the desktop AppImage bits until
@@ -262,6 +263,8 @@ herdr-lan apply        # herdr machine add nixos/vaayu/ai-mac (interactive)
 # prefix+shift+o  open worktree
 # prefix+shift+i  start Pi in the focused pane
 herdr plugin action invoke setup --plugin herdr-mobile-relay.events
+herdr agent wait <name> --until idle --timeout 3600000   # block this pane
+# named implementer idle/done/blocked → toast + prompt idle coordinator
 ```
 
 **Muse Spark** is two products with **different bills**:

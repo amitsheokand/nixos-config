@@ -1,0 +1,12 @@
+# Linked from Home Manager. Toasts + prompts the coordinator when a
+# named implementer pane settles (idle / done / blocked).
+id = "nixos-config.agent-idle"
+name = "Agent idle callback"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Notify the coordinator when a named Herdr agent settles"
+platforms = ["linux", "macos"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["./notify.sh"]

@@ -22,6 +22,12 @@ let
     text = builtins.readFile ./herdr-pi-worktree/start-pi.sh;
   };
 
+  notifyIdle = pkgs.writeShellApplication {
+    name = "herdr-notify-agent-idle";
+    runtimeInputs = [ herdr pkgs.jq pkgs.coreutils pkgs.gnugrep pkgs.gawk ];
+    text = builtins.readFile ./herdr-agent-idle/notify.sh;
+  };
+
   plugin = pkgs.runCommand "herdr-pi-worktree-plugin" { } ''
     mkdir -p $out
     cat > $out/herdr-plugin.toml <<EOF
@@ -41,6 +47,22 @@ command = ["${lib.getExe startPi}"]
 [[events]]
 on = "worktree.created"
 command = ["${lib.getExe startPi}"]
+EOF
+  '';
+
+  idlePlugin = pkgs.runCommand "herdr-agent-idle-plugin" { } ''
+    mkdir -p $out
+    cat > $out/herdr-plugin.toml <<EOF
+id = "nixos-config.agent-idle"
+name = "Agent idle callback"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Notify the coordinator when a named Herdr agent settles"
+platforms = ["linux", "macos"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["${lib.getExe notifyIdle}"]
 EOF
   '';
 
@@ -265,7 +287,7 @@ EOF
   };
 in
 {
-  inherit herdr worktrunk serve lan plugin;
+  inherit herdr worktrunk serve lan plugin idlePlugin;
 
   home.packages = [
     herdr
@@ -295,9 +317,13 @@ in
       mkdir -p "$HOME/.config/herdr" "$HOME/.pi/agent/extensions"
 
       "$herdr" plugin unlink nixos-config.pi-worktree >/dev/null 2>&1 || true
+      "$herdr" plugin unlink nixos-config.agent-idle >/dev/null 2>&1 || true
       "$herdr" plugin link ${plugin} >/dev/null 2>&1 \
         || "$herdr" plugin link ${plugin} \
         || echo "herdr: WARNING failed to link pi-worktree plugin" >&2
+      "$herdr" plugin link ${idlePlugin} >/dev/null 2>&1 \
+        || "$herdr" plugin link ${idlePlugin} \
+        || echo "herdr: WARNING failed to link agent-idle plugin" >&2
 
       ensure_plugin() {
         local spec="$1"
