@@ -10,6 +10,7 @@ let
   mlxMinicpm = import ../../modules/shared/mlx-minicpm.nix { inherit user pkgs; };
   mlxCompact = import ../../modules/shared/mlx-compactor.nix { inherit user pkgs; };
   museSpark = import ../../modules/shared/muse-spark.nix { inherit pkgs lib; };
+  herdr = import ../../modules/shared/herdr.nix { inherit pkgs lib user; };
   overflowPick = import ../../modules/shared/overflow-pick.nix { inherit pkgs lib; };
 in
 {
@@ -102,6 +103,8 @@ in
   launchd.user.agents.muse-spark-proxy = museSpark.launchdAgents.muse-spark-proxy;
 
   launchd.user.agents.overflow-pick = overflowPick.launchdAgents.overflow-pick;
+
+  launchd.user.agents.herdr-server = herdr.launchdAgents.herdr-server;
 
   system = {
     # Turn off NIX_PATH warnings now that we're using flakes

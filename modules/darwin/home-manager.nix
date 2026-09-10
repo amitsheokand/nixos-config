@@ -47,6 +47,7 @@ in
         commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
         zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
         museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
+        herdr = import ../shared/herdr.nix { inherit pkgs lib user; };
         oneGrep = import ../shared/one-grep.nix { inherit config pkgs lib open-grep; };
         # Desktop catalog over LAN. Default stays MLX; `/model forge` hits PC.
         hipfireLan = import ../shared/pi-hipfire-catalog.nix {
@@ -99,12 +100,14 @@ in
             ++ (commandCode.home.packages or [])
             ++ (zvecGrep.home.packages or [])
             ++ (museSpark.home.packages or [])
-            ++ (piAgent.home.packages or []);
+            ++ (piAgent.home.packages or [])
+            ++ (herdr.home.packages or []);
           file = lib.mkMerge [
             sharedFiles
             additionalFiles
             (headroom.home.file or {})
             (zvecGrep.home.file or {})
+            (herdr.home.file or {})
             {
               ".codex/mlx-local.config.toml" = {
                 text = ''
@@ -128,6 +131,7 @@ in
             (zvecGrep.home.activation or {})
             (museSpark.home.activation or {})
             piAgent.activation
+            (herdr.home.activation or {})
           ];
           stateVersion = "23.11";
         };

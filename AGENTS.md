@@ -235,6 +235,35 @@ Claude Code / Codex / prime-agent are **not** installed from `llm-agents.nix`.
 | zvec-grep (`zg`) | Linux fallback; Darwin launchd **off** | npm `@zvec/zvec-grep` |
 | Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
 
+## Herdr (always-on agent mux)
+
+[Herdr 0.9](https://herdr.dev/blog/connecting-the-machines/) is the terminal
+runtime. Each of **PC (`nixos`)**, **M1 (`vaayu`)**, **M4 (`ai-mac`)** runs
+`herdr server` at login. Agents keep running after detach (`ctrl+b q`). One
+TUI can attach to every host over LAN SSH (`herdr machine add`).
+
+| Piece | Where |
+|-------|--------|
+| Binary | `modules/shared/herdr-package.nix` (upstream **0.9.0**; nixpkgs is 0.8) |
+| HM + config | `modules/shared/herdr.nix` |
+| Server | user systemd `herdr-server` (NixOS) / launchd `herdr-server` (Darwin) |
+| Worktrees | nixpkgs `worktrunk` (`wt`) + plugin `disintegrator/trunkr` |
+| Pi in panes | plugin `nixos-config.pi-worktree` on `worktree.created`; `prefix+shift+i` |
+| Phone / iPad | plugin `0cv/herdr-mobile-relay` PWA, or `ssh <host>` then `herdr` |
+
+Happier is **not** the phone/iPad path. Leave the desktop AppImage bits until
+Herdr has been stable; then remove Happier from every host.
+
+```sh
+herdr                  # attach Local
+herdr-lan              # print PC / M1 / M4 add commands
+herdr-lan apply        # herdr machine add nixos/vaayu/ai-mac (interactive)
+# prefix+shift+g  create worktree (wt + trunkr)
+# prefix+shift+o  open worktree
+# prefix+shift+i  start Pi in the focused pane
+herdr plugin action invoke setup --plugin herdr-mobile-relay.events
+```
+
 **Muse Spark** is two products with **different bills**:
 
 | Path | Auth | Bill |
@@ -416,7 +445,8 @@ Do not enable hipfire's NixOS module here: it rebuilds the crate and overwrites 
 
 ### Shared Pi agent (Mac / PC / vaayu)
 
-Pi is the hub. Cursor (`pi-cursor-sdk`) and Muse Code Power (`pi-muse-bridge`,
+Pi is the hub. It runs inside **Herdr worktree panes** (always-on `herdr
+server` on PC / M1 / M4). Cursor (`pi-cursor-sdk`) and Muse Code Power (`pi-muse-bridge`,
 pin `muse-code/muse-spark-1.3`) run **inside Pi**. Usage ladder:
 `modules/shared/pi-stack.md` → `~/.pi/agent/stack.md`. Grok Bot is not the
 coordinator seat. Rakazo is not packaged.

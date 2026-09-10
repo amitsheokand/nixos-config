@@ -22,6 +22,7 @@ let
     inherit lib;
     baseUrl = "http://nixos.local:8080/v1";
   };
+  herdr = import ../shared/herdr.nix { inherit pkgs lib user; };
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
@@ -52,18 +53,21 @@ in
       ++ (zvecGrep.home.packages or [])
       ++ (museSpark.home.packages or [])
       ++ (piAgent.home.packages or [])
+      ++ (herdr.home.packages or [])
       ++ (mtpTorch.home.packages or [])
       ++ (if hipfireLocal == null then [] else hipfireLocal.packages);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
       // (zvecGrep.home.file or {})
+      // (herdr.home.file or {})
       // import ../shared/ai-tools.nix { inherit pkgs lib user; };
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
       // (zvecGrep.home.activation or {})
       // (museSpark.home.activation or {})
       // piAgent.activation
+      // (herdr.home.activation or {})
       // (if hipfireLocal == null then {} else {
         mergeHipfireCatalogClients = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.catalogMergeScript;
       });
@@ -80,6 +84,7 @@ in
       // (museSpark.systemdUserServices or {})
       // (zvecGrep.systemdUserServices or {})
       // (piAgent.systemdUserServices or {})
+      // (herdr.systemdUserServices or {})
       // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
     timers = piAgent.systemdUserTimers or {};
   };
@@ -95,6 +100,8 @@ in
       "systemd/user/default.target.wants/zvec-grep-refresh.service".force = true;
       "systemd/user/overflow-pick.service".force = true;
       "systemd/user/overflow-pick.timer".force = true;
+      "systemd/user/herdr-server.service".force = true;
+      "systemd/user/default.target.wants/herdr-server.service".force = true;
     }
     (lib.mkIf hipfireEnabled {
       "systemd/user/hipfire-serve.service".force = true;

@@ -16,6 +16,7 @@ let
     inherit config pkgs lib;
     inherit (inputs) open-grep;
   };
+  herdr = import ../shared/herdr.nix { inherit pkgs lib user; };
   hipfireLan = import ../shared/pi-hipfire-catalog.nix {
     inherit lib;
     baseUrl = "http://nixos.local:8080/v1";
@@ -43,16 +44,19 @@ in
       ++ (commandCode.home.packages or [])
       ++ (zvecGrep.home.packages or [])
       ++ (museSpark.home.packages or [])
-      ++ (piAgent.home.packages or []);
+      ++ (piAgent.home.packages or [])
+      ++ (herdr.home.packages or []);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
-      // (zvecGrep.home.file or {});
+      // (zvecGrep.home.file or {})
+      // (herdr.home.file or {});
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
       // (zvecGrep.home.activation or {})
       // (museSpark.home.activation or {})
-      // piAgent.activation;
+      // piAgent.activation
+      // (herdr.home.activation or {});
     sessionPath = (commandCode.home.sessionPath or [])
       ++ (zvecGrep.home.sessionPath or [])
       ++ (headroom.home.sessionPath or []);
@@ -65,7 +69,8 @@ in
     services = (headroom.systemd.user.services or {})
       // (museSpark.systemdUserServices or {})
       // (zvecGrep.systemdUserServices or {})
-      // (piAgent.systemdUserServices or {});
+      // (piAgent.systemdUserServices or {})
+      // (herdr.systemdUserServices or {});
     timers = piAgent.systemdUserTimers or {};
   };
 
@@ -76,6 +81,8 @@ in
     "systemd/user/default.target.wants/zvec-grep-refresh.service".force = true;
     "systemd/user/overflow-pick.service".force = true;
     "systemd/user/overflow-pick.timer".force = true;
+    "systemd/user/herdr-server.service".force = true;
+    "systemd/user/default.target.wants/herdr-server.service".force = true;
   };
 
   services.gpg-agent = {
