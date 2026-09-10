@@ -6,3 +6,6 @@ result
 CLAUDE.md
 .zvec-grep/
 __pycache__/
+
+# Happier / agent worktrees (Affirmed 2026-09-10)
+.worktrees/
