@@ -1,9 +1,9 @@
-# Linked from Home Manager. Starts Pi in a new worktree pane.
+# Linked from Home Manager. Starts Pi in a worktree pane after cd.
 id = "nixos-config.pi-worktree"
 name = "Pi in worktree"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.9.0"
-description = "Start Pi in Herdr worktree panes"
+description = "cd to the Git checkout, then start Pi in Herdr worktree panes"
 platforms = ["linux", "macos"]
 
 [[actions]]
@@ -14,4 +14,8 @@ command = ["./start-pi.sh"]
 
 [[events]]
 on = "worktree.created"
+command = ["./start-pi.sh"]
+
+[[events]]
+on = "worktree.opened"
 command = ["./start-pi.sh"]

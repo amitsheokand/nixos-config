@@ -16,9 +16,11 @@ let
   worktrunk = pkgs.worktrunk;
   bash = pkgs.bash;
 
+  isPc = (!isDarwin) && pkgs.stdenv.hostPlatform.isx86_64;
+
   startPi = pkgs.writeShellApplication {
     name = "herdr-start-pi-in-pane";
-    runtimeInputs = [ herdr pkgs.jq pkgs.coreutils pkgs.gnugrep pkgs.gawk ];
+    runtimeInputs = [ herdr pkgs.jq pkgs.coreutils pkgs.gnugrep pkgs.gawk pkgs.direnv ];
     text = builtins.readFile ./herdr-pi-worktree/start-pi.sh;
   };
 
@@ -33,9 +35,9 @@ let
     cat > $out/herdr-plugin.toml <<EOF
 id = "nixos-config.pi-worktree"
 name = "Pi in worktree"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.9.0"
-description = "Start Pi in Herdr worktree panes"
+description = "cd to the Git checkout, then start Pi in Herdr worktree panes"
 platforms = ["linux", "macos"]
 
 [[actions]]
@@ -46,6 +48,10 @@ command = ["${lib.getExe startPi}"]
 
 [[events]]
 on = "worktree.created"
+command = ["${lib.getExe startPi}"]
+
+[[events]]
+on = "worktree.opened"
 command = ["${lib.getExe startPi}"]
 EOF
   '';
@@ -87,6 +93,11 @@ EOF
 
     [ui]
     window_title = "{hostname}: {workspace}"
+${lib.optionalString isPc ''
+
+    [worktrees]
+    directory = "/mnt/advait-scratch/worktrees"
+''}
 
     [ui.sidebar.agents]
     row_gap = 0
@@ -135,6 +146,9 @@ EOF
     # Managed by modules/shared/herdr.nix.
     # Create/open/merge/remove go through the trunkr Herdr plugin (`wt` +
     # `herdr worktree open`) so worktrunk hooks still run.
+    ${lib.optionalString isPc ''
+    worktree-path = "/mnt/advait-scratch/worktrees/{{ branch | sanitize }}"
+    ''}
   '';
 
   agentPath = lib.concatStringsSep ":" (

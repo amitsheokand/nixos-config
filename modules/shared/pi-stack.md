@@ -2,7 +2,10 @@
 
 Pi is the coding-agent hub. It runs **inside Herdr worktree panes** on PC /
 M1 / M4 (`herdr server` always on; phone/iPad uses herdr-mobile-relay or
-SSH, not Happier). Cursor (Ultra, via `pi-cursor-sdk`) and Muse
+SSH, not Happier). Create/open worktrees with **Worktrunk + trunkr**
+(`prefix+shift+g` / `wt switch --create`), never `git worktree add`. The
+`nixos-config.pi-worktree` plugin cds the pane to the checkout and starts Pi
+on `worktree.opened`. Cursor (Ultra, via `pi-cursor-sdk`) and Muse
 Code Power (via `pi-muse-bridge`, `muse-code/muse-spark-1.3`) live **inside
 Pi**. Do not open a second control plane for the same work.
 

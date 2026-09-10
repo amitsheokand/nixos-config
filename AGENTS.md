@@ -248,23 +248,33 @@ TUI can attach to every host over LAN SSH (`herdr machine add`).
 | HM + config | `modules/shared/herdr.nix` |
 | Server | user systemd `herdr-server` (NixOS) / launchd `herdr-server` (Darwin) |
 | Worktrees | nixpkgs `worktrunk` (`wt`) + plugin `disintegrator/trunkr` |
-| Pi in panes | plugin `nixos-config.pi-worktree` on `worktree.created`; `prefix+shift+i` |
+| Pi in panes | plugin `nixos-config.pi-worktree` on `worktree.created` **and** `worktree.opened` (`cd` then Pi); `prefix+shift+i` |
 | Idle callback | plugin `nixos-config.agent-idle` on `pane.agent_status_changed` |
 | Phone / iPad | plugin `0cv/herdr-mobile-relay` PWA, or `ssh <host>` then `herdr` |
 
 Happier is **not** the phone/iPad path. Leave the desktop AppImage bits until
 Herdr has been stable; then remove Happier from every host.
 
+**Worktrees (do not `git worktree add`):** trunkr + Worktrunk own create/open/merge.
+`herdr worktree open` does **not** fire `worktree.created`; Pi starts on
+`worktree.opened` after the plugin cds the pane to the checkout (`new_cwd=follow`
+otherwise inherits `~/work/advait`). PC checkouts:
+`/mnt/advait-scratch/worktrees/{{ branch | sanitize }}`.
+
 ```sh
 herdr                  # attach Local
 herdr-lan              # print PC / M1 / M4 add commands
 herdr-lan apply        # herdr machine add nixos/vaayu/ai-mac (interactive)
-# prefix+shift+g  create worktree (wt + trunkr)
-# prefix+shift+o  open worktree
-# prefix+shift+i  start Pi in the focused pane
+# prefix+shift+g  create worktree (wt + trunkr) — then Pi auto-starts in that cwd
+# prefix+shift+o  open worktree (same)
+# prefix+shift+i  start Pi in the focused pane (if the hook missed)
+# CLI (from repo root, never git worktree add):
+#   wt switch --create -y wt/pc/advait/<packet>
+#   herdr worktree open --cwd ~/work/advait --path <wt-path> --label T-...
 herdr plugin action invoke setup --plugin herdr-mobile-relay.events
-herdr agent wait <name> --until idle --timeout 3600000   # block this pane
 # named implementer idle/done/blocked → toast + prompt idle coordinator
+# (do not poll panes). Then wt switch --create / prefix+shift+g for the next packet.
+herdr agent wait <name> --until idle --timeout 3600000   # optional; idle plugin is default
 ```
 
 **Muse Spark** is two products with **different bills**:
