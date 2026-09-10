@@ -144,11 +144,19 @@ ${lib.optionalString isPc ''
 
   worktrunkToml = ''
     # Managed by modules/shared/herdr.nix.
+    # Lifecycle: wt switch --create → implement → wt merge (auto-deletes
+    # the worktree). Do not leave spent trees; they are multi-GB.
     # Create/open/merge/remove go through the trunkr Herdr plugin (`wt` +
     # `herdr worktree open`) so worktrunk hooks still run.
     ${lib.optionalString isPc ''
     worktree-path = "/mnt/advait-scratch/worktrees/{{ branch | sanitize }}"
     ''}
+    ${lib.optionalString (!isPc) ''
+    worktree-path = "{{ repo_path }}/../worktrees/{{ branch | sanitize }}"
+    ''}
+
+    [list]
+    json-schema = 2
   '';
 
   agentPath = lib.concatStringsSep ":" (

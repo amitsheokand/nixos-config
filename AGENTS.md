@@ -256,24 +256,27 @@ Happier is **not** the phone/iPad path. Leave the desktop AppImage bits until
 Herdr has been stable; then remove Happier from every host.
 
 **Worktrees (do not `git worktree add`):** trunkr + Worktrunk own create/open/merge.
-`herdr worktree open` does **not** fire `worktree.created`; Pi starts on
-`worktree.opened` after the plugin cds the pane to the checkout (`new_cwd=follow`
-otherwise inherits `~/work/advait`). PC checkouts:
-`/mnt/advait-scratch/worktrees/{{ branch | sanitize }}`.
+`wt merge` deletes the worktree (and the merged branch) unless you pass
+`--no-remove`. Raw `git merge` does not — spent trees are multi-GB, so close
+out through `wt merge` / `prefix+shift+m`. `herdr worktree open` does **not**
+fire `worktree.created`; Pi starts on `worktree.opened` after the plugin cds
+the pane (`new_cwd=follow` otherwise inherits the source pane cwd).
 
 ```sh
 herdr                  # attach Local
 herdr-lan              # print PC / M1 / M4 add commands
 herdr-lan apply        # herdr machine add nixos/vaayu/ai-mac (interactive)
 # prefix+shift+g  create worktree (wt + trunkr) — then Pi auto-starts in that cwd
-# prefix+shift+o  open worktree (same)
+# prefix+shift+o  open worktree
+# prefix+shift+m  merge worktree (wt merge → deletes the tree)
+# prefix+d        remove worktree
 # prefix+shift+i  start Pi in the focused pane (if the hook missed)
-# CLI (from repo root, never git worktree add):
-#   wt switch --create -y wt/pc/advait/<packet>
-#   herdr worktree open --cwd ~/work/advait --path <wt-path> --label T-...
+# CLI (from the primary clone, never git worktree add):
+#   wt switch --create -y -b main <branch>
+# leftover from a raw git merge: wt remove <branch> -y --foreground
 herdr plugin action invoke setup --plugin herdr-mobile-relay.events
 # named implementer idle/done/blocked → toast + prompt idle coordinator
-# (do not poll panes). Then wt switch --create / prefix+shift+g for the next packet.
+# (do not poll panes). Then wt merge (auto-delete) and start the next tree.
 herdr agent wait <name> --until idle --timeout 3600000   # optional; idle plugin is default
 ```
 
