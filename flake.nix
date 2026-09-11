@@ -86,6 +86,7 @@
         "install" = mkApp "install" system;
         "install-with-secrets" = mkApp "install-with-secrets" system;
         "deploy-lan" = mkSharedApp "deploy-lan" system;
+        "oss-leak-fence" = mkSharedApp "oss-leak-fence" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -99,6 +100,7 @@
         "disk-usage" = mkApp "disk-usage" system;
         "rollback" = mkApp "rollback" system;
         "deploy-lan" = mkSharedApp "deploy-lan" system;
+        "oss-leak-fence" = mkSharedApp "oss-leak-fence" system;
       };
     in
     {

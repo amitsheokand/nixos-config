@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# Fail if Advait-product identifiers appear on git-tracked paths that are
+# not in docs/oss-private-paths.md (public/OSS leak fence).
+# Usage: ./apps/shared/oss-leak-fence
+#        ./apps/shared/oss-leak-fence --self-test
+#        nix run .#oss-leak-fence   # from a checkout (uses $PWD)
+set -euo pipefail
+
+PATTERN='advait|aikya|setu[-_]shell'
+ALLOWLIST_DOC="docs/oss-private-paths.md"
+
+find_root() {
+  if [[ -n "${OSS_LEAK_ROOT:-}" ]]; then
+    printf '%s\n' "$OSS_LEAK_ROOT"
+    return
+  fi
+  if git rev-parse --show-toplevel >/dev/null 2>&1; then
+    git rev-parse --show-toplevel
+    return
+  fi
+  echo "oss-leak-fence: run from a nixos-config checkout (or set OSS_LEAK_ROOT)" >&2
+  exit 2
+}
+
+load_allowlist() {
+  local doc="$1"
+  awk '
+    /^## Allowlisted paths$/ { want = 1; next }
+    want && /^```/ {
+      if (inblock) { exit }
+      inblock = 1
+      next
+    }
+    inblock && $0 != "" && $0 !~ /^#/ { print }
+  ' "$doc"
+}
+
+classify() {
+  local path="$1"
+  local allowed="$2"
+  printf '%s\n' "$allowed" | grep -Fxq -- "$path"
+}
+
+run_scan() {
+  local root="$1"
+  local allowed="$2"
+  local hits rc path leak unused
+  local -a leaked unused_paths
+  local -A seen_hit
+
+  set +e
+  hits="$(git -C "$root" grep -I -n -i -E "$PATTERN" -- .)"
+  rc=$?
+  set -e
+  if [[ "$rc" -gt 1 ]]; then
+    echo "oss-leak-fence: git grep failed (exit $rc)" >&2
+    return "$rc"
+  fi
+  if [[ "$rc" -eq 1 || -z "$hits" ]]; then
+    echo "oss-leak-fence: no identifier hits; allowlist should be empty" >&2
+    return 1
+  fi
+
+  leaked=()
+  while IFS= read -r line; do
+    path="${line%%:*}"
+    seen_hit["$path"]=1
+    if ! classify "$path" "$allowed"; then
+      leaked+=("$line")
+    fi
+  done <<< "$hits"
+
+  unused_paths=()
+  while IFS= read -r path; do
+    [[ -z "$path" ]] && continue
+    if [[ ! -e "$root/$path" ]]; then
+      unused_paths+=("$path (missing)")
+      continue
+    fi
+    if [[ -z "${seen_hit[$path]:-}" ]]; then
+      unused_paths+=("$path (no hits)")
+    fi
+  done <<< "$allowed"
+
+  if ((${#leaked[@]})); then
+    echo "oss-leak-fence: FAIL — identifiers on non-allowlisted public paths:" >&2
+    printf '  %s\n' "${leaked[@]}" >&2
+    return 1
+  fi
+  if ((${#unused_paths[@]})); then
+    echo "oss-leak-fence: FAIL — allowlist stale:" >&2
+    printf '  %s\n' "${unused_paths[@]}" >&2
+    return 1
+  fi
+
+  echo "oss-leak-fence: ok — $(printf '%s\n' "$hits" | wc -l | tr -d ' ') hits on $(printf '%s\n' "$allowed" | grep -c . | tr -d ' ') allowlisted paths"
+}
+
+self_test() {
+  local allowed="$1"
+  local sample
+
+  sample="Advait aikya setu-shell /mnt/advait-scratch"
+  if ! printf '%s\n' "$sample" | grep -qiE "$PATTERN"; then
+    echo "oss-leak-fence: --self-test detector dead" >&2
+    return 1
+  fi
+  if classify "README.md" "$allowed"; then
+    echo "oss-leak-fence: --self-test README.md must not be allowlisted" >&2
+    return 1
+  fi
+  if ! classify "hosts/nixos/default.nix" "$allowed"; then
+    echo "oss-leak-fence: --self-test hosts/nixos/default.nix must be allowlisted" >&2
+    return 1
+  fi
+  echo "oss-leak-fence: --self-test classifier ok"
+}
+
+ROOT="$(find_root)"
+cd "$ROOT"
+
+if [[ ! -f "$ALLOWLIST_DOC" ]]; then
+  echo "oss-leak-fence: missing $ALLOWLIST_DOC" >&2
+  exit 2
+fi
+
+ALLOWED="$(load_allowlist "$ALLOWLIST_DOC")"
+if [[ -z "$ALLOWED" ]]; then
+  echo "oss-leak-fence: empty allowlist in $ALLOWLIST_DOC" >&2
+  exit 2
+fi
+
+case "${1:-}" in
+  --self-test)
+    self_test "$ALLOWED"
+    run_scan "$ROOT" "$ALLOWED"
+    ;;
+  "")
+    run_scan "$ROOT" "$ALLOWED"
+    ;;
+  *)
+    echo "usage: oss-leak-fence [--self-test]" >&2
+    exit 2
+    ;;
+esac

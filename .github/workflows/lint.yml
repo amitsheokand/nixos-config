@@ -15,6 +15,14 @@ on:
       - 'README.md'
 
 jobs:
+  oss-leak-fence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Private-path string fence
+        run: ./apps/shared/oss-leak-fence --self-test
+
   lint:
     runs-on: ubuntu-latest
     outputs:
