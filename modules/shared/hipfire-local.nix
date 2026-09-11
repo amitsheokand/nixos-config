@@ -62,7 +62,9 @@ let
     max_seq = backend.maxSeq or 65536;
     speculation = backend.speculation or [ "off" ];
     available = backend.available or true;
-  } // lib.optionalAttrs (backend ? draftFile) { draft_file = backend.draftFile; };
+  } // lib.optionalAttrs (backend ? draftFile) { draft_file = backend.draftFile; }
+    // lib.optionalAttrs (backend ? tools) { tools = backend.tools; }
+    // lib.optionalAttrs (backend ? kvBackend) { kv_backend = backend.kvBackend; };
 
   visibleBackends = lib.filterAttrs (_: backend: backend.available or true) profiles.backends;
 
@@ -124,13 +126,18 @@ let
       export HIPFIRE_MODELS_DIR="''${HIPFIRE_MODELS_DIR:-${modelsDir}}"
       export HIPFIRE_DAEMON_BIN="''${HIPFIRE_DAEMON_BIN:-${hipfireDaemon}}"
       export HIP_PATH="${rocm.clr}"
+      export HIPFIRE_ROCM_DEVICE_LIB_PATH="${rocm.rocm-device-libs}/amdgcn/bitcode"
       export HIPFIRE_HIPCC_EXTRA_FLAGS="--rocm-device-lib-path=${rocm.rocm-device-libs}/amdgcn/bitcode"
+      # gfx1201 long-ctx DFlash: multi-row Q8 verifier (#748 / beta-plus).
+      export HIPFIRE_FA_PERTOKEN_MIN_CTX="''${HIPFIRE_FA_PERTOKEN_MIN_CTX:-4096}"
+      export HIPFIRE_VERIFY_GRAPH="''${HIPFIRE_VERIFY_GRAPH:-0}"
       export LD_LIBRARY_PATH="${rocmLib}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
       cd ${lib.escapeShellArg hipfireRoot}
       exec ${lib.escapeShellArg hipfireBin} serve \
         127.0.0.1 \
         --model ${lib.escapeShellArg defaultBackend.tag} \
         --kv-mode ${lib.escapeShellArg (defaultBackend.kvMode or "q8")} \
+        --kv-backend ${lib.escapeShellArg (defaultBackend.kvBackend or "vmm")} \
         --idle-timeout 0 \
         "$@"
     '';
@@ -197,6 +204,11 @@ let
   catalogMergeScript = ''
     rm -f "$HOME/.config/systemd/user/hipfire-serve.service.d/ornith-ar.conf"
     rm -f "$HOME/.config/systemd/user/hipfire-profile-proxy.service.d/ornith-ar.conf"
+    # Leftover MiniCPM / loopback / adaptive-B pins; product serve is Qwen 3.8.
+    rm -f "$HOME/.config/systemd/user/hipfire-serve.service.d/z-minicpm-load.conf"
+    rm -f "$HOME/.config/systemd/user/hipfire-serve.service.d/p0-loopback.conf"
+    rm -f "$HOME/.config/systemd/user/hipfire-serve.service.d/no-adaptive-b.conf"
+    rm -f "$HOME/.config/systemd/user/hipfire-serve.service.d/post-latch.conf"
     mkdir -p "$HOME/.pi/agent/skills/pi-compact-focus"
     mkdir -p "$HOME/.local/share/pi-compact"
     install -m 0644 ${./pi-compact/SKILL.md} "$HOME/.pi/agent/skills/pi-compact-focus/SKILL.md"
@@ -285,6 +297,8 @@ in
           "HIP_VISIBLE_DEVICES=0"
           "HIPFIRE_QWEN_MTP=0"
           "HIPFIRE_DFLASH_MODE=auto"
+          "HIPFIRE_FA_PERTOKEN_MIN_CTX=4096"
+          "HIPFIRE_VERIFY_GRAPH=0"
           # After think-cap closes </think>, allow this many answer tokens
           # before hard EOS (default 768 was cutting forge/ornith mid-reply).
           "HIPFIRE_POST_LATCH_ANSWER_TOKENS=2048"

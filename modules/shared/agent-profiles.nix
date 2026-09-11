@@ -2,26 +2,19 @@
 #
 # Public API for Pi / Hermes / Grok / Continue / Zed:
 #   forge / anvil / feather  — generic lanes (thinking, effort, spec policy)
-#   fuse                     — Fuse-2 MoE lane (no thinking; native template)
-#   qwen38                   — daily weight id
-#   fuse-2-moe               — Fuse-2 MoE k=2 weights (forge/fuse to swap)
+#   minicpm                  — MiniCPM5-2B MQ4 on hipfire (llama arch 0)
+#   qwen38                   — daily weight id (mq4-pro)
+#   qwen38-xt                — speed SKU (mq4-xt); swap defaultBackend to use
 #
 # Do not put checkpoint names in AI_MODEL / GROK_LOCAL_MODEL. Default lane is
 # forge; default backend is qwen38 (mq4-pro). Swap `defaultBackend` when the
 # daily checkpoint changes — keep lane ids stable.
-#
-# Fuse-2 is a NON-THINKING model: lanes that request thinking (forge/anvil/
-# feather policy) make it meta-chatter and open unclosed <think> spans. Use
-# the `fuse` lane (thinking=false) or the raw `fuse-2-moe` backend id (no
-# lane defaults); `forge/fuse` inherits forge thinking and is unsupported.
 #
 # Context windows are the *filled* working set Pi/Grok advertise, not the
 # model card. hipfire `memory.max_seq` is the GPU fail-closed ceiling.
 # Advertising 256k meant Pi never compacted; Qwen 27B dense then died around
 # 94k prefill on the R9700 (daemon abort in PrefillBatchScratch / hipFree).
 # Keep advertised windows inside that envelope so auto-compact fires first.
-# Fuse-2 is validated to ~8k tokens; advertised 32k is conservative headroom
-# with the 32k fail-closed ceiling.
 rec {
   defaultBackend = "qwen38";
   defaultLane = "forge";
@@ -38,39 +31,55 @@ rec {
   maxTokens = 16384;
 
   backends = {
-    fuse = {
-      tag = "fuse-2-moe";
-      aliases = [ "fuse" "fuse-2" "fuse-2:moe" "fuse-2-moe" ];
-      displayName = "Fuse 2 MoE";
-      description = "Fuse-2 MoE k=2 (uniform MQ4V2 routed, sqrtsoftplus gate, native chat template). Non-thinking: use the fuse lane or raw backend id; forge/fuse inherits forge thinking and is unsupported.";
+    minicpm = {
+      tag = "minicpm5";
+      aliases = [ "minicpm" "minicpm5" "minicpm5-2b" ];
+      displayName = "MiniCPM5 2B";
+      description = "MiniCPM5-2B MQ4 on hipfire (GGUF llama layout). Non-thinking. Advertised 32k; do not treat 128k card as the session window.";
       available = true;
       contextWindow = 32768;
       maxTokens = 8192;
       maxSeq = 32768;
       kvMode = "q8";
+      kvBackend = "contiguous";
       speculation = [ "off" ];
+      tools = false;
     };
     qwen38 = {
       tag = "qwen3.8:27b-mq4-pro";
       aliases = [ "qwen38" "qwen3.8" "qwen3.8:27b" "qwen3.8:latest" "qwen3.8:27b-mq4-pro" ];
       displayName = "Qwen 3.8";
-      description = "Qwen3.8 27B mq4-pro. Daily backend for forge/anvil/feather. DFlash on feather. Advertised 32k/48k; GPU cap 65k.";
+      description = "Qwen3.8 27B mq4-pro. Daily backend for forge/anvil/feather. DFlash on anvil/feather. Advertised 32k/48k; GPU cap 65k. gfx1201 multi-row verifier past 4k.";
       contextWindow = 49152;
       maxTokens = 16384;
       maxSeq = 65536;
       kvMode = "q8";
-      speculation = [ "off" "dflash" "mtp" ];
+      kvBackend = "vmm";
+      speculation = [ "off" "dflash" ];
+      draftFile = "qwen38-27b-dflash-mq4.hfq";
+    };
+    qwen38-xt = {
+      tag = "qwen3.8:27b-mq4-xt";
+      aliases = [ "qwen38-xt" "qwen3.8:fast" "qwen3.8:27b-mq4-xt" ];
+      displayName = "Qwen 3.8 XT";
+      description = "Qwen3.8 27B mq4-xt speed SKU. Same 65k GPU cap and DFlash draft as mq4-pro.";
+      contextWindow = 49152;
+      maxTokens = 16384;
+      maxSeq = 65536;
+      kvMode = "q8";
+      kvBackend = "vmm";
+      speculation = [ "off" "dflash" ];
       draftFile = "qwen38-27b-dflash-mq4.hfq";
     };
   };
 
   # Pi thinkingLevelMap keys: off/minimal/low/medium/high/xhigh/max.
-  # null = hide/clamp away. The fuse lane omits the map (no thinking levels).
+  # null = hide/clamp away.
   profiles = {
-    fuse = {
-      displayName = "Fuse";
-      description = "Fuse-2 MoE without thinking: native template, greedy AR, no speculation. Compact at 24k.";
-      backend = "fuse";
+    minicpm = {
+      displayName = "MiniCPM";
+      description = "MiniCPM5-2B on hipfire: native template, greedy AR, no speculation. Compact at 24k.";
+      backend = "minicpm";
       thinking = false;
       contextWindow = 32768;
       maxTokens = 8192;
