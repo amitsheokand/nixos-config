@@ -49,6 +49,9 @@ in
 
   # Allow uv/pipx-installed native wheels (onnxruntime, etc.) to find
   # libstdc++ and friends — required for Headroom proxy on NixOS.
+  # Extra GUI libs cover unpatched Tauri AppImages (Happier Desktop) whose
+  # linuxdeploy bundle omits fontconfig/wayland/X11 and then fails with
+  # `app: error while loading shared libraries: libfontconfig.so.1`.
   programs.nix-ld = {
     enable = true;
     libraries = with pkgs; [
@@ -58,7 +61,30 @@ in
       curl
       icu
       libxml2
+      fontconfig
+      freetype
+      expat
+      harfbuzz
+      fribidi
+      wayland
+      libxkbcommon
+      libx11
+      libxcb
+      libGL
+      libglvnd
+      libdrm
+      libgbm
+      libgpg-error
+      libkrb5
     ];
+  };
+
+  # Downloaded AppImages (Happier Desktop in ~/Applications, etc.) need an FHS
+  # env on NixOS. binfmt runs them through appimage-run so the GNOME launcher
+  # and `happier-desktop` symlink keep working without a custom wrapper.
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
   };
 
   # Clipboard history manager (GNOME-native: daemon + Shell extension + CLI).

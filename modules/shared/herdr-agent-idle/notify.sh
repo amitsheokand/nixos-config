@@ -74,8 +74,8 @@ if [[ -f "$debounce" ]]; then
 fi
 printf '%s\n' "$now" >"$debounce"
 
-sound=done
-[[ "$status" == "blocked" ]] && sound=request
+sound="done"
+[[ "$status" == "blocked" ]] && sound="request"
 body="${name} ${status}  ${pane_id}"
 [[ -n "$cwd" ]] && body="${body}  ${cwd}"
 

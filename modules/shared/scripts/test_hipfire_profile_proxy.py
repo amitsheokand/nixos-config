@@ -256,6 +256,48 @@ class ApplyRequestTests(unittest.TestCase):
         self.assertEqual(body["model"], "qwen3.8:27b")
         self.assertEqual(body["speculation"], "off")
 
+    def test_minicpm_strips_pi_tools(self) -> None:
+        cfg = json.loads(json.dumps(CFG))
+        cfg["backends"]["minicpm"] = {
+            "tag": "minicpm5",
+            "aliases": ["minicpm", "minicpm5"],
+            "speculation": ["off"],
+            "display_name": "MiniCPM5 2B",
+            "context_window": 32768,
+            "max_tokens": 8192,
+            "max_seq": 32768,
+            "tools": False,
+        }
+        cfg["profiles"]["minicpm"] = {
+            "display_name": "MiniCPM",
+            "backend": "minicpm",
+            "context_window": 32768,
+            "max_tokens": 8192,
+            "speculation": "off",
+            "defaults": {
+                "chat_template_kwargs": {"enable_thinking": False},
+                "temperature": 0,
+            },
+        }
+        tools = [{"type": "function", "function": {"name": "read"}}]
+        body = proxy.apply_request(
+            cfg,
+            {
+                "model": "minicpm",
+                "tools": tools,
+                "tool_choice": "auto",
+                "messages": [{"role": "user", "content": "hi"}],
+            },
+        )
+        self.assertEqual(body["model"], "minicpm5")
+        self.assertNotIn("tools", body)
+        self.assertNotIn("tool_choice", body)
+        forge = proxy.apply_request(
+            cfg, {"model": "forge", "tools": tools, "tool_choice": "auto"}
+        )
+        self.assertEqual(forge["tools"], tools)
+        self.assertEqual(forge["tool_choice"], "auto")
+
 
 if __name__ == "__main__":
     unittest.main()

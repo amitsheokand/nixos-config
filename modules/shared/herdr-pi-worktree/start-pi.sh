@@ -114,8 +114,8 @@ pane_cwd() {
 }
 
 wait_shell() {
-  local i
-  for i in $(seq 1 40); do
+  local n=40
+  while (( n-- > 0 )); do
     if pane_shell_idle; then
       return 0
     fi

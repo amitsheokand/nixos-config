@@ -118,6 +118,30 @@ def resolve_speculation(policy: Any, backend: dict[str, Any]) -> str:
     return "off"
 
 
+def backend_supports_tools(backend: dict[str, Any] | None) -> bool:
+    """Default on (Qwen). MiniCPM/llama_ar must set tools=false — Pi always
+    attaches a tool schema, and hipfire llama_ar fail-closes by aborting the
+    SSE body (Pi reports 'socket connection was closed unexpectedly')."""
+    if not isinstance(backend, dict):
+        return True
+    return backend.get("tools", True) is not False
+
+
+def strip_unsupported_tools(
+    body: dict[str, Any], backend: dict[str, Any] | None
+) -> None:
+    if backend_supports_tools(backend):
+        return
+    for key in (
+        "tools",
+        "tool_choice",
+        "parallel_tool_calls",
+        "functions",
+        "function_call",
+    ):
+        body.pop(key, None)
+
+
 def apply_lane_defaults(
     body: dict[str, Any], lane: dict[str, Any], backend: dict[str, Any]
 ) -> None:
@@ -314,6 +338,7 @@ def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
         body["model"] = str(backend.get("tag") or backend_id)
         lane = lanes[lane_id]
         apply_lane_defaults(body, lane, backend)
+        strip_unsupported_tools(body, backend)
         enforce_budgets(body, lane, backend)
         return body
 
@@ -333,6 +358,7 @@ def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
             raise UnknownModel(model)
         body["model"] = str(backend.get("tag") or backend_id)
         apply_lane_defaults(body, lane, backend)
+        strip_unsupported_tools(body, backend)
         enforce_budgets(body, lane, backend)
         return body
 
@@ -340,6 +366,7 @@ def apply_request(cfg: dict[str, Any], body: dict[str, Any]) -> dict[str, Any]:
     if found is not None:
         backend_id, backend = found
         body["model"] = str(backend.get("tag") or model)
+        strip_unsupported_tools(body, backend)
         enforce_budgets(body, None, backend)
         return body
 
