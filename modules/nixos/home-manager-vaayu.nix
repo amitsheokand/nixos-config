@@ -76,9 +76,6 @@ in
 
   xdg.configFile = {
     "systemd/user/muse-spark-proxy.service".force = true;
-    "systemd/user/zvec-grep.service".force = true;
-    "systemd/user/zvec-grep-refresh.service".force = true;
-    "systemd/user/default.target.wants/zvec-grep-refresh.service".force = true;
     "systemd/user/overflow-pick.service".force = true;
     "systemd/user/overflow-pick.timer".force = true;
     "systemd/user/herdr-server.service".force = true;
