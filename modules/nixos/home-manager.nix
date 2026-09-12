@@ -18,6 +18,9 @@ let
   hipfireLocal = if hipfireEnabled
     then import ../shared/hipfire-local.nix { inherit pkgs lib user; }
     else null;
+  minicpmV = if hipfireEnabled
+    then import ../shared/minicpm-v.nix { inherit pkgs lib user; }
+    else null;
   hipfireLan = import ../shared/pi-hipfire-catalog.nix {
     inherit lib;
     baseUrl = "http://nixos.local:8080/v1";
@@ -46,7 +49,15 @@ in
       else hipfireLocal.sessionVariables)
       // (piAgent.sessionVariables or {})
       // (zvecGrep.home.sessionVariables or {})
-      // (mtpTorch.home.sessionVariables or {});
+      // (mtpTorch.home.sessionVariables or {})
+      // (if minicpmV == null then {} else minicpmV.sessionVariables)
+      // (lib.optionalAttrs hipfireEnabled {
+        # Resident GPU is MiniCPM-V, not Qwen 27B. hipfire :8080 stays manual.
+        AI_BASE_URL = "http://127.0.0.1:8093/v1";
+        AI_MODEL = "minicpm-v-4.5";
+        GROK_LOCAL_MODEL = "minicpm-v-4.5";
+        GROK_LOCAL_BASE_URL = "http://127.0.0.1:8093/v1";
+      });
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
@@ -55,7 +66,8 @@ in
       ++ (piAgent.home.packages or [])
       ++ (herdr.home.packages or [])
       ++ (mtpTorch.home.packages or [])
-      ++ (if hipfireLocal == null then [] else hipfireLocal.packages);
+      ++ (if hipfireLocal == null then [] else hipfireLocal.packages)
+      ++ (if minicpmV == null then [] else minicpmV.packages);
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
@@ -70,6 +82,9 @@ in
       // (herdr.home.activation or {})
       // (if hipfireLocal == null then {} else {
         mergeHipfireCatalogClients = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.catalogMergeScript;
+      })
+      // (if minicpmV == null then {} else {
+        retireHipfireResident27b = lib.hm.dag.entryAfter [ "writeBoundary" ] minicpmV.retireScript;
       });
     sessionPath = (commandCode.home.sessionPath or [])
       ++ (zvecGrep.home.sessionPath or [])
@@ -80,12 +95,21 @@ in
   programs = shared-programs // { gpg.enable = true; };
 
   systemd.user = {
-    services = (headroom.systemd.user.services or {})
-      // (museSpark.systemdUserServices or {})
-      // (zvecGrep.systemdUserServices or {})
-      // (piAgent.systemdUserServices or {})
-      // (herdr.systemdUserServices or {})
-      // (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices);
+    services = lib.mkMerge [
+      (headroom.systemd.user.services or {})
+      (museSpark.systemdUserServices or {})
+      (zvecGrep.systemdUserServices or {})
+      (piAgent.systemdUserServices or {})
+      (herdr.systemdUserServices or {})
+      (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices)
+      (if minicpmV == null then {} else minicpmV.systemdUserServices)
+      (lib.optionalAttrs hipfireEnabled {
+        # Keep hipfire-serve-local installed; do not autostart 27B.
+        hipfire-serve.Install.WantedBy = lib.mkForce [];
+        hipfire-profile-proxy.Install.WantedBy = lib.mkForce [];
+        hipfire-daemon-watch.Install.WantedBy = lib.mkForce [];
+      })
+    ];
     timers = piAgent.systemdUserTimers or {};
   };
 
@@ -106,11 +130,13 @@ in
     (lib.mkIf hipfireEnabled {
       "systemd/user/hipfire-serve.service".force = true;
       "systemd/user/hipfire-daemon-watch.service".force = true;
+      "systemd/user/minicpm-v.service".force = true;
       "systemd/user/pi-compact-router.service".force = true;
       "systemd/user/pi-compact-tiny.service".force = true;
       # Live `systemctl --user enable` left these wants links; HM must overwrite them.
       "systemd/user/default.target.wants/pi-compact-router.service".force = true;
       "systemd/user/default.target.wants/pi-compact-tiny.service".force = true;
+      "systemd/user/default.target.wants/minicpm-v.service".force = true;
     })
   ];
 

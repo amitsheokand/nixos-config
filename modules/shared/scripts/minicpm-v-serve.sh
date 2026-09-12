@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# MiniCPM-V 4.5 on llama.cpp Vulkan — R9700 only (not iGPU compact, not hipfire).
-# Loopback :8093. Unload hipfire before starting (one GPU client).
+# MiniCPM-V 4.5 on llama.cpp Vulkan — R9700 only (not iGPU compact).
+# Loopback :8093. Resident GPU job. hipfire 27B is parked (Conflicts with
+# minicpm-v.service); start hipfire-serve only for a later VL/HIP experiment.
 set -euo pipefail
 
 DIR="${MINICPM_V_DIR:-${HOME}/.local/share/minicpm-v-4.5}"
