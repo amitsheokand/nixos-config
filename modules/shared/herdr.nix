@@ -96,7 +96,7 @@ EOF
 ${lib.optionalString isPc ''
 
     [worktrees]
-    directory = "/mnt/advait-scratch/worktrees"
+    directory = "/home/amitsheokand/work/worktrees"
 ''}
 
     [ui.sidebar.agents]
@@ -148,12 +148,7 @@ ${lib.optionalString isPc ''
     # the worktree). Do not leave spent trees; they are multi-GB.
     # Create/open/merge/remove go through the trunkr Herdr plugin (`wt` +
     # `herdr worktree open`) so worktrunk hooks still run.
-    ${lib.optionalString isPc ''
-    worktree-path = "/mnt/advait-scratch/worktrees/{{ branch | sanitize }}"
-    ''}
-    ${lib.optionalString (!isPc) ''
     worktree-path = "{{ repo_path }}/../worktrees/{{ branch | sanitize }}"
-    ''}
 
     [list]
     json-schema = 2
