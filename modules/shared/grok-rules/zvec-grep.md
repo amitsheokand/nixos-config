@@ -1,5 +1,9 @@
 # zvec-grep (MCP `zvec_grep`)
 
+> **Superseded.** Product search is **one-grep** (stdio MCP). Use
+> [one-grep.md](./one-grep.md). The `zg` CLI may remain installed for manual
+> indexing; hooks and `:7999` services are retired.
+
 Local hybrid search (ripgrep + BM25 + vectors) via MCP `zvec_grep_search` on
 `http://127.0.0.1:7999/mcp` (`zvec-grep` user service). Every call needs an
 **absolute `root`** for the workspace index under `<root>/.zvec-grep/`.
