@@ -228,6 +228,11 @@ in
       ${npm} install -g --prefix "$HOME/.local" ${pkg} || \
         echo "zvec-grep: WARNING npm install failed (network?)" >&2
     fi
+    # Services were retired; leftover mask/wants would make xdg.configFile.force fail.
+    rm -f "$HOME/.config/systemd/user/zvec-grep.service" \
+      "$HOME/.config/systemd/user/zvec-grep-refresh.service" \
+      "$HOME/.config/systemd/user/default.target.wants/zvec-grep.service" \
+      "$HOME/.config/systemd/user/default.target.wants/zvec-grep-refresh.service"
   '';
 
   # No zvecGrepGitHooks — post-commit refresh hit ARG_MAX on large Advait trees.
