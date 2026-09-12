@@ -1,13 +1,9 @@
 # Home-Manager fragment: hipfire serve + named profile proxy on the desktop PC.
 #
-# 27B class is **parked**. Resident R9700 job is MiniCPM-V (`minicpm-v.nix`,
-# :8093). Keep these scripts so a later hipfire VL SKU (or a better 8B-class
-# checkpoint) can be started manually: `systemctl --user start hipfire-serve`
-# (Conflicts with minicpm-v.service).
-#
 # Does not import hipfire's NixOS module (that rebuilds the Rust workspace and
 # overwrites ~/.hipfire/config.toml). Uses the locally built binaries and the
-# existing user config. Catalog lives in ./agent-profiles.nix.
+# existing user config. Catalog lives in ./agent-profiles.nix:
+#   lanes (forge/anvil/feather/fuse) vs backends (qwen38 daily; fuse-2-moe via fuse).
 {
   pkgs,
   lib,
