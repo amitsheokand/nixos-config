@@ -1,10 +1,11 @@
-# zvec-grep (`zg`) — local-first hybrid search (ripgrep + BM25 + vectors).
+# zvec-grep (`zg`) — optional local CLI (ripgrep + BM25 + vectors).
 # npm: @zvec/zvec-grep → ~/.local. Not in nixpkgs.
-# Agent MCP is one-grep (stdio) on every host. This module keeps the zg CLI
-# and Advait index helpers only; it does not register zvec_grep MCP.
+# Product search is one-grep (stdio MCP). This module keeps the zg CLI and
+# manual index helpers only; no MCP server, no git hooks, no user services.
 #
 # Index per workspace. Advait is two roots (see zg-index-advait / zg-refresh-advait).
-# Incremental refresh: login (systemd/launchd) + post-commit in advait/advait-docs.
+# Refresh manually or via `zg-refresh-advait`; post-commit hooks were removed
+# (ARG_MAX failures on large Advait trees).
 #
 # Embedding: Jina code (deeper than Potion). Linux → Vulkan on the **iGPU**
 # (vaayu Asahi, nixos desktop integrated). hipfire stays on the
@@ -39,18 +40,6 @@ let
     # zg Vulkan must stay on the iGPU. Do not inherit hipfire ROCm env (R9700).
     unset HIP_VISIBLE_DEVICES ROCR_VISIBLE_DEVICES HIP_PATH 2>/dev/null || true
   '';
-  zgServicePath = lib.makeBinPath [
-    pkgs.bash
-    pkgs.coreutils
-    util-linux
-    nodejs
-  ] + ":${homeDir}/.local/bin";
-  zgServiceEnv = [
-    "PATH=${zgServicePath}"
-    "HOME=${homeDir}"
-    "ZVEC_GREP_EMBEDDING=${embedModel}"
-    "ZVEC_GREP_DEVICE=${embedDevice}"
-  ];
   indexAdvait = pkgs.writeShellApplication {
     name = "zg-index-advait";
     runtimeInputs = [ pkgs.coreutils ];
@@ -213,14 +202,9 @@ let
       run_refresh
     '';
   };
-  postCommitHook = pkgs.writeShellApplication {
-    name = "zvec-grep-post-commit";
-    runtimeInputs = [ refreshAdvait pkgs.coreutils ];
-    text = builtins.readFile ./scripts/zvec-grep-post-commit.sh;
-  };
 in
 {
-  home.packages = [ nodejs indexAdvait indexHipfire refreshAdvait postCommitHook ];
+  home.packages = [ nodejs indexAdvait indexHipfire refreshAdvait ];
 
   home.file = {
     ".grok/prompts/local-helper.md".source = ./grok-prompts/local-helper.md;
@@ -246,83 +230,8 @@ in
     fi
   '';
 
-  home.activation.zvecGrepGitHooks = lib.hm.dag.entryAfter [ "installZvecGrep" ] ''
-    install_hook() {
-      local repo="$1"
-      local hook="$repo/.git/hooks/post-commit"
-      local ours="${lib.getExe postCommitHook}"
-      [[ -d "$repo/.git" ]] || return 0
-      mkdir -p "$(dirname "$hook")"
-      if [[ -L "$hook" ]] && [[ "$(readlink "$hook")" == "$ours" ]]; then
-        return 0
-      fi
-      if [[ -e "$hook" ]] && ! grep -q 'zvec-grep-post-commit' "$hook" 2>/dev/null; then
-        cp -a "$hook" "$(dirname "$hook")/post-commit.local"
-        chmod +x "$(dirname "$hook")/post-commit.local" 2>/dev/null || true
-      fi
-      ln -sfn "$ours" "$hook"
-    }
-    install_hook ${lib.escapeShellArg codeRoot}
-    install_hook ${lib.escapeShellArg docsRoot}
-  '';
+  # No zvecGrepGitHooks — post-commit refresh hit ARG_MAX on large Advait trees.
+  # Product search is one-grep (stdio MCP); see modules/shared/one-grep.nix.
 
-  systemdUserServices = lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-    zvec-grep = {
-      Unit = {
-        Description = "zvec-grep local MCP search server (:7999)";
-        After = [ "network.target" ];
-      };
-      Service = {
-        ExecStart = "${zgBin} server run";
-        Restart = "on-failure";
-        RestartSec = "3";
-        Environment = zgServiceEnv;
-      };
-      Install.WantedBy = [ "default.target" ];
-    };
-    zvec-grep-refresh = {
-      Unit = {
-        Description = "Incremental zvec-grep index (Advait workspaces)";
-        After = [ "zvec-grep.service" ];
-        Wants = [ "zvec-grep.service" ];
-      };
-      Service = {
-        Type = "oneshot";
-        ExecStart = "${lib.getExe refreshAdvait} --background";
-        Environment = zgServiceEnv;
-      };
-      Install.WantedBy = [ "default.target" ];
-    };
-  };
-
-  launchdAgents.zvec-grep = {
-    command = "${zgBin} server run";
-    serviceConfig = {
-      KeepAlive = true;
-      RunAtLoad = true;
-      StandardOutPath = "/tmp/zvec-grep_${user}.out.log";
-      StandardErrorPath = "/tmp/zvec-grep_${user}.err.log";
-      EnvironmentVariables = {
-        PATH = zgServicePath;
-        HOME = homeDir;
-        ZVEC_GREP_EMBEDDING = embedModel;
-        ZVEC_GREP_DEVICE = embedDevice;
-      };
-    };
-  };
-
-  launchdAgents.zvec-grep-refresh = {
-    command = "${lib.getExe refreshAdvait} --background";
-    serviceConfig = {
-      RunAtLoad = true;
-      StandardOutPath = "/tmp/zvec-grep-refresh_${user}.out.log";
-      StandardErrorPath = "/tmp/zvec-grep-refresh_${user}.err.log";
-      EnvironmentVariables = {
-        PATH = zgServicePath;
-        HOME = homeDir;
-        ZVEC_GREP_EMBEDDING = embedModel;
-        ZVEC_GREP_DEVICE = embedDevice;
-      };
-    };
-  };
+  # No zvec-grep / zvec-grep-refresh user services — superseded by one-grep MCP stdio.
 }
