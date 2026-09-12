@@ -49,7 +49,6 @@ exec "$LLAMA" \
   --device "$DEVICE" \
   -ngl 99 \
   --parallel 1 \
-  --reasoning-budget 0 \
+  --reasoning off \
   --jinja \
-  --chat-template-kwargs '{"enable_thinking":false}' \
   --no-webui
