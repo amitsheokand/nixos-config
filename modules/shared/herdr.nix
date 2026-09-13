@@ -35,9 +35,9 @@ let
     cat > $out/herdr-plugin.toml <<EOF
 id = "nixos-config.pi-worktree"
 name = "Pi in worktree"
-version = "0.2.0"
+version = "0.3.0"
 min_herdr_version = "0.9.0"
-description = "cd to the Git checkout, then start Pi in Herdr worktree panes"
+description = "cd to the Git checkout, start Pi without --model (coordinator assigns)"
 platforms = ["linux", "macos"]
 
 [[actions]]
@@ -61,9 +61,9 @@ EOF
     cat > $out/herdr-plugin.toml <<EOF
 id = "nixos-config.agent-idle"
 name = "Agent idle callback"
-version = "0.1.0"
+version = "0.1.2"
 min_herdr_version = "0.9.0"
-description = "Notify the coordinator when a named Herdr agent settles"
+description = "Toast + prompt the same-repo coordinator when a named agent settles"
 platforms = ["linux", "macos"]
 
 [[events]]

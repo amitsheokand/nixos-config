@@ -18,14 +18,22 @@ jq_first() {
   jq -r "$expr" <<<"$ctx" 2>/dev/null | awk 'NF && $0 != "null" { print; exit }'
 }
 
+# Herdr 0.9: {event: STRING, data: {agent_status, pane_id, ...}}.
+# Bare `.event.agent_status` errors (event is a string) and aborts the whole jq.
 status="$(jq_first '
-  .agent_status // .event.agent_status // .event.data.agent_status // empty
+  try .data.agent_status catch empty
+  // try .agent_status catch empty
+  // empty
 ')"
 pane_id="$(jq_first '
-  .pane_id // .event.pane_id // .event.data.pane_id // empty
+  try .data.pane_id catch empty
+  // try .pane_id catch empty
+  // empty
 ')"
 workspace_id="$(jq_first '
-  .workspace_id // .event.workspace_id // .event.data.workspace_id // empty
+  try .data.workspace_id catch empty
+  // try .workspace_id catch empty
+  // empty
 ')"
 
 case "$status" in
@@ -81,14 +89,28 @@ body="${name} ${status}  ${pane_id}"
 
 "$herdr" notification show "${name} ${status}" --body "$body" --sound "$sound" >/dev/null 2>&1 || true
 
-coord="$(jq -r --arg src "$pane_id" '
-  (.result.agents // .agents // [])
-  | map(select(
-      .pane_id != $src
-      and ((.name // "") == "" or (.name // "") == "coord" or (.name // "") == "coordinator")
-      and ((.agent_status // "") == "idle" or (.agent_status // "") == "done")
-    ))
-  | .[0].name // .[0].pane_id // empty
+# Prompt only a coordinator in the same repo family. First idle/done unnamed
+# pane used to be Advait `wQ`, so herdr-lane / nixos-config settles polluted
+# that context. Toast still fires. No matching idle coordinator → no prompt.
+coord="$(jq -r --arg src "$pane_id" --arg cwd "$cwd" '
+  def lane:
+    if test("wt-pc-advait-|/work/advait(/|$)") then "advait"
+    elif test("wt-pc-lane-|/work/herdr-lane(/|$)") then "herdr-lane"
+    elif test("nixos-config") then "nixos-config"
+    else "other" end;
+  ($cwd | lane) as $want
+  | if $want == "other" then empty else
+      (.result.agents // .agents // [])
+      | map(select(
+          .pane_id != $src
+          and ((.name // "") == "" or (.name // "") == "coord" or (.name // "") == "coordinator")
+          and ((.agent_status // "") == "idle" or (.agent_status // "") == "done")
+          and (((.cwd // "") | lane) == $want)
+        ))
+      | (map(select((.name // "") == "coord" or (.name // "") == "coordinator"))
+         + map(select((.name // "") == "")))
+      | .[0].name // .[0].pane_id // empty
+    end
 ' <<<"$listed")"
 
 [[ -n "$coord" ]] || exit 0
