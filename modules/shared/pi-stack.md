@@ -59,8 +59,11 @@ Command-Code) **US-hosted only**. Reviewers are Cursor Grok and Muse in Pi.
 
 ## Spawn that model in a Herdr pane
 
-Copy-paste + verify: `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md`.
-Docs: `advait-docs/agents/herdr-worktrees.md`.
+Copy-paste + verify: `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md`
+(source: `modules/shared/herdr-pi-worktree/SKILL.md`). Docs:
+`advait-docs/agents/herdr-worktrees.md`. Do **not** `skill_manage create`
+that name — Hermes memory writes a second copy under
+`~/.pi/agent/pi-hermes-memory/skills/` and Pi reports `[Skill conflicts]`.
 
 1. `wt -C ~/work/advait switch --create -y -b main wt/pc/advait/<packet>`
    → path **must** be `~/work/worktrees/…` (not `/mnt/advait-scratch/`).

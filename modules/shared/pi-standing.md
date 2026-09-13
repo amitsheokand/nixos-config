@@ -8,14 +8,16 @@
 - Search: one-grep MCP (`search` / `rg`) with an **absolute** `root`
   (code checkout vs docs clone). FFF `grep` pages; do not dump TODO/FIXME.
 - Large tool output: Headroom MCP (`headroom_compress`) **before** it re-enters
-  the prompt. `/compact` at a finished subtask (`compact/compactor` on `:8091`
-  → Mac `:8081` then iGPU `:8092`). Never compact on hipfire. Do not treat
-  blunt early compact as a substitute for a new chat.
+  the prompt. On Pi, obs-pack archives dumps >10 KiB under `~/.pi/agent/obs/`;
+  recall with `one-grep rg ~/.pi/agent/obs/<session> -- <literal>`. Do not
+  call `obs_recall`. `/compact` at a finished subtask (`compact/compactor` on
+  `:8091` → Mac `:8081` then iGPU `:8092`). Never compact on hipfire. Do not
+  treat blunt early compact as a substitute for a new chat.
 - After `edit`/`write`, if you would immediately bash a test/build/check of
-  that file, pass `then_run` on the same call (Action Fusion). Do not spend a
-  second model turn to run the obvious follow-up. Long `cargo test` / cmake
-  logs are reduced locally (EPR: regex scout, then `compact/compactor`).
-  Read `source_artifact` when you need the full log. Logs never leave the LAN.
+  that file, pass `then_run` on the same call (Action Fusion). PACKET.md
+  **Gate** is the default command. Long `cargo test` / cmake logs are reduced
+  locally (EPR: regex scout, then `compact/compactor`). Read `source_artifact`
+  when you need the full log. Logs never leave the LAN.
 - Durable facts go in git resume files or `memory_*` tools, not the prompt.
   Never hermes `memoryMode` legacy-inject.
 - At work start: `overflow-assign`. Use `~/.pi/agent/overflow.md` only if the

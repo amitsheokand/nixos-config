@@ -19,5 +19,7 @@ Manual: `prefix+shift+i` or `herdr plugin action invoke start --plugin nixos-con
 Companion: `nixos-config.agent-idle` (`herdr-agent-idle/`) toasts and prompts
 the idle coordinator when a named implementer settles. Next packet:
 `wt switch --create` / `prefix+shift+g` then this plugin auto-starts Pi.
-Copy-paste + verify: `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md`.
-Docs: `advait-docs/agents/herdr-worktrees.md`.
+Copy-paste + verify: `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md`
+(this directory's `SKILL.md`, installed by `pi-agent.nix`). Docs:
+`advait-docs/agents/herdr-worktrees.md`. Never `skill_manage create`
+`herdr-pi-model-spawn` (duplicate under `pi-hermes-memory/skills/`).
