@@ -59,7 +59,7 @@ in
   };
 
   ".local/bin/cursor-local-help" = {
-    text = script "cursor-local-help";
+    text = script "minicpm-v-help";
     executable = true;
   };
 }

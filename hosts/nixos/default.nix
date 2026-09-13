@@ -1,7 +1,7 @@
 { config, lib, pkgs, modulesPath, user, ... }:
 
 let
-  hipfireLocal = import ../../modules/shared/hipfire-local.nix { inherit pkgs lib user; };
+  minicpmV = import ../../modules/shared/minicpm-v.nix { inherit pkgs lib user; };
   museSpark = import ../../modules/shared/muse-spark.nix { inherit pkgs lib; };
 in
 {
@@ -110,10 +110,10 @@ in
 
   time.timeZone = "Asia/Kolkata";
 
-  # Grok /model picker: keep cloud grok-* and add catalog lanes/backends.
+  # Grok /model picker: cloud grok-* plus MiniCPM-V (visuals). Not hipfire lanes.
   # Do not set GROK_MODELS_BASE_URL — that replaces the cloud catalog.
   environment.etc."grok/managed_config.toml".text =
-    hipfireLocal.grokToml + museSpark.grokToml;
+    minicpmV.grokToml + museSpark.grokToml;
 
   # Desktop GPU uses amdgpu; GNOME fractional-scaling overrides.
   # https://discourse.nixos.org/t/how-to-set-fractional-scaling-via-nix-configuration-for-gnome-wayland/56774
@@ -126,7 +126,7 @@ in
     '';
   };
 
-  # Hipfire (Forge/Anvil) is the local LLM. Drop Ollama and its model store.
+  # Hipfire 27B is parked; MiniCPM-V is the resident GPU job. Drop Ollama.
   services.ollama.enable = false;
   system.activationScripts.removeOllama = {
     text = ''
