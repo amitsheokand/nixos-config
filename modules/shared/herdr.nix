@@ -2,7 +2,7 @@
 #
 # Each host runs `herdr server`. Attach locally with `herdr`, or from another
 # box via `herdr machine add` (https://herdr.dev/blog/connecting-the-machines/).
-# Phone/iPad: herdr-mobile-relay PWA, or SSH then `herdr`. Not Happier.
+# Phone/iPad: herdr-mobile-relay PWA, or SSH then `herdr`.
 {
   pkgs,
   lib,
@@ -240,7 +240,7 @@ ${lib.optionalString isPc ''
         missing+=("$host")
       done
       echo
-      echo "Phone/iPad: herdr-mobile-relay PWA, or ssh <host> then herdr. Not Happier."
+      echo "Phone/iPad: herdr-mobile-relay PWA, or ssh <host> then herdr."
       echo "Relay setup (once per machine):"
       echo "  herdr plugin action invoke setup --plugin herdr-mobile-relay.events"
 

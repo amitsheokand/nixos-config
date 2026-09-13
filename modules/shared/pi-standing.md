@@ -1,15 +1,23 @@
 # Pi standing instructions
 
-- New chat per task. Do not grow a multi-day thread.
-- Rewind with `/tree` to a named node; do not resume a long leaf.
-- Put durable facts in git resume files or `memory_*` tools, not the prompt.
-- Never set hermes `memoryMode` to legacy-inject.
-- `/compact` before huge tool dumps or logs. Quote last 20 lines, not the file. Compact uses `compact/compactor` (Mac MLX, then local tiny) — never hipfire/Anvil.
-- Search with FFF (`grep` in override mode): follow the cursor page; do not dump TODO/FIXME across the repo. Semantic/hybrid: one-grep MCP (`search` / `rg`).
-- One client on the desktop GPU at a time. No Agent Team or parallel Pi on that slot.
-- Default local model is `longctx` (MiniCPM5-2B on the Mac). Escalate to `forge` / `anvil` on Qwen 3.8 only when the packet needs it. Usage ladder: `~/.pi/agent/stack.md`.
-- At work start: `overflow-assign`. Use `~/.pi/agent/overflow.md` for the free
-  **executor** (Pi OpenRouter/Zen, `hermes`, or `cmd`). Do not re-rank or scrape
-  Artificial Analysis during the session. Do not use that free model as a reviewer.
-- Reviewers: Muse in Pi (`muse-code/muse-spark-1.3` or subagent `muse-spark`) and
-  Cursor Grok / Composer (`pi-cursor-sdk`). Never Meta Model API PAYG (`MODEL_API_KEY`).
+- New chat per packet. Do not grow a multi-day thread. Rewind with `/tree`.
+- Default chat: `cursor/composer-2-5:slow` at **high** (Cursor Ultra). Not
+  `:fast`. Not MiniCPM5 `longctx` (parked — too slow). Visuals:
+  `/model minicpm-v-4.5`. From 14 Sep: Bounded PE + review via
+  `muse-code/muse-spark-1.3` (never `*-contributor*`). Hard: Grok 4.6 high.
+- Search: one-grep MCP (`search` / `rg`) with an **absolute** `root`
+  (code checkout vs docs clone). FFF `grep` pages; do not dump TODO/FIXME.
+- Large tool output: Headroom MCP (`headroom_compress`) **before** it re-enters
+  the prompt. `/compact` at a finished subtask (`compact/compactor` on `:8091`
+  → Mac `:8081` then iGPU `:8092`). Never compact on hipfire. Do not treat
+  blunt early compact as a substitute for a new chat.
+- After `edit`/`write`, if you would immediately bash a test/build/check of
+  that file, pass `then_run` on the same call (Action Fusion). Do not spend a
+  second model turn to run the obvious follow-up.
+- Durable facts go in git resume files or `memory_*` tools, not the prompt.
+  Never hermes `memoryMode` legacy-inject.
+- At work start: `overflow-assign`. Use `~/.pi/agent/overflow.md` only if the
+  pick is **not** China-hosted and **not** Contributor. Ignore a DeepSeek /
+  Z.AI / Kimi / Alibaba first-party id. Reviewers: Muse + Cursor in Pi.
+- One client on the desktop GPU at a time (MiniCPM-V). Usage ladder:
+  `~/.pi/agent/stack.md`.

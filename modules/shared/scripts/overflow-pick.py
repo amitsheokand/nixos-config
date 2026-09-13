@@ -86,6 +86,29 @@ BAN_SUBSTR = (
     ":batch",
 )
 
+# First-party / China-hosted inference. Weight origin is fine locally;
+# these markers are live catalog ids (OpenRouter, Zen, Hermes, cmd).
+CHINA_HOST_MARKERS = (
+    "deepseek",
+    "z-ai/",
+    "zai-org/",
+    "zhipu",
+    "moonshot",
+    "meituan/",
+    "longcat",
+    "minimax",
+    "stepfun",
+    "tencent",
+    "alibaba",
+    "01-ai/",
+    "baichuan",
+    "qwen/",
+    "glm-5",
+    "kimi",
+    "xiaomi",
+    "inclusionai",
+)
+
 
 def agent_dir(home: Path | None = None) -> Path:
     return (home or Path.home()) / ".pi" / "agent"
@@ -270,7 +293,9 @@ def is_banned(model_id: str) -> bool:
     low = model_id.lower()
     if "~" in low:
         return True
-    return any(token in low for token in BAN_SUBSTR)
+    if any(token in low for token in BAN_SUBSTR):
+        return True
+    return any(token in low for token in CHINA_HOST_MARKERS)
 
 
 def is_free_id(model_id: str, prompt_m: float | None, completion_m: float | None) -> bool:
@@ -754,7 +779,8 @@ def render_md(payload: dict[str, Any]) -> str:
         "## Roles",
         "",
         "- **Executor:** today's free pick — any of Pi (OpenRouter / OpenCode Zen),",
-        "  `hermes`, or `cmd`. Local default is still `longctx`.",
+        "  `hermes`, or `cmd`. Pi default chat is Cursor Composer 2.5 (`:slow`, high).",
+        "  `longctx` is parked.",
         "- **Reviewer:** Cursor Grok / Composer and Muse **in Pi**. Do not review",
         "  with the free overflow model.",
         "",
@@ -840,7 +866,7 @@ def build_assignment(
             "cheap_blended_usd_per_m": list(CHEAP_CAPS),
             "min_context": MIN_CONTEXT,
             "free_confidential_ok": False,
-            "banned_substrings": list(BAN_SUBSTR),
+            "banned_substrings": list(BAN_SUBSTR) + list(CHINA_HOST_MARKERS),
             "executor_catalogs": ["openrouter", "zen", "hermes", "commandcode"],
             "reviewers": ["pi-cursor-sdk (Grok/Composer)", "muse-code/muse-spark-1.3"],
         },

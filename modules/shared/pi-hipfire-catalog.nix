@@ -4,6 +4,7 @@
 
 let
   profiles = import ./agent-profiles.nix;
+  chatDefaults = import ./pi-chat-defaults.nix;
   defaultBackendId = profiles.defaultBackend;
   visibleBackends = lib.filterAttrs (_: backend: backend.available or true) profiles.backends;
   compactLan = import ./pi-compactor.nix {
@@ -95,12 +96,7 @@ let
     models = piModels;
   };
 
-  piLocalSettings = {
-    defaultProvider = "longctx";
-    defaultModel = "longctx";
-    model = "longctx";
-    defaultThinkingLevel = "low";
-  };
+  piLocalSettings = chatDefaults;
 
   sessionVariables = {
     AI_BASE_URL = baseUrl;

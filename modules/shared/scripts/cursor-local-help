@@ -19,9 +19,10 @@ Visuals (all local clients): MiniCPM-V 4.5 on the R9700.
   • capture   vl-capture.py (Advait tools/agent) — do not paste PNGs into cloud seats
 
 Coding stays off this GPU:
-  • Cursor Agent / CLI  → cloud Grok (complex) / Composer (normal)
-  • Pi default chat     → /model longctx (Mac MiniCPM5-2B)
+  • Cursor Agent / CLI  → cloud Grok (Hard) / Composer 2.5 high (default)
+  • Pi default chat     → /model cursor/composer-2-5:slow (high; not :fast)
   • visuals in Pi       → /model minicpm-v-4.5
+  • longctx              → parked (MiniCPM5-2B too slow)
   • Continue / Zed / Hermes / Grok TUI local picker → ${model}
 
 hipfire 27B is parked (Conflicts with minicpm-v.service). Do not start it

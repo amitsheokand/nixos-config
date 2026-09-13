@@ -233,7 +233,7 @@ def rewrite_grok_toml(text: str) -> str:
             f'base_url = "{BASE_URL}"\n'
             f'name = "{DISPLAY_NAME}"\n'
             "description = "
-            '"R9700 visual oracle. Prefer for screenshots and XAML; Pi chat stays longctx."\n'
+            '"R9700 visual oracle. Prefer for screenshots and XAML; Pi chat is Composer 2.5."\n'
             'api_backend = "chat_completions"\n'
             'api_key = "local"\n'
             f"context_window = {CTX}\n"

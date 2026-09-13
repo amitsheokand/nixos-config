@@ -1,6 +1,6 @@
 # Slim Home Manager for Asahi MacBook Air (vaayu).
 # Shell/git/tmux + Headroom + Pi. Visuals on the desktop MiniCPM-V
-# at http://nixos.local:8093/v1. Pi default chat is Mac longctx.
+# at http://nixos.local:8093/v1. Pi default chat is Composer 2.5 high.
 # OpenRouter overflow is assigned daily (`overflow-assign`). No ROCm / ai-tools.
 { config, pkgs, lib, inputs, ... }:
 
@@ -25,7 +25,7 @@ let
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
     # OpenRouter overflow is assigned daily (`overflow-assign`), not a pinned
-    # model. `/model minicpm-v-4.5` hits desktop VL; default chat is longctx.
+    # model. `/model minicpm-v-4.5` hits desktop VL; default chat is Composer.
     localSettings = minicpmVLan.piLocalSettings;
     localModels = minicpmVLan.piLocalModels;
   };

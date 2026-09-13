@@ -252,9 +252,6 @@ TUI can attach to every host over LAN SSH (`herdr machine add`).
 | Idle callback | plugin `nixos-config.agent-idle` on `pane.agent_status_changed` |
 | Phone / iPad | plugin `0cv/herdr-mobile-relay` PWA, or `ssh <host>` then `herdr` |
 
-Happier is **not** the phone/iPad path. Leave the desktop AppImage bits until
-Herdr has been stable; then remove Happier from every host.
-
 **Worktrees (do not `git worktree add`):** trunkr + Worktrunk own create/open/merge.
 `wt merge` deletes the worktree (and the merged branch) unless you pass
 `--no-remove`. Raw `git merge` does not — spent trees are multi-GB, so close
@@ -289,11 +286,11 @@ herdr agent wait <name> --until idle --timeout 3600000   # optional; idle plugin
 
 Do **not** export `META_API_KEY` / `MODEL_API_KEY` in the shell if you want the subscription. Those env vars always win over the account session. Extra keys you create in the [Model API dashboard](https://dev.meta.ai/) are PAYG; the subscription credential is attached during Muse Code account onboarding and is **Muse Code only** ([subscriptions](https://ai.developer.meta.com/docs/muse-code/subscriptions)).
 
-Hipfire/`forge` stays the local default.
+Hipfire/`forge` is parked. Pi default chat is Cursor Composer 2.5 (`:slow`, high).
 
 ```sh
 muse          # /login → Sign in with your browser (not "paste an API key")
-# keep Pi on /model forge — Spark in Pi is PAYG
+# Pi: /model cursor/composer-2-5:slow — Spark in Pi is PAYG if you use MODEL_API_KEY
 ```
 
 `muse-spark-proxy` (`:8082`) and `~/.config/meta.env` are **PAYG only**. Do not start the proxy or source that file unless you intend token billing. Spark reuses `tool_call_id=call_0`; the proxy exists only for that Chat Completions bug.
@@ -321,7 +318,7 @@ installs the flake package via Home Manager — no cargo symlink required.
 Activation upserts stdio `one-grep serve --stdio` and, because the Nix binary
 is always present, **removes `zvec_grep`**. Restart the agent after switch.
 
-Tools (absolute `root` required; index in `<root>/.onegrep/`):
+Tools (absolute `root` required; index in `<root>/.one-grep/`):
 
 | Tool | Use |
 |------|-----|
@@ -439,11 +436,11 @@ normal `grok` session — that replaces the cloud catalog).
 
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
-| Mac (`ai-mac`) | `longctx` (default MiniCPM5-2B `:8080`), `gemmacoder` when `mlx-lane gemma` | default `mlx-local` / `longctx`. Compactor `:8081`. `/model minicpm-v-4.5` → PC VL | MiniCPM aliases `longctx`/`minicpm`. Gemma path on demand. Compact `compactor`. VL `http://nixos.local:8093/v1` |
-| PC (`nixos`) | `minicpm-v-4.5` (visuals); cloud grok-* stay default chat | default **`longctx`** (Mac MiniCPM over LAN). `/model minicpm-v-4.5` for screenshots/XAML | longctx at `http://ai-mac.local:8080/v1`; VL at `http://127.0.0.1:8093/v1`. Catalog: `modules/shared/pi-minicpm-v-catalog.nix` |
-| Air (`vaayu`) | `minicpm-v-4.5` (LAN VL) | default `longctx` (Mac); `/model minicpm-v-4.5` desktop VL; cloud overflow via `~/.pi/agent/overflow.md` | same ids |
+| Mac (`ai-mac`) | `longctx` (parked MiniCPM5-2B `:8080`), `gemmacoder` when `mlx-lane gemma` | default **Composer 2.5** (`cursor/composer-2-5:slow`). Compactor `:8081`. `/model minicpm-v-4.5` → PC VL | MiniCPM aliases `longctx`/`minicpm` remain registered. Gemma path on demand. Compact `compactor`. VL `http://nixos.local:8093/v1` |
+| PC (`nixos`) | `minicpm-v-4.5` (visuals); cloud grok-* stay default chat | default **Composer 2.5** (`cursor/composer-2-5:slow`). `/model minicpm-v-4.5` for screenshots/XAML. `longctx` parked | longctx still at `http://ai-mac.local:8080/v1` if you `/model` it; VL at `http://127.0.0.1:8093/v1`. Catalog: `modules/shared/pi-minicpm-v-catalog.nix` |
+| Air (`vaayu`) | `minicpm-v-4.5` (LAN VL) | default Composer 2.5; `/model minicpm-v-4.5` desktop VL; cloud overflow via `~/.pi/agent/overflow.md` (US-host only) | same ids |
 
-Resident GPU job on the PC is **MiniCPM-V 4.5** (llama.cpp Vulkan, R9700, `:8093`, ~8 GiB). Visuals for Continue / Zed / Hermes / Grok local picker / Pi go there. Cursor Agent/CLI stays cloud Grok/Composer — use Advait `vl-capture.py`, do not paste PNGs. **Pi** defaults to `longctx` so opening `pi` does not steal the R9700.
+Resident GPU job on the PC is **MiniCPM-V 4.5** (llama.cpp Vulkan, R9700, `:8093`, ~8 GiB). Visuals for Continue / Zed / Hermes / Grok local picker / Pi go there. Cursor Agent/CLI stays cloud Grok/Composer — use Advait `vl-capture.py`, do not paste PNGs. **Pi** defaults to Cursor Composer 2.5 (`composer-2-5:slow`, high) so opening `pi` does not steal the R9700 and does not sit on MiniCPM5 longctx.
 
 **hipfire (parked):** `hipfire-serve-local` stays on PATH. Catalog proxy `:8080` / serve `:11435` are **manual** (`systemctl --user start hipfire-serve`) and **Conflicts** with `minicpm-v.service`. Do not enable hipfire's NixOS module (it rebuilds the crate and overwrites `~/.hipfire/config.toml`). Do not autostart hipfire while MiniCPM-V is resident.
 
@@ -459,7 +456,7 @@ coordinator seat. Rakazo is not packaged.
 |-------|--------|
 | Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, muse-bridge 0.3.0, tool-display, statusline, pi-fff, pi-cc-compact, …) |
 | Compact model | Mac MLX Compactor on `:8081` (login). Fits with MiniCPM `:8080`. `mlx-lane gemma` is exclusive (stops both). PC router `:8091` → Mac `:8081`, then local tiny. `PI_CC_COMPACT_MODEL`. Never hipfire. |
-| Local model defaults | MiniCPM `longctx` (Mac `:8080`, LAN on PC/vaayu). `/model minicpm-v-4.5` for visuals on the PC R9700. Gemma on demand. |
+| Local model defaults | Cursor Composer 2.5 (`composer-2-5:slow`, high). `/model minicpm-v-4.5` for visuals on the PC R9700. MiniCPM5 `longctx` parked. |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` uses **pi-cc-compact**. Mac talks to Compactor on `:8081` (`mlx-compact/compactor`, thinking off, 16k). The GPU host uses `compact/compactor` via `:8091` (Mac `:8081`, then local 0.8B on iGPU). `PI_ASYNC_PREFIX_COMPACTION=0` on the GPU host so background compact does not share the R9700 (MiniCPM-V). Do not compact on hipfire.
@@ -467,8 +464,8 @@ After `nix run .#build-switch` on each machine, missing `pi install` packages ar
 **Session knowledge (do not stuff the prompt):**
 - hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via `compact/compactor` so it does not steal the R9700 slot.
 - Rewind with `/tree`, do not resume a long leaf. New chat per task.
-- `/compact` before huge tool dumps. Quote last 20 log lines, not the file.
-- Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (installed only if missing, so `/memory-pin` wins after that). Ladder: `~/.pi/agent/stack.md` (always refreshed). Cloud **executor**: `overflow-assign` → `~/.pi/agent/overflow.md` (OpenRouter / Zen / Hermes / `cmd`; do not re-rank mid-day; reviewers are Muse + Cursor Grok in Pi).
+- `/compact` at a finished subtask. Compress huge tool dumps with Headroom MCP first. Quote last 20 log lines, not the file.
+- Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md`. Ladder: `~/.pi/agent/stack.md` (always refreshed). Cloud **executor**: `overflow-assign` → `~/.pi/agent/overflow.md` (US-hosted OpenRouter / Zen / Hermes / `cmd`; do not re-rank mid-day; reviewers are Muse + Cursor Grok in Pi).
 - One GPU client at a time. Headroom in front of MiniCPM-V `:8093` is optional later, not on this path.
 
 Pi `id` is sent to the server. mlx-lm treats unknown ids as a new checkpoint and can crash. MiniCPM aliases `longctx` / `minicpm` on `:8080`. Do **not** send `gemmacoder` to MiniCPM. Gemma still uses the filesystem path when `mlx-lane gemma` owns `:8080`. `/model minicpm-v-4.5` on Mac/vaayu uses desktop VL at `http://nixos.local:8093/v1`.

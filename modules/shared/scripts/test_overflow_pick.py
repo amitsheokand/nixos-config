@@ -58,6 +58,16 @@ class OverflowPickTests(unittest.TestCase):
         self.assertTrue(pick.is_banned("~deepseek/deepseek-v4-flash-latest"))
         self.assertFalse(pick.is_banned("nvidia/nemotron-3.5-lightning:free"))
 
+    def test_bans_china_hosted(self) -> None:
+        self.assertTrue(pick.is_banned("opencode/deepseek-v4-flash-free"))
+        self.assertTrue(pick.is_banned("z-ai/glm-5.3-flash"))
+        self.assertTrue(pick.is_banned("zai-org/glm-5.3"))
+        self.assertTrue(pick.is_banned("meituan/longcat-2.0:free"))
+        self.assertTrue(pick.is_banned("qwen/qwen3-coder:free"))
+        self.assertTrue(pick.is_banned("xiaomi/mimo-v2.5"))
+        self.assertFalse(pick.is_banned("thinkingmachines/inkling:free"))
+        self.assertFalse(pick.is_banned("openai/gpt-oss-120b"))
+
     def test_match_or_and_zen_ids(self) -> None:
         catalog = {
             "nemotron-3-5-lightning": aa(),
@@ -102,7 +112,6 @@ class OverflowPickTests(unittest.TestCase):
             "inkling": aa(slug="inkling", name="Inkling", ii=25.54),
             "nemotron-3-5-lightning": aa(),
             "gpt-oss-120b": aa(slug="gpt-oss-120b", name="gpt-oss-120b", ii=12.35),
-            "glm-5-3-flash": aa(slug="glm-5-3-flash", name="GLM-5.3 Flash", ii=41.91),
         }
         rows = [
             live(),
@@ -137,7 +146,7 @@ class OverflowPickTests(unittest.TestCase):
         self.assertEqual(payload["date"], "2026-09-09")
         self.assertEqual(payload["free"]["openrouter"], "thinkingmachines/inkling:free")
         self.assertFalse(payload["free"]["confidential_ok"])
-        self.assertEqual(payload["cheap"]["openrouter"], "z-ai/glm-5.3-flash")
+        self.assertEqual(payload["cheap"]["openrouter"], "openai/gpt-oss-120b")
         self.assertTrue(payload["cheap"]["confidential_ok"])
         self.assertNotEqual(payload["free"]["model"], "stealth/ox-alpha")
 
@@ -182,9 +191,10 @@ Available models  ·  4 models
 
 Open Source
 
-deepseek/deepseek-v4-flash             fast hybrid-attention reasoning (default)
+nvidia/nemotron-3.5-lightning-free      FREE NVIDIA
 meituan/longcat-2.0:free               FREE trillion-parameter agentic coding
 poolside/laguna-s-2.1-free             FREE open-weight agentic coding
+deepseek/deepseek-v4-flash             fast hybrid-attention reasoning (default)
 
 Anthropic
 
@@ -192,48 +202,50 @@ claude-sonnet-5                        best combo of speed & intelligence
 """
         rows = pick.parse_cmd_list_models(text)
         ids = {r["id"] for r in rows}
-        self.assertIn("deepseek/deepseek-v4-flash", ids)
-        self.assertIn("meituan/longcat-2.0:free", ids)
+        self.assertIn("nvidia/nemotron-3.5-lightning-free", ids)
+        self.assertNotIn("deepseek/deepseek-v4-flash", ids)
+        self.assertNotIn("meituan/longcat-2.0:free", ids)
         self.assertNotIn("poolside/laguna-s-2.1-free", ids)
         self.assertNotIn("claude-sonnet-5", ids)
         tagged = {r["id"]: r["cmd_free_tag"] for r in rows}
-        self.assertTrue(tagged["meituan/longcat-2.0:free"])
-        self.assertFalse(tagged["deepseek/deepseek-v4-flash"])
+        self.assertTrue(tagged["nvidia/nemotron-3.5-lightning-free"])
         free_flag = {r["id"]: r["free"] for r in rows}
-        self.assertTrue(free_flag["meituan/longcat-2.0:free"])
-        self.assertFalse(free_flag["deepseek/deepseek-v4-flash"])
+        self.assertTrue(free_flag["nvidia/nemotron-3.5-lightning-free"])
 
     def test_executor_harnesses_and_reviewer_copy(self) -> None:
         catalog = {
-            "deepseek-v4-flash": aa(
-                slug="deepseek-v4-flash",
-                name="DeepSeek V4 Flash",
-                ii=34.53,
-            ),
-            "glm-5-3-flash": aa(slug="glm-5-3-flash", name="GLM-5.3 Flash", ii=41.91),
-            "glm-5-3": aa(slug="glm-5-3", name="GLM-5.3", ii=44.86),
+            "nemotron-3-5-lightning": aa(),
+            "inkling": aa(slug="inkling", name="Inkling", ii=25.54),
+            "gpt-oss-120b": aa(slug="gpt-oss-120b", name="gpt-oss-120b", ii=12.35),
         }
         rows = [
             live(
                 catalog="zen",
-                id="deepseek-v4-flash-free",
-                name="Zen flash",
+                id="nemotron-3.5-lightning-free",
+                name="Zen lightning",
             ),
             live(
                 catalog="hermes",
-                id="meituan/longcat-2.0:free",
-                name="Nous longcat",
+                id="thinkingmachines/inkling:free",
+                name="Nous inkling",
             ),
             live(
                 catalog="commandcode",
-                id="deepseek/deepseek-v4-flash",
-                name="GOAT flash",
-                free=False,
+                id="nvidia/nemotron-3.5-lightning-free",
+                name="GOAT lightning",
+                free=True,
             ),
             live(
                 catalog="commandcode",
                 id="zai-org/glm-5.3",
                 name="GOAT glm",
+                free=False,
+            ),
+            live(
+                id="openai/gpt-oss-120b",
+                name="gpt-oss-120b",
+                pin=0.037,
+                pout=0.17,
                 free=False,
             ),
             live(
@@ -252,18 +264,17 @@ claude-sonnet-5                        best combo of speed & intelligence
         )
         free = payload["free"]
         self.assertEqual(free["role"], "executor")
-        self.assertEqual(free["pi"], "opencode/deepseek-v4-flash-free")
-        self.assertEqual(
-            free["harnesses"]["hermes"],
-            "hermes -m deepseek-v4-flash-free --provider opencode-free",
-        )
-        self.assertEqual(free["harnesses"]["cmd"], "cmd -m deepseek/deepseek-v4-flash")
+        self.assertEqual(free["hermes"], "thinkingmachines/inkling:free")
+        self.assertNotIn("deepseek", json.dumps(free).lower())
+        self.assertNotIn("glm", json.dumps(free).lower())
         self.assertNotEqual(free.get("commandcode"), "zai-org/glm-5.3")
+        self.assertEqual(payload["cheap"]["openrouter"], "openai/gpt-oss-120b")
         md = pick.render_md(payload)
         self.assertIn("**Reviewer:**", md)
         self.assertIn("muse-code/muse-spark-1.3", md)
         self.assertIn("pi-cursor-sdk", md)
-        self.assertIn("cmd -m deepseek/deepseek-v4-flash", md)
+        self.assertIn("`:slow`", md)
+        self.assertIn("`longctx` is parked", md)
         self.assertNotIn("stealth/ox-alpha", md)
         self.assertEqual(
             payload["policy"]["reviewers"],
@@ -274,12 +285,13 @@ claude-sonnet-5                        best combo of speed & intelligence
         rows = pick.parse_nous({
             "data": [
                 {"id": "anthropic/claude-opus-5"},
+                {"id": "thinkingmachines/inkling:free"},
                 {"id": "meituan/longcat-2.0:free"},
                 {"id": "poolside/laguna-s-2.1:free"},
             ]
         })
         ids = {r["id"] for r in rows}
-        self.assertEqual(ids, {"meituan/longcat-2.0:free"})
+        self.assertEqual(ids, {"thinkingmachines/inkling:free"})
 
 
 if __name__ == "__main__":
