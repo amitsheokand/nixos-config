@@ -104,6 +104,9 @@ in
         hipfire-serve.Install.WantedBy = lib.mkForce [];
         hipfire-profile-proxy.Install.WantedBy = lib.mkForce [];
         hipfire-daemon-watch.Install.WantedBy = lib.mkForce [];
+        # One mux: this host runs `herdr-headless` (systemd-run). Enabling
+        # herdr-server at login fights the socket (`already running` + Restart=5s).
+        herdr-server.Install.WantedBy = lib.mkForce [];
       })
     ];
     timers = piAgent.systemdUserTimers or {};
@@ -118,7 +121,6 @@ in
       "systemd/user/overflow-pick.service".force = true;
       "systemd/user/overflow-pick.timer".force = true;
       "systemd/user/herdr-server.service".force = true;
-      "systemd/user/default.target.wants/herdr-server.service".force = true;
     }
     (lib.mkIf hipfireEnabled {
       "systemd/user/hipfire-serve.service".force = true;

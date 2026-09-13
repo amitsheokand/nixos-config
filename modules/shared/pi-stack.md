@@ -14,7 +14,7 @@ Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 
 | Layer | Job | Where |
 |-------|-----|--------|
-| Herdr | panes, worktrees, idle notify | `herdr.nix` + `wt` |
+| Herdr | panes, worktrees, idle notify | `herdr.nix` + `wt`. PC mux = `herdr-headless`, not `herdr-server` |
 | Pi | four tools + extensions | `pi-agent.nix` |
 | one-grep | hybrid search, absolute `root` | MCP in Pi / Cursor / Muse / Hermes |
 | Headroom | compress tool dumps before they re-enter context | MCP in Pi + Cursor; proxy `:8787` for Claude/Codex |

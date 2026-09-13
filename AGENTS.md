@@ -246,7 +246,7 @@ TUI can attach to every host over LAN SSH (`herdr machine add`).
 |-------|--------|
 | Binary | `modules/shared/herdr-package.nix` (upstream **0.9.0**; nixpkgs is 0.8) |
 | HM + config | `modules/shared/herdr.nix` |
-| Server | user systemd `herdr-server` (NixOS) / launchd `herdr-server` (Darwin) |
+| Server | **PC:** transient `herdr-headless` (`systemd-run herdr server`, `MemoryMax=8G`). Do **not** enable user `herdr-server` on this host (second mux crash-loops). **vaayu / Darwin:** user `herdr-server` / launchd `herdr-server`. |
 | Worktrees | nixpkgs `worktrunk` (`wt`) + plugin `disintegrator/trunkr` |
 | Pi in panes | plugin `nixos-config.pi-worktree` on `worktree.created` **and** `worktree.opened` (`cd` then Pi); `prefix+shift+i` |
 | Idle callback | plugin `nixos-config.agent-idle` on `pane.agent_status_changed` |

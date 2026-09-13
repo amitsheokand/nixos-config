@@ -191,8 +191,11 @@ ${lib.optionalString isPc ''
     text = ''
       set -euo pipefail
       herdr_bin="${lib.getExe herdr}"
+      # `herdr status server` exits 0 even when down. Probe JSON `.running`.
       is_up() {
-        "$herdr_bin" status server >/dev/null 2>&1
+        local json
+        json="$("$herdr_bin" status server --json 2>/dev/null)" || return 1
+        [[ "$json" == *'"running":true'* ]]
       }
       if is_up; then
         echo "herdr-serve: server already running; waiting to take over" >&2
@@ -273,12 +276,18 @@ ${lib.optionalString isPc ''
         RestartSec = "5";
         TimeoutStartSec = "0";
         KillMode = "mixed";
+        # Cap a leaked Cursor SDK `node` (56G OOM on Advait primary). Mux
+        # restarts; the user session and GPU host stay up.
+        MemoryMax = "8G";
+        MemoryHigh = "6G";
         Environment = [
           "HOME=${homeDir}"
           "PATH=${agentPath}"
           "SHELL=${pkgs.zsh}/bin/zsh"
         ];
       };
+      # PC (hosts/nixos home-manager.nix) mkForce-clears WantedBy: live mux is
+      # transient `herdr-headless`. Do not enable this unit beside that socket.
       Install.WantedBy = [ "default.target" ];
     };
   };

@@ -127,6 +127,14 @@ Coordinator must become **idle**. `nixos-config.agent-idle` toasts on named
 implementer settle and only `agent prompt`s a coordinator that is already
 idle/done (unnamed, or name `coord`/`coordinator`).
 
+## One mux (PC)
+
+Live mux is **`herdr-headless`** (`systemd-run herdr server`, `MemoryMax=8G`).
+Do **not** `systemctl --user enable herdr-server` on this host. A second
+`herdr server` exits `already running`; `Restart=on-failure` every 5s looks
+like a crash. Never add `herdr-server.service.d/direct-server.conf` (that
+drop-in bypasses `herdr-serve` wait). PC Home Manager `WantedBy` is empty.
+
 ## Do not
 
 - `skill_manage create` this name (second copy under `pi-hermes-memory/skills/`).
