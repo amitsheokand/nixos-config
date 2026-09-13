@@ -13,8 +13,11 @@ import {
 const MIN_BYTES = 4096;
 const MAX_SCOUT_LINES = 12;
 const MAX_QUOTE = 600;
-const CLIP_HEAD = 2048;
-const CLIP_TAIL = 1536;
+// Compactor :8091 accepts 12k input tokens. ~4 chars/token on ASCII logs.
+const CLIP_HEAD = 20000;
+const CLIP_TAIL = 12000;
+const PREVIEW_HEAD = 2048;
+const PREVIEW_TAIL = 1536;
 const LLM_TIMEOUT_MS = 60_000;
 const COMPACT_URLS = [
   "http://127.0.0.1:8091/v1/chat/completions",
@@ -93,8 +96,9 @@ export function scoutLines(body: string, max = MAX_SCOUT_LINES): string[] {
 }
 
 export function clipForLlm(body: string, scout: string[]): string {
+  if (body.length <= CLIP_HEAD + CLIP_TAIL) return body;
   const head = body.slice(0, CLIP_HEAD);
-  const tail = body.length > CLIP_TAIL ? body.slice(-CLIP_TAIL) : "";
+  const tail = body.slice(-CLIP_TAIL);
   const extra = scout.filter((line) => !head.includes(line) && !tail.includes(line));
   return [head, extra.length ? extra.join("\n") : "", tail]
     .filter(Boolean)
@@ -299,9 +303,9 @@ export default function (pi: ExtensionAPI) {
           `source_artifact=${archived.path}`,
           `reducer=${via}`,
           "preview_head:",
-          body.slice(0, CLIP_HEAD),
+          body.slice(0, PREVIEW_HEAD),
           "preview_tail:",
-          body.slice(-CLIP_TAIL),
+          body.slice(-PREVIEW_TAIL),
           "readback=read the source_artifact for the full log",
         ].join("\n");
       } else {

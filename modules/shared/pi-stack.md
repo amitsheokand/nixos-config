@@ -21,6 +21,7 @@ Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 | Compactor | session compact at subtask boundaries | `:8091` → Mac `:8081` → iGPU `:8092` |
 | Action Fusion | edit/write `then_run` (no extra model turn) | `pi-extensions/action-fusion.ts` |
 | EPR | diagnostic logs → scout, then local Compactor | `pi-extensions/epr.ts` |
+| obs-pack | large tool results → archive + head/tail after 2 sends | `pi-extensions/obs-pack.ts` |
 
 Do **not** install NVIDIA SoL-Pi as a second package. It is a Pi
 extension, not a harness, but two of its four mechanisms duplicate this
@@ -29,9 +30,9 @@ ladder:
 | SoL-Pi | Ours | Action |
 |--------|------|--------|
 | Action Fusion | none before | **brought over** as `action-fusion.ts` |
-| ObservationPack | Headroom MCP + FFF pages + Pi 50KB truncate | keep Headroom; exact paged recall is Headroom's job |
+| ObservationPack | Headroom (Cursor/Claude/Codex) + **obs-pack.ts** on Pi | 10 KiB, 2 full sends, then head/tail; recall via one-grep / sed. Not `obs_recall`. |
 | Online Context Compact | `/compact` + `pi-cc-compact` + `pi-async-compaction` | do not enable OCC (it aborts the run) |
-| Evidence-Preserving Reducer | local scout + `compact/compactor` | **brought over** as `epr.ts` (no cloud) |
+| Evidence-Preserving Reducer | local scout + `compact/compactor` (12k-token clip) | **brought over** as `epr.ts` (no cloud) |
 
 Grok Bot is quota-capped. [Rakazo](https://github.com/elie222/rakazo) is the
 open-source persistent-bot UI (also Pi-backed). It is **not** wired here —

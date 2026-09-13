@@ -21,8 +21,8 @@ LIKELY_SECRET = re.compile(
 )
 MAX_SCOUT_LINES = 12
 MAX_QUOTE = 600
-CLIP_HEAD = 2048
-CLIP_TAIL = 1536
+CLIP_HEAD = 20000
+CLIP_TAIL = 12000
 
 
 def scout_lines(body: str, max_n: int = MAX_SCOUT_LINES) -> list[str]:
@@ -44,8 +44,10 @@ def scout_lines(body: str, max_n: int = MAX_SCOUT_LINES) -> list[str]:
 
 
 def clip_for_llm(body: str, scout: list[str]) -> str:
+    if len(body) <= CLIP_HEAD + CLIP_TAIL:
+        return body
     head = body[:CLIP_HEAD]
-    tail = body[-CLIP_TAIL:] if len(body) > CLIP_TAIL else ""
+    tail = body[-CLIP_TAIL:]
     extra = [line for line in scout if line not in head and line not in tail]
     parts = [head]
     if extra:
@@ -95,8 +97,12 @@ class EprTests(unittest.TestCase):
             )
         )
 
-    def test_clip_keeps_middle_scout(self) -> None:
+    def test_clip_passes_through_under_budget(self) -> None:
         body = "H" * 3000 + "\nerror: boom in the middle of the log\n" + "T" * 3000
+        self.assertEqual(clip_for_llm(body, scout_lines(body, 40)), body)
+
+    def test_clip_keeps_middle_scout(self) -> None:
+        body = "H" * 25000 + "\nerror: boom in the middle of the log\n" + "T" * 25000
         scout = scout_lines(body, 40)
         clipped = clip_for_llm(body, scout)
         self.assertIn("error: boom in the middle of the log", clipped)
