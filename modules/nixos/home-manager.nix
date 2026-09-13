@@ -29,11 +29,11 @@ let
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
-    localSettings = if hipfireLocal != null
-      then hipfireLocal.piLocalSettings
+    localSettings = if minicpmV != null
+      then minicpmV.piLocalSettings
       else hipfireLan.piLocalSettings;
-    localModels = if hipfireLocal != null
-      then hipfireLocal.piLocalModels
+    localModels = if minicpmV != null
+      then minicpmV.piLocalModels
       else hipfireLan.piLocalModels;
   };
 in
@@ -44,20 +44,12 @@ in
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
-    sessionVariables = (if hipfireLocal == null
-      then hipfireLan.sessionVariables
+    sessionVariables = (if minicpmV != null then minicpmV.sessionVariables
+      else if hipfireLocal == null then hipfireLan.sessionVariables
       else hipfireLocal.sessionVariables)
       // (piAgent.sessionVariables or {})
       // (zvecGrep.home.sessionVariables or {})
-      // (mtpTorch.home.sessionVariables or {})
-      // (if minicpmV == null then {} else minicpmV.sessionVariables)
-      // (lib.optionalAttrs hipfireEnabled {
-        # Resident GPU is MiniCPM-V, not Qwen 27B. hipfire :8080 stays manual.
-        AI_BASE_URL = "http://127.0.0.1:8093/v1";
-        AI_MODEL = "minicpm-v-4.5";
-        GROK_LOCAL_MODEL = "minicpm-v-4.5";
-        GROK_LOCAL_BASE_URL = "http://127.0.0.1:8093/v1";
-      });
+      // (mtpTorch.home.sessionVariables or {});
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
@@ -73,18 +65,22 @@ in
       // (headroom.home.file or {})
       // (zvecGrep.home.file or {})
       // (herdr.home.file or {})
-      // import ../shared/ai-tools.nix { inherit pkgs lib user; };
+      // import ../shared/ai-tools.nix { inherit pkgs lib user; }
+      // (lib.optionalAttrs hipfireEnabled {
+        ".local/bin/cursor-local-help" = {
+          text = builtins.readFile ../shared/scripts/minicpm-v-help;
+          executable = true;
+        };
+      });
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
       // (zvecGrep.home.activation or {})
       // (museSpark.home.activation or {})
       // piAgent.activation
       // (herdr.home.activation or {})
-      // (if hipfireLocal == null then {} else {
-        mergeHipfireCatalogClients = lib.hm.dag.entryAfter [ "writeBoundary" ] hipfireLocal.catalogMergeScript;
-      })
       // (if minicpmV == null then {} else {
         retireHipfireResident27b = lib.hm.dag.entryAfter [ "writeBoundary" ] minicpmV.retireScript;
+        mergeMinicpmVClients = lib.hm.dag.entryAfter [ "retireHipfireResident27b" ] minicpmV.clientMergeScript;
       });
     sessionPath = (commandCode.home.sessionPath or [])
       ++ (zvecGrep.home.sessionPath or [])

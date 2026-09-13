@@ -1,7 +1,7 @@
 # Slim Home Manager for Asahi MacBook Air (vaayu).
-# Shell/git/tmux + Headroom + Pi. GPU inference is on the desktop catalog
-# at http://nixos.local:8080/v1 (forge/anvil/feather). OpenRouter overflow
-# is assigned daily (`overflow-assign`). No ROCm / ai-tools.
+# Shell/git/tmux + Headroom + Pi. Visuals on the desktop MiniCPM-V
+# at http://nixos.local:8093/v1. Pi default chat is Mac longctx.
+# OpenRouter overflow is assigned daily (`overflow-assign`). No ROCm / ai-tools.
 { config, pkgs, lib, inputs, ... }:
 
 let
@@ -17,17 +17,17 @@ let
     inherit (inputs) open-grep;
   };
   herdr = import ../shared/herdr.nix { inherit pkgs lib user; };
-  hipfireLan = import ../shared/pi-hipfire-catalog.nix {
+  minicpmVLan = import ../shared/pi-minicpm-v-catalog.nix {
     inherit lib;
-    baseUrl = "http://nixos.local:8080/v1";
+    baseUrl = "http://nixos.local:8093/v1";
   };
   piAgent = import ../shared/pi-agent.nix {
     inherit pkgs lib;
     pi = inputs.llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
     # OpenRouter overflow is assigned daily (`overflow-assign`), not a pinned
-    # model. `/model forge` hits desktop LAN.
-    localSettings = hipfireLan.piLocalSettings;
-    localModels = hipfireLan.piLocalModels;
+    # model. `/model minicpm-v-4.5` hits desktop VL; default chat is longctx.
+    localSettings = minicpmVLan.piLocalSettings;
+    localModels = minicpmVLan.piLocalModels;
   };
 in
 {
@@ -37,7 +37,7 @@ in
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
-    sessionVariables = hipfireLan.sessionVariables
+    sessionVariables = minicpmVLan.sessionVariables
       // (piAgent.sessionVariables or {})
       // (zvecGrep.home.sessionVariables or {});
     packages = (headroom.home.packages or [])
