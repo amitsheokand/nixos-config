@@ -144,6 +144,12 @@ if pane_has_pi && [[ -z "$action_id" ]]; then
   exit 0
 fi
 
+# Do not block Pi start. If today's overflow file is missing, assign in the
+# background (reuse-if-today; no --refresh).
+if [[ ! -f "${HOME}/.pi/agent/overflow.md" ]] && command -v overflow-assign >/dev/null 2>&1; then
+  overflow-assign >/dev/null 2>&1 &
+fi
+
 branch="$(jq_first '.worktree.branch // .branch // .workspace.branch // empty' || true)"
 slug="$(printf '%s' "${branch:-pi}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-' | tr -s '-' | cut -c1-24)"
 slug="${slug#-}"

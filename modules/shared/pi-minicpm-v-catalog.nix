@@ -7,6 +7,7 @@
 }:
 
 let
+  chatDefaults = import ./pi-chat-defaults.nix;
   longctxLan = import ./pi-longctx.nix { baseUrl = "http://ai-mac.local:8080/v1"; };
   compactLan = import ./pi-compactor.nix { baseUrl = "http://ai-mac.local:8081/v1"; };
 
@@ -14,7 +15,7 @@ let
     id = "minicpm-v-4.5";
     apiModel = "minicpm-v-4.5";
     displayName = "MiniCPM-V 4.5";
-    description = "R9700 visual oracle (llama.cpp Vulkan). Screenshots/XAML; Pi chat stays longctx.";
+    description = "R9700 visual oracle (llama.cpp Vulkan). Screenshots/XAML; Pi chat is Cursor Composer 2.5.";
     contextWindow = 8192;
     maxTokens = 2048;
     inherit baseUrl;
@@ -51,12 +52,7 @@ let
     ];
   };
 
-  piLocalSettings = {
-    defaultProvider = "longctx";
-    defaultModel = "longctx";
-    model = "longctx";
-    defaultThinkingLevel = "low";
-  };
+  piLocalSettings = chatDefaults;
 
   sessionVariables = {
     AI_BASE_URL = baseUrl;

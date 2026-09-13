@@ -2,7 +2,7 @@
 
 Local-first hybrid search (ripgrep + BM25 + ONNX embeddings) via stdio MCP
 `one-grep serve --stdio`. No daemon. Every call needs an **absolute `root`**.
-The index lives under `<root>/.onegrep/`.
+The index lives under `<root>/.one-grep/`.
 
 Tools:
 

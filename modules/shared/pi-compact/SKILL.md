@@ -8,8 +8,13 @@ description: >-
 
 # Pi compact (off hipfire)
 
-Operator (Anvil / forge / Ornith) stays on hipfire `:11435`. Compact is a
-different model on a different port.
+Chat operator is Cursor Composer / Grok / Muse — not hipfire Anvil. Compact is
+a different model on a different port. Headroom MCP shrinks **tool dumps**
+before they enter the prompt; `/compact` rewrites the **session** at a
+subtask boundary. EPR shrinks **diagnostic bash logs** with a regex scout
+then `compact/compactor` (`:8091`); it is not a substitute for `/compact`.
+Do not use one as a substitute for the other. Do not install
+NVIDIA SoL-Pi Online Context Compact — it aborts the Pi run to compact.
 
 ## Routing
 

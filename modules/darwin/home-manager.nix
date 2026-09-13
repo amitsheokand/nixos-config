@@ -57,12 +57,7 @@ in
         piAgent = import ../shared/pi-agent.nix {
           inherit pkgs lib;
           pi = llm-agents-nix.packages.${pkgs.stdenv.hostPlatform.system}.pi;
-          localSettings = {
-            model = "longctx";
-            defaultProvider = "mlx-local";
-            defaultModel = "longctx";
-            defaultThinkingLevel = "low";
-          };
+          localSettings = import ../shared/pi-chat-defaults.nix;
           localModels = {
             providerId = "mlx-local";
             apiModel = "longctx";

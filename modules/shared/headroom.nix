@@ -122,6 +122,14 @@ PY
     };
     # one-grep is upserted after writeBoundary (programs.one-grep).
   };
+
+  piHeadroomEntry = {
+    command = shimHeadroom;
+    args = [ "mcp" "serve" "--proxy-url" "http://127.0.0.1:8787" ];
+    env = {
+      LD_LIBRARY_PATH = libPath;
+    };
+  };
 in
 {
   home.packages = [
@@ -146,6 +154,40 @@ in
     executable = true;
     force = true;
   };
+
+  # ObservationPack analog: compress tool dumps in Pi (and Muse) before they
+  # re-enter the prompt. one-grep already owns those MCP files; merge, don't replace.
+  home.activation.piHeadroomMcp = lib.hm.dag.entryAfter [ "oneGrepMcp" "writeBoundary" ] ''
+    ${pkgs.python313}/bin/python3 - ${pkgs.writeText "pi-headroom-mcp.json" (builtins.toJSON piHeadroomEntry)} <<'PY'
+import json, sys
+from pathlib import Path
+entry = json.loads(Path(sys.argv[1]).read_text())
+home = Path.home()
+
+def upsert_json(path, *server_keys):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = {}
+    if path.is_file():
+        try:
+            loaded = json.loads(path.read_text())
+            if isinstance(loaded, dict):
+                data = loaded
+        except json.JSONDecodeError:
+            pass
+    for key in server_keys:
+        servers = data.get(key)
+        if not isinstance(servers, dict):
+            servers = {}
+            data[key] = servers
+        servers["headroom"] = entry
+    if "mcpServers" in data and "settings" not in data:
+        data.setdefault("settings", {"toolPrefix": "server", "idleTimeout": 10})
+    path.write_text(json.dumps(data, indent=2) + "\n")
+
+upsert_json(home / ".pi" / "agent" / "mcp.json", "mcpServers")
+upsert_json(home / ".config" / "muse" / "settings.json", "mcpServers", "mcp_servers")
+PY
+  '';
 } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   systemd.user.services.headroom-install = {
     Unit = {
