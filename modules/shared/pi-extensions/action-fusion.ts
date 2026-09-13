@@ -31,7 +31,7 @@ function withThenRunSchema(schema: unknown): unknown {
   cloned.properties.then_run = {
     type: "string",
     description:
-      "Shell command to run after this mutation succeeds (test, build, or check this file). Prefer this over a separate bash call.",
+      "Shell command to run after this mutation succeeds. Prefer PACKET.md Gate, e.g. cargo test -p <crate> --lib. Prefer this over a separate bash call.",
   };
   return cloned;
 }
@@ -79,7 +79,7 @@ function fuse(
     parameters: withThenRunSchema(bootstrap.parameters),
     prepareArguments: bootstrap.prepareArguments,
     promptGuidelines: [
-      `After ${name}, if you would immediately bash a test/build/check of that file, pass then_run on the same call instead of a second bash.`,
+      `After ${name}, if you would immediately bash a test/build/check of that file, pass then_run on the same call instead of a second bash. Example: then_run="cargo test -p aikya-com --lib" after editing that crate. PACKET.md Gate is the default command.`,
     ],
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       const { thenRun, rest } = stripThenRun(params);

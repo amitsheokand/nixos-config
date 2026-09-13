@@ -16,8 +16,8 @@
 - After `edit`/`write`, if you would immediately bash a test/build/check of
   that file, pass `then_run` on the same call (Action Fusion). PACKET.md
   **Gate** is the default command. Long `cargo test` / cmake logs are reduced
-  locally (EPR: regex scout, then `compact/compactor`). Read `source_artifact`
-  when you need the full log. Logs never leave the LAN.
+  locally (EPR: scout, then `compact/compactor` ~8k-token clip). Read
+  `source_artifact` when you need the full log. Logs never leave the LAN.
 - Durable facts go in git resume files or `memory_*` tools, not the prompt.
   Never hermes `memoryMode` legacy-inject.
 - At work start: `overflow-assign`. Use `~/.pi/agent/overflow.md` only if the
