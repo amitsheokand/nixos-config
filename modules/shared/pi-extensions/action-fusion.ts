@@ -93,13 +93,14 @@ function fuse(
         signal,
         onUpdate,
       );
+      const marker = looksFailed(cmd) ? "[then_run:failed]" : "[then_run:succeeded]";
       return {
         ...result,
         content: [
           ...(result.content ?? []),
           {
             type: "text",
-            text: `\n[then_run] ${thenRun}\n${textOf(cmd)}`,
+            text: `\n${marker} ${thenRun}\n${textOf(cmd)}`,
           },
         ],
         details: {

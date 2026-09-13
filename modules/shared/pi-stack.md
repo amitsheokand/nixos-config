@@ -20,9 +20,10 @@ Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 | Headroom | compress tool dumps before they re-enter context | MCP in Pi + Cursor; proxy `:8787` for Claude/Codex |
 | Compactor | session compact at subtask boundaries | `:8091` → Mac `:8081` → iGPU `:8092` |
 | Action Fusion | edit/write `then_run` (no extra model turn) | `pi-extensions/action-fusion.ts` |
+| EPR | diagnostic logs → scout, then local Compactor | `pi-extensions/epr.ts` |
 
 Do **not** install NVIDIA SoL-Pi as a second package. It is a Pi
-extension, not a harness, but three of its four mechanisms duplicate this
+extension, not a harness, but two of its four mechanisms duplicate this
 ladder:
 
 | SoL-Pi | Ours | Action |
@@ -30,7 +31,7 @@ ladder:
 | Action Fusion | none before | **brought over** as `action-fusion.ts` |
 | ObservationPack | Headroom MCP + FFF pages + Pi 50KB truncate | keep Headroom; exact paged recall is Headroom's job |
 | Online Context Compact | `/compact` + `pi-cc-compact` + `pi-async-compaction` | do not enable OCC (it aborts the run) |
-| Evidence-Preserving Reducer | overflow cheap + Headroom, later if needed | skip; would send logs to a nested model |
+| Evidence-Preserving Reducer | local scout + `compact/compactor` | **brought over** as `epr.ts` (no cloud) |
 
 Grok Bot is quota-capped. [Rakazo](https://github.com/elie222/rakazo) is the
 open-source persistent-bot UI (also Pi-backed). It is **not** wired here —

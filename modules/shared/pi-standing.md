@@ -13,7 +13,9 @@
   blunt early compact as a substitute for a new chat.
 - After `edit`/`write`, if you would immediately bash a test/build/check of
   that file, pass `then_run` on the same call (Action Fusion). Do not spend a
-  second model turn to run the obvious follow-up.
+  second model turn to run the obvious follow-up. Long `cargo test` / cmake
+  logs are reduced locally (EPR: regex scout, then `compact/compactor`).
+  Read `source_artifact` when you need the full log. Logs never leave the LAN.
 - Durable facts go in git resume files or `memory_*` tools, not the prompt.
   Never hermes `memoryMode` legacy-inject.
 - At work start: `overflow-assign`. Use `~/.pi/agent/overflow.md` only if the
