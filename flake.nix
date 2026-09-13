@@ -41,7 +41,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     open-grep = {
-      url = "github:amitsheokand/open-grep";
+      url = "github:amitsheokand/one-grep";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

@@ -1,4 +1,4 @@
-# one-grep from github:amitsheokand/open-grep (CLI name stays `one-grep`).
+# one-grep from github:amitsheokand/one-grep.
 # Installs the Nix package on every host and registers MCP (stdio) so agents
 # do not depend on a cargo symlink at ~/.local/bin/one-grep.
 #
