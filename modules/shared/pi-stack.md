@@ -57,6 +57,25 @@ Command-Code) **US-hosted only**. Reviewers are Cursor Grok and Muse in Pi.
 | Hard / novel ABI | Cursor Grok 4.6 **high**; xhigh only if labeled Hard | Conserved Ultra. |
 | Parked | `longctx` MiniCPM5-2B `:8080`; hipfire 27B | Too slow / Conflicts with MiniCPM-V. |
 
+## Spawn that model in a Herdr pane
+
+Copy-paste + verify: `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md`.
+Docs: `advait-docs/agents/herdr-worktrees.md`.
+
+1. `wt -C ~/work/advait switch --create -y -b main wt/pc/advait/<packet>`
+   → path **must** be `~/work/worktrees/…` (not `/mnt/advait-scratch/`).
+2. `herdr worktree open --cwd ~/work/advait --path <wt-path> --label T-<id> --no-focus`
+   (always `--cwd` the Advait primary; workspace label can lie).
+3. Plugin starts `--kind pi -- --model cursor/composer-2-5:slow --thinking high`.
+4. For Grok or Muse Code: `/quit` that Pi, then
+   `herdr agent start <name> --kind pi --pane <id> -- --model <id> --thinking <level>`.
+5. Verify `herdr agent get` cwd and `herdr pane process-info` argv. Prompt
+   PACKET **without** `--wait`. Coordinator stays idle.
+
+`--kind grok` is the xAI `grok` CLI. `--kind muse` is the Muse CLI. Packet
+Grok/Composer/Muse-in-Pi are **`--kind pi` + `--model`**. Nested `pi__Agent`
+blocks the coordinator; user Enter queues (`steeringMode=all`).
+
 ## Privacy
 
 - No China-hosted cloud endpoints.
