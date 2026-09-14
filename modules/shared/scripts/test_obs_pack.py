@@ -16,10 +16,24 @@ LIKELY_SECRET = re.compile(
 SKIP_LINE = re.compile(r"^(?:advait_epr_v1|advait_obs_v1)\b")
 
 
+def is_cursor_edit_diff(body: str) -> bool:
+    looks_diff = bool(re.search(r"\n@@\s+-\d+", body)) and (
+        bool(re.match(r"edit\s+\S", body, re.I))
+        or bool(re.search(r"^---\s+(?:a/|/dev/null)", body, re.M))
+    )
+    if not looks_diff:
+        return False
+    return not bool(
+        re.search(r"error\[E\d+]|FAILED\.|panic!|Compiling\s+\S+\sv\d", body, re.I)
+    )
+
+
 def should_skip(body: str) -> bool:
     if len(body.encode("utf-8")) <= THRESHOLD_BYTES:
         return True
     if LIKELY_SECRET.search(body):
+        return True
+    if is_cursor_edit_diff(body):
         return True
     first = body.split("\n", 1)[0]
     return bool(SKIP_LINE.search(first)) or "\nadvait_epr_v1\n" in body
@@ -77,6 +91,22 @@ class ObsPackTests(unittest.TestCase):
         self.assertIn("HEAD-MARKER", text)
         self.assertIn("TAIL-MARKER", text)
         self.assertNotIn("obs_recall", text)
+
+    def test_skips_large_cursor_edit_diff(self) -> None:
+        body = (
+            "edit crates/lane-cli/src/lib.rs\n\n+496 -0\n\n"
+            "--- /dev/null\n+++ b/crates/lane-cli/src/lib.rs\n@@ -1,0 +1,496 @@\n"
+            + ("+fn x() {}\n" * 1200)
+        )
+        self.assertGreater(len(body.encode()), THRESHOLD_BYTES)
+        self.assertTrue(should_skip(body))
+
+    def test_packs_large_cargo_log(self) -> None:
+        body = "   Compiling aikya-com v0.1.0\nerror[E0599]: no method\n" + (
+            "note: stuff\n" * 1200
+        )
+        self.assertGreater(len(body.encode()), THRESHOLD_BYTES)
+        self.assertFalse(should_skip(body))
 
 
 if __name__ == "__main__":

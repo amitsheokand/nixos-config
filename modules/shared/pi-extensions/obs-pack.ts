@@ -47,9 +47,18 @@ export function isPureTextResult(message: ToolResult): boolean {
   );
 }
 
+export function isCursorEditDiff(body: string): boolean {
+  const looksDiff =
+    /\n@@\s+-\d+/.test(body) &&
+    (/^edit\s+\S/i.test(body) || /^---\s+(?:a\/|\/dev\/null)/m.test(body));
+  if (!looksDiff) return false;
+  return !/\berror\[E\d+]|FAILED\.|panic!|Compiling\s+\S+\sv\d/i.test(body);
+}
+
 export function shouldSkip(body: string): boolean {
   if (Buffer.byteLength(body, "utf8") <= THRESHOLD_BYTES) return true;
   if (LIKELY_SECRET.test(body)) return true;
+  if (isCursorEditDiff(body)) return true;
   const first = body.split(/\r?\n/, 1)[0] ?? "";
   return SKIP_LINE.test(first) || body.includes("\nadvait_epr_v1\n");
 }
