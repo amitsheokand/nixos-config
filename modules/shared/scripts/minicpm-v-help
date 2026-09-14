@@ -20,7 +20,7 @@ Visuals (all local clients): MiniCPM-V 4.5 on the R9700.
 
 Coding stays off this GPU:
   • Cursor Agent / CLI  → cloud Grok (Hard) / Composer 2.5 high (default)
-  • Pi default chat     → /model cursor/composer-2-5:slow (high; not :fast)
+  • Pi default chat     → /model opencode/nemotron-3-ultra-free (high)
   • visuals in Pi       → /model minicpm-v-4.5
   • longctx              → parked (MiniCPM5-2B too slow)
   • Continue / Zed / Hermes / Grok TUI local picker → ${model}

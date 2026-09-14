@@ -1,9 +1,9 @@
 # Pi standing instructions
 
-- Pi is the **cheap** hub (overflow, MiniCPM-V, `/compact`, obs-pack, EPR).
-  Paid Muse Code / Cursor Ultra = Herdr `--kind muse` / `--kind cursor` on a
-  **worktree** — not `pi-muse-bridge` / `pi-cursor-sdk`. Never `--kind grok`
-  (xAI CLI). Never those kinds on Advait/herdr-lane primary.
+- Pi is the **cheap** hub. Default chat: OpenCode Zen `nemotron-3-ultra-free`.
+  Paid Muse / Cursor Ultra = Herdr `--kind muse` / `--kind cursor` on a
+  **worktree** — not Pi wraps. Never `--kind grok` (xAI CLI). Never those
+  kinds on Advait/herdr-lane primary.
 - New chat per packet. Rewind with `/tree`. Plugin auto-starts Pi; coordinator
   `/quit`s and starts the native kind for a paid packet.
 - Visuals: `/model minicpm-v-4.5`. Never `*-contributor*` /

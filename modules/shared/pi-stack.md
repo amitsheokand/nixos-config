@@ -6,8 +6,9 @@ and **`--kind cursor`** on a linked worktree — not `pi-muse-bridge` /
 `pi-cursor-sdk`. Create/open worktrees with **Worktrunk + trunkr**
 (`prefix+shift+g` / `wt switch --create`), never `git worktree add`. The
 `nixos-config.pi-worktree` plugin cds the pane and starts `--kind pi`
-**without `--model`**. Coordinator `/quit`s and starts the native kind for
-a paid packet. Do not open a second control plane for the same work.
+with `opencode/nemotron-3-ultra-free`. Coordinator `/quit`s and starts
+the native kind for a paid packet. Do not open a second control plane
+for the same work.
 
 Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 
@@ -48,13 +49,13 @@ Command-Code) **US-hosted only**. Reviewers are `--kind muse` or `--kind cursor`
 
 | Need | Where | Notes |
 |------|-------|--------|
-| Coordinator, boards, mechanical | Pi `--kind pi` + overflow / small context | Not Ultra wrap. Not Contributor. |
+| Coordinator, boards, mechanical | Pi `--kind pi` + Zen `nemotron-3-ultra-free` | Not Ultra wrap. Not Contributor. |
 | Visual / XAML / capture | Pi `/model minicpm-v-4.5` + `vl-capture.py` | R9700 `:8093`. Do not paste PNGs. |
 | Session compact | `/compact` → `compact/compactor` | Mac `:8081` then iGPU `:8092`. |
 | Free / included cloud executor | today's `~/.pi/agent/overflow.md` | Ranked daily. Skip China-hosted and Contributor. Not a reviewer. |
 | Reviewer (frozen diff) | `--kind muse` or `--kind cursor` (worktree) | Never the free overflow model. Never Contributor. |
-| Bounded PE | `--kind muse` (Muse Code CLI) | `pi-muse-bridge` wrap |
-| Hard / novel ABI | `--kind cursor` (Agent CLI) **high**; xhigh if labeled Hard | `pi-cursor-sdk` wrap; `--kind grok` |
+| Bounded PE | `--kind muse` (Muse Code CLI) | never `pi-muse-bridge` |
+| Hard / novel ABI | `--kind cursor` (Agent CLI) **high**; xhigh if labeled Hard | never `pi-cursor-sdk`; never `--kind grok` |
 | Parked | `longctx` MiniCPM5-2B `:8080`; hipfire 27B | Too slow / Conflicts with MiniCPM-V. |
 
 ## Spawn that model in a Herdr pane

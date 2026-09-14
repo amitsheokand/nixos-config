@@ -271,14 +271,14 @@ claude-sonnet-5                        best combo of speed & intelligence
         self.assertEqual(payload["cheap"]["openrouter"], "openai/gpt-oss-120b")
         md = pick.render_md(payload)
         self.assertIn("**Reviewer:**", md)
-        self.assertIn("muse-code/muse-spark-1.3", md)
-        self.assertIn("pi-cursor-sdk", md)
-        self.assertIn("`:slow`", md)
+        self.assertIn("--kind muse", md)
+        self.assertIn("--kind cursor", md)
+        self.assertIn("nemotron-3-ultra-free", md)
         self.assertIn("`longctx` is parked", md)
         self.assertNotIn("stealth/ox-alpha", md)
         self.assertEqual(
             payload["policy"]["reviewers"],
-            ["pi-cursor-sdk (Grok/Composer)", "muse-code/muse-spark-1.3"],
+            ["--kind muse (worktree)", "--kind cursor (worktree)"],
         )
 
     def test_nous_free_only(self) -> None:
