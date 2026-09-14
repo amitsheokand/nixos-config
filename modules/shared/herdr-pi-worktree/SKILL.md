@@ -1,13 +1,14 @@
 ---
 name: herdr-pi-model-spawn
-description: Spawn a named Pi model (Cursor Grok/Composer or Muse Code Spark 1.3) in a Herdr worktree pane with wt paths under ~/work/worktrees, then verify cwd and model. Use when opening a packet seat or when a pane landed on Composer, the wrong repo, or /mnt.
+description: Spawn a Herdr pane agent. Pi is the cheap hub; paid Muse Code and Cursor Agent CLI are --kind muse / --kind cursor on a linked worktree. Use when opening a packet seat or when a pane landed on the wrong kind, repo, or /mnt.
 ---
 
-# Herdr + Pi: spawn a specific model
+# Herdr: spawn Pi (cheap) or native CLIs (paid)
 
-Cursor Grok and Composer run **inside Pi** (`pi-cursor-sdk`). Muse Spark 1.3
-runs **inside Pi** (`pi-muse-bridge` → `muse-code/muse-spark-1.3`). Herdr
-`--kind grok` / `--kind muse` / `--kind cursor` are **other binaries**.
+Pi is the **cheap** hub (overflow, MiniCPM-V, `/compact`, obs-pack, EPR).
+Paid Muse Code Power and Cursor Agent CLI (Ultra / Grok / Composer) are
+**`--kind muse`** and **`--kind cursor`** — not `pi-muse-bridge` /
+`pi-cursor-sdk`. `--kind grok` is the xAI `grok` CLI; never that.
 
 Worktrees live under **`~/work/worktrees/`** on PC (Worktrunk
 `{{ repo_path }}/../worktrees/{{ branch | sanitize }}`). Not `/mnt/`.
@@ -30,12 +31,15 @@ Pi load order (first wins): `~/.pi/agent/skills/` → packages →
 
 | Want | Start this | Do not |
 |------|------------|--------|
-| Composer 2.5 slow high (default plugin) | `--kind pi -- --model cursor/composer-2-5:slow --thinking high` | `:fast`, MiniCPM5 `longctx` |
-| Cursor Grok 4.6 | `--kind pi -- --model cursor/grok-4.6 --thinking high` (Hard PE: `xhigh`) | `--kind grok` (xAI CLI `/run/current-system/sw/bin/grok`) |
-| Muse Code Power Spark 1.3 | `--kind pi -- --model muse-code/muse-spark-1.3 --thinking high` | `--kind muse`, `cursor/muse-spark-1.3`, `*-contributor*` |
+| Cheap / VL / compact / overflow | `--kind pi` (plugin default) | wrapping Ultra or Muse Power inside Pi |
+| Muse Code Power | `--kind muse` on a **worktree** | `pi-muse-bridge`, `/model muse-code/*`, `*-contributor*` |
+| Cursor Agent CLI (Ultra / Grok / Composer) | `--kind cursor` on a **worktree** | `pi-cursor-sdk`, `/model cursor/*` on a primary, `--kind grok` |
+| xAI grok CLI | never | `--kind grok` |
 
 Plugin auto-start (`nixos-config.pi-worktree` on `worktree.opened`):
-`HERDR_PI_MODEL=cursor/composer-2-5:slow` `HERDR_PI_THINKING=high`.
+`--kind pi`. Coordinator `/quit`s that Pi and starts `--kind muse` or
+`--kind cursor` for a paid packet. Never those kinds on `~/work/advait` or
+`~/work/herdr-lane` primary (`.git/` directory).
 
 ## Procedure
 
@@ -96,25 +100,26 @@ pane=<pane_id>
 herdr agent wait "$name" --until idle --timeout 60000
 herdr agent prompt "$name" "/quit"
 # wait until that name is gone and the pane is a shell
-herdr agent start "$name" --kind pi --pane "$pane" -- \
-  --model cursor/grok-4.6 --thinking xhigh --name "T-${packet}"
-# Muse Code instead:
-# herdr agent start "$name" --kind pi --pane "$pane" -- \
-#   --model muse-code/muse-spark-1.3 --thinking high --name "T-${packet}"
+# Paid Muse Code (worktree):
+herdr agent start "$name" --kind muse --pane "$pane"
+# Paid Cursor Agent CLI (worktree only — never Advait/herdr-lane primary):
+# herdr agent start "$name" --kind cursor --pane "$pane"
+# Cheap Pi (overflow / VL / compact) — keep or restart:
+# herdr agent start "$name" --kind pi --pane "$pane"
 ```
 
 ### 5. Verify model and cwd
 
 ```bash
-herdr agent get "$name"          # .cwd == $wt_path, .agent == pi
+herdr agent get "$name"          # .cwd == $wt_path, .agent == muse|cursor|pi
 herdr pane process-info --pane "$pane"
 herdr agent read "$name" --source visible --lines 20
 ```
 
-`process-info` argv must contain the `--model` id you passed. Footer must match.
-Pi fullscreen TUI: prefer `--source visible`; host scrollback can miss the
-alternate screen. Packet proof is a RECEIPT file in the worktree, not a nested
-agent id.
+`.agent` must match the kind you started. Pi fullscreen TUI: prefer
+`--source visible`. Packet proof is a RECEIPT file in the worktree, not a
+nested agent id. Native Cursor/Muse: last hunk+Gate in the same shell;
+Headroom before logs re-enter.
 
 ### 6. Dispatch PACKET, then idle
 
@@ -141,7 +146,8 @@ drop-in bypasses `herdr-serve` wait). PC Home Manager `WantedBy` is empty.
 - Nested `pi__Agent` / Cursor Task for a packet (parent stays `working`;
   Enter queues as steering because `steeringMode=all`).
 - `herdr agent prompt … --wait` from the coordinator for a packet.
-- `--kind grok` / `--kind muse` / `--kind cursor` for Cursor-in-Pi or Muse-in-Pi.
+- `--kind grok` (xAI CLI). `--kind muse` / `--kind cursor` on a **primary**.
+- `/model cursor/*` or `muse-code/*` inside Pi for a paid implementer seat.
 - `git worktree add` or `herdr worktree create` as the first create step.
 - `git worktree move` across `/mnt` → home (Invalid cross-device link). Copy
   gitignored `PACKET.md` first; `stash -u` skips it.
