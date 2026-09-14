@@ -71,6 +71,8 @@ if [[ -z "$pane_id" ]]; then
   exit 1
 fi
 
+want_kind="${HERDR_START_KIND:-pi}"
+
 pane_has_pi() {
   local out
   out="$("$herdr" agent list 2>/dev/null || true)"
@@ -82,16 +84,18 @@ pane_has_pi() {
 
 # Re-open of an already-open workspace: do not spawn a second Pi.
 # Manual action (prefix+shift+i) still starts if the pane is a bare shell.
-if [[ -z "$action_id" && "$already_open" == "true" ]] && pane_has_pi; then
-  exit 0
-fi
-if pane_has_pi && [[ -z "$action_id" ]]; then
-  exit 0
+if [[ "$want_kind" == "pi" ]]; then
+  if [[ -z "$action_id" && "$already_open" == "true" ]] && pane_has_pi; then
+    exit 0
+  fi
+  if pane_has_pi && [[ -z "$action_id" ]]; then
+    exit 0
+  fi
 fi
 
 lock="$state_dir/${pane_id//:/_}.starting"
 while ! mkdir "$lock" 2>/dev/null; do
-  if pane_has_pi; then
+  if [[ "$want_kind" == "pi" ]] && pane_has_pi; then
     exit 0
   fi
   sleep 0.2
@@ -140,7 +144,7 @@ if [[ -n "$wt_path" && -d "$wt_path" ]]; then
   fi
 fi
 
-if pane_has_pi && [[ -z "$action_id" ]]; then
+if [[ "$want_kind" == "pi" ]] && pane_has_pi && [[ -z "$action_id" ]]; then
   exit 0
 fi
 
@@ -167,40 +171,58 @@ linked=0
 if [[ -n "$git_root" && -f "$git_root/.git" ]]; then
   linked=1
 fi
+if [[ "$linked" -ne 1 && ( "$want_kind" == "cursor" || "$want_kind" == "muse" ) ]]; then
+  echo "herdr-pi-worktree: refuse --kind ${want_kind} on primary (${git_root:-?})" >&2
+  exit 1
+fi
 
 start_args=()
 model="${HERDR_PI_MODEL:-}"
+if [[ "$want_kind" != "pi" ]]; then
+  model=""
+fi
 if [[ -n "$model" && "$linked" -ne 1 && ( "$model" == cursor/* || "$model" == muse-code/* ) ]]; then
   echo "herdr-pi-worktree: skip paid wrap --model on primary (${git_root:-?})" >&2
   model=""
 fi
-if [[ -n "$model" ]]; then
+if [[ "$want_kind" == "pi" && -n "$model" ]]; then
   start_args+=(-- --model "$model")
   if [[ -n "${HERDR_PI_THINKING:-}" ]]; then
     start_args+=(--thinking "$HERDR_PI_THINKING")
   fi
-elif [[ -n "${HERDR_PI_THINKING:-}" ]]; then
+elif [[ "$want_kind" == "pi" && -n "${HERDR_PI_THINKING:-}" ]]; then
   start_args+=(-- --thinking "$HERDR_PI_THINKING")
+elif [[ "$want_kind" == "hermes" ]]; then
+  start_args+=(-- --yolo)
+elif [[ "$want_kind" == "muse" ]]; then
+  start_args+=(-- --yolo)
 fi
 
 started=0
-for attempt in 1 2 3 4 5 6 7 8; do
-  if out="$("$herdr" agent start "$name" --kind pi --pane "$pane_id" "${start_args[@]}" 2>&1)"; then
+if [[ "$want_kind" == "cmd" || "$want_kind" == "command-code" ]]; then
+  # Herdr 0.9 has no --kind for Command Code. Start the GOAT CLI in-pane.
+  if "$herdr" pane run "$pane_id" "exec cmd --yolo --trust" >/dev/null; then
     started=1
-    break
   fi
-  if grep -qi 'already\|unique\|taken\|exists' <<<"$out"; then
-    name="${slug}-$(printf '%02d' "$attempt")"
-  fi
-  sleep 1
-  if [[ -z "${workspace_id:-}" ]]; then
-    :
-  elif [[ -z "$pane_id" ]]; then
-    pane_id="$(pane_from_list "$workspace_id" || true)"
-  fi
-done
+else
+  for attempt in 1 2 3 4 5 6 7 8; do
+    if out="$("$herdr" agent start "$name" --kind "$want_kind" --pane "$pane_id" "${start_args[@]}" 2>&1)"; then
+      started=1
+      break
+    fi
+    if grep -qi 'already\|unique\|taken\|exists' <<<"$out"; then
+      name="${slug}-$(printf '%02d' "$attempt")"
+    fi
+    sleep 1
+    if [[ -z "${workspace_id:-}" ]]; then
+      :
+    elif [[ -z "$pane_id" ]]; then
+      pane_id="$(pane_from_list "$workspace_id" || true)"
+    fi
+  done
+fi
 
 if [[ "$started" -ne 1 ]]; then
-  echo "herdr-pi-worktree: failed to start pi in $pane_id" >&2
+  echo "herdr-pi-worktree: failed to start ${want_kind} in $pane_id" >&2
   exit 1
 fi

@@ -52,7 +52,9 @@ Command-Code) **US-hosted only**. Reviewers are `--kind muse` or `--kind cursor`
 | Coordinator, boards, mechanical | Pi `--kind pi` + Zen `nemotron-3-ultra-free` | Not Ultra wrap. Not Contributor. |
 | Visual / XAML / capture | Pi `/model minicpm-v-4.5` + `vl-capture.py` | R9700 `:8093`. Do not paste PNGs. |
 | Session compact | `/compact` → `compact/compactor` | Mac `:8081` then iGPU `:8092`. |
-| Free / included cloud executor | today's `~/.pi/agent/overflow.md` | Ranked daily. Skip China-hosted and Contributor. Not a reviewer. |
+| Free / included cloud executor | today's `~/.pi/agent/overflow.md` | Pi Zen, Hermes Nous OSS, `cmd` GOAT OSS. `hermes insights --days 7` / `cmd status`. Not a reviewer. |
+| Hermes quality (GPT-5/Claude portal) | `--kind hermes` (worktree) | $20 plan default — not overflow |
+| Command Code GOAT | plugin `start-cmd` / `cmd --yolo --trust` | Herdr has no `--kind cmd` |
 | Reviewer (frozen diff) | `--kind muse` or `--kind cursor` (worktree) | Never the free overflow model. Never Contributor. |
 | Bounded PE | `--kind muse` (Muse Code CLI) | never `pi-muse-bridge` |
 | Hard / novel ABI | `--kind cursor` (Agent CLI) **high**; xhigh if labeled Hard | never `pi-cursor-sdk`; never `--kind grok` |

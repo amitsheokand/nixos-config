@@ -1,6 +1,6 @@
 ---
 name: herdr-pi-model-spawn
-description: Spawn a Herdr pane agent. Pi is the cheap hub; paid Muse Code and Cursor Agent CLI are --kind muse / --kind cursor on a linked worktree. Use when opening a packet seat or when a pane landed on the wrong kind, repo, or /mnt.
+description: Spawn a Herdr pane agent. Pi is the cheap hub; Muse, Cursor, Hermes, and Command Code are native CLIs on a linked worktree. Use when opening a packet seat or when a pane landed on the wrong kind, repo, or /mnt.
 ---
 
 # Herdr: spawn Pi (cheap) or native CLIs (paid)
@@ -38,6 +38,8 @@ Pi load order (first wins): `~/.pi/agent/skills/` → packages →
 | Want | Start this | Do not |
 |------|------------|--------|
 | Cheap / VL / compact / overflow | `--kind pi` (plugin default) | wrapping Ultra or Muse Power inside Pi |
+| Hermes Nous ($20 OSS / :free) | `--kind hermes` on a **worktree** | portal GPT-5/Claude as overflow; China-host ids |
+| Command Code GOAT | plugin `start-cmd` (`cmd --yolo --trust`) | Anthropic/OpenAI GOAT rows; Herdr has no `--kind cmd` |
 | Muse Code Power | `--kind muse` on a **worktree** | `pi-muse-bridge`, `/model muse-code/*`, `*-contributor*` |
 | Cursor Agent CLI (Ultra / Grok / Composer) | `--kind cursor` on a **worktree** | `pi-cursor-sdk`, `/model cursor/*` on a primary, `--kind grok` |
 | xAI grok CLI | never | `--kind grok` |
@@ -108,6 +110,10 @@ herdr agent prompt "$name" "/quit"
 herdr agent start "$name" --kind muse --pane "$pane"
 # Paid Cursor Agent CLI (worktree only — never Advait/herdr-lane primary):
 # herdr agent start "$name" --kind cursor --pane "$pane"
+# Hermes Nous overflow / $20 OSS (worktree):
+# herdr agent start "$name" --kind hermes --pane "$pane" -- --yolo
+# Command Code GOAT (no --kind; plugin or):
+# herdr pane run "$pane" "exec cmd --yolo --trust"
 # Cheap Pi (overflow / VL / compact) — keep the plugin Pi, or:
 # herdr agent start "$name" --kind pi --pane "$pane"
 ```

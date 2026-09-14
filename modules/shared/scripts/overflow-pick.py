@@ -6,8 +6,9 @@ Do not pin a model in git. Rank what is actually listed today, write
 that assignment until the next calendar day (or --refresh).
 
 Free catalogs (executors, not reviewers): OpenRouter, OpenCode Zen,
-Hermes (Nous :free + opencode-free), Command-Code GOAT Open Source.
+Hermes (Nous $20 included OSS + :free), Command-Code GOAT Open Source.
 Reviewers stay Herdr `--kind muse` / `--kind cursor` on a worktree.
+Hermes portal defaults (GPT-5 / Claude) are quality seats, not overflow.
 """
 from __future__ import annotations
 
@@ -409,13 +410,26 @@ def parse_zen(payload: Any) -> list[dict[str, Any]]:
     return rows
 
 
+def is_frontier_overflow(mid: str) -> bool:
+    """Account-plan quality seats — not the overflow executor pool."""
+    low = mid.lower()
+    if low.startswith(("anthropic/", "google/gemini", "x-ai/", "xai/")):
+        return True
+    if "claude" in low:
+        return True
+    if re.match(r"^openai/(gpt-5|gpt-4|o1|o3|o4)", low):
+        return True
+    return False
+
+
 def parse_id_list(ids: Any, catalog: str, *, free_only: bool = True) -> list[dict[str, Any]]:
     rows = []
     for item in ids or []:
         mid = item if isinstance(item, str) else (item.get("id") or item.get("model") or "")
-        if not mid or is_banned(mid):
+        if not mid or is_banned(mid) or is_frontier_overflow(mid):
             continue
-        if free_only and not is_free_id(mid, None, None):
+        tagged = is_free_id(mid, None, None)
+        if free_only and not tagged:
             continue
         rows.append(
             {
@@ -435,7 +449,7 @@ def parse_id_list(ids: Any, catalog: str, *, free_only: bool = True) -> list[dic
 
 
 def parse_nous(payload: Any) -> list[dict[str, Any]]:
-    return parse_id_list(payload.get("data") or [], "hermes", free_only=True)
+    return parse_id_list(payload.get("data") or [], "hermes", free_only=False)
 
 
 def parse_cmd_list_models(text: str) -> list[dict[str, Any]]:
@@ -471,7 +485,8 @@ def parse_cmd_list_models(text: str) -> list[dict[str, Any]]:
                 "max_tokens": 32768,
                 "pin": 0.0,
                 "pout": 0.0,
-                "free": tagged_free,
+                # GOAT Open Source is included on the plan, not OpenRouter PAYG.
+                "free": True,
                 "reasoning": True,
                 "inputs": ["text"],
                 "cmd_free_tag": tagged_free,
@@ -516,7 +531,7 @@ def fetch_nous_free(home: Path) -> list[dict[str, Any]]:
         cache = json.loads(cache_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         return []
-    return parse_id_list((cache.get("nous") or {}).get("models"), "hermes", free_only=True)
+    return parse_id_list((cache.get("nous") or {}).get("models"), "hermes", free_only=False)
 
 
 def fetch_cmd_models() -> list[dict[str, Any]]:
@@ -781,6 +796,9 @@ def render_md(payload: dict[str, Any]) -> str:
         "- **Executor:** today's free pick — any of Pi (OpenRouter / OpenCode Zen),",
         "  `hermes`, or `cmd`. Pi default chat is OpenCode Zen",
         "  `nemotron-3-ultra-free` (high). `longctx` is parked.",
+        "  Hermes Nous ($20) and Command Code GOAT included OSS are extra",
+        "  overflow seats (`--kind hermes` / `cmd`). Check usage:",
+        "  `hermes insights --days 7`, `cmd status`.",
         "- **Reviewer:** `--kind muse` or `--kind cursor` on a worktree. Do not",
         "  review with the free overflow model.",
         "",
@@ -804,6 +822,7 @@ def render_md(payload: dict[str, Any]) -> str:
         "",
         "- Muse: `herdr agent start NAME --kind muse --pane ID` (worktree)",
         "- Cursor: `herdr agent start NAME --kind cursor --pane ID` (worktree)",
+        "- Hermes quality (not overflow): `--kind hermes` default portal model",
         "",
     ]
     if cheap:
