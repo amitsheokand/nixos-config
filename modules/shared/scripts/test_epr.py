@@ -109,5 +109,78 @@ class EprTests(unittest.TestCase):
         self.assertLess(len(clipped), len(body))
 
 
+def command_of(event: dict) -> str | None:
+    """Keep in sync with epr.ts commandOf (Cursor Shell replay + then_run)."""
+    details = event.get("details") if isinstance(event.get("details"), dict) else {}
+    inp = event.get("input") if isinstance(event.get("input"), dict) else {}
+    then = details.get("then_run")
+    if isinstance(then, str) and then.strip():
+        return then.strip()
+    if isinstance(inp.get("then_run"), str) and inp["then_run"].strip():
+        return inp["then_run"].strip()
+    content = event.get("content") or []
+    text = "".join(
+        part.get("text", "") for part in content if isinstance(part, dict)
+    )
+    marker = re.search(r"\[then_run(?::(?:succeeded|failed))?]\s+([^\n]+)", text)
+    if marker:
+        return marker.group(1).strip()
+    source = str(details.get("sourceToolName") or event.get("toolName") or "")
+    shell = source.lower() in {"bash", "shell", "shelltool"}
+    if not shell:
+        return None
+    if isinstance(inp.get("command"), str) and inp["command"].strip():
+        return inp["command"].strip()
+    if isinstance(details.get("command"), str) and details["command"].strip():
+        return details["command"].strip()
+    expanded = details.get("expandedText") if isinstance(details.get("expandedText"), str) else text
+    dollar = re.search(r"^\s*\$\s+([^\n]+)", expanded, re.M)
+    if dollar:
+        return dollar.group(1).strip()
+    return None
+
+
+class EprCommandOfTests(unittest.TestCase):
+    def test_native_bash_command(self) -> None:
+        self.assertEqual(
+            command_of({"toolName": "bash", "input": {"command": "cargo test -p aikya-com"}}),
+            "cargo test -p aikya-com",
+        )
+
+    def test_cursor_shell_replay(self) -> None:
+        event = {
+            "toolName": "cursor",
+            "details": {
+                "sourceToolName": "bash",
+                "expandedText": "$ cargo test -p aikya-com --lib\nerror: boom\n",
+            },
+            "content": [{"type": "text", "text": "$ cargo test -p aikya-com --lib\nerror: boom\n"}],
+        }
+        self.assertEqual(command_of(event), "cargo test -p aikya-com --lib")
+        self.assertTrue(DIAGNOSTIC_COMMAND.search(command_of(event) or ""))
+
+    def test_then_run_details(self) -> None:
+        self.assertEqual(
+            command_of(
+                {
+                    "toolName": "gate_edit",
+                    "details": {"then_run": "cargo test -p aikya-com --lib"},
+                }
+            ),
+            "cargo test -p aikya-com --lib",
+        )
+
+    def test_ignores_cursor_edit(self) -> None:
+        self.assertIsNone(
+            command_of(
+                {
+                    "toolName": "cursor",
+                    "details": {"sourceToolName": "edit", "path": "src/lib.rs"},
+                    "content": [{"type": "text", "text": "edit src/lib.rs\n@@ -1 +1 @@\n"}],
+                }
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

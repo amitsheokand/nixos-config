@@ -1,7 +1,7 @@
-// Optional then_run on edit/write so a test/build/check runs in the same
-// tool turn. Idea from NVIDIA SoL-Pi (MIT); this is our Pi 0.85 wrapper
-// around createEditTool/createWriteTool/createBashTool — not the SoL-Pi
-// package. Compaction stays /compact + Headroom; do not enable SoL-Pi OCC.
+// Optional then_run on edit/write, plus gate_edit/gate_write for Cursor.
+// pi-cursor-sdk hides overlapping Pi builtins from the MCP bridge; gate_*
+// stay visible as pi__gate_edit / pi__gate_write. Idea from NVIDIA SoL-Pi
+// (MIT); this is our Pi 0.85 wrapper — not the SoL-Pi package.
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
   createBashTool,
@@ -68,10 +68,14 @@ function looksFailed(result: { content?: Content[] } | undefined): boolean {
 
 function fuse(
   pi: ExtensionAPI,
-  name: "edit" | "write",
+  name: string,
   factory: (cwd: string) => MutationTool,
 ) {
   const bootstrap = factory(".");
+  const cursorHost =
+    name === "gate_edit" || name === "gate_write"
+      ? " Cursor host Edit/Shell cannot take then_run — prefer this tool."
+      : "";
   pi.registerTool({
     name,
     label: name,
@@ -79,7 +83,7 @@ function fuse(
     parameters: withThenRunSchema(bootstrap.parameters),
     prepareArguments: bootstrap.prepareArguments,
     promptGuidelines: [
-      `After ${name}, if you would immediately bash a test/build/check of that file, pass then_run on the same call instead of a second bash. Example: then_run="cargo test -p aikya-com --lib" after editing that crate. PACKET.md Gate is the default command.`,
+      `After ${name}, if you would immediately bash a test/build/check of that file, pass then_run on the same call instead of a second bash.${cursorHost} Example: then_run="cargo test -p aikya-com --lib". PACKET.md Gate is the default command.`,
     ],
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       const { thenRun, rest } = stripThenRun(params);
@@ -122,6 +126,11 @@ export default function (pi: ExtensionAPI) {
     try {
       fuse(pi, "edit", createEditTool);
       fuse(pi, "write", createWriteTool);
+      // Non-overlapping names: pi-cursor-sdk hides edit/write from the
+      // bridge (Cursor already has host Edit/Shell). gate_* stay visible as
+      // pi__gate_edit / pi__gate_write so Cursor models can fuse a Gate.
+      fuse(pi, "gate_edit", createEditTool);
+      fuse(pi, "gate_write", createWriteTool);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       ctx.ui.notify(`action-fusion skipped: ${message}`, "warning");

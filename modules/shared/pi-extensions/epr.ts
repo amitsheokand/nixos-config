@@ -50,6 +50,48 @@ function record(value: unknown): Record<string, unknown> | undefined {
     : undefined;
 }
 
+export const SHELL_TOOL_NAMES = new Set([
+  "bash",
+  "shell",
+  "Shell",
+  "shellTool",
+]);
+
+export function sourceToolNameOf(event: {
+  toolName?: string;
+  details?: unknown;
+}): string {
+  const details = record(event.details);
+  const source = details?.sourceToolName;
+  if (typeof source === "string" && source.trim()) return source.trim();
+  return event.toolName || "";
+}
+
+export function isShellResult(event: {
+  toolName?: string;
+  details?: unknown;
+}): boolean {
+  const source = sourceToolNameOf(event);
+  if (SHELL_TOOL_NAMES.has(source) || SHELL_TOOL_NAMES.has(source.toLowerCase())) {
+    return true;
+  }
+  return source.toLowerCase() === "shell";
+}
+
+function stringField(
+  rec: Record<string, unknown> | undefined,
+  key: string,
+): string | undefined {
+  const value = rec?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function commandFromShellText(text: string): string | undefined {
+  const dollar = text.match(/^\s*\$\s+([^\n]+)/m);
+  if (dollar?.[1]?.trim()) return dollar[1].trim();
+  return undefined;
+}
+
 export function commandOf(event: {
   toolName?: string;
   input?: unknown;
@@ -57,10 +99,6 @@ export function commandOf(event: {
   content?: Content[];
 }): string | undefined {
   const input = record(event.input);
-  if (event.toolName === "bash") {
-    const command = input?.command;
-    return typeof command === "string" ? command : undefined;
-  }
   const details = record(event.details);
   if (typeof details?.then_run === "string" && details.then_run.trim()) {
     return details.then_run.trim();
@@ -70,7 +108,18 @@ export function commandOf(event: {
   if (typeof input?.then_run === "string") return input.then_run;
   const text = textOf(event.content);
   const marker = text.match(/\[then_run(?::(?:succeeded|failed))?]\s+([^\n]+)/);
-  return marker?.[1]?.trim();
+  if (marker?.[1]?.trim()) return marker[1].trim();
+
+  if (isShellResult(event)) {
+    return (
+      stringField(input, "command") ||
+      stringField(details, "command") ||
+      commandFromShellText(stringField(details, "expandedText") || "") ||
+      commandFromShellText(text) ||
+      stringField(details, "summary")
+    );
+  }
+  return undefined;
 }
 
 export function thenRunBody(text: string): string {
@@ -251,8 +300,10 @@ export default function (pi: ExtensionAPI) {
       const command = commandOf(event);
       if (!command || !DIAGNOSTIC_COMMAND.test(command)) return;
       const fullText = textOf(event.content);
-      const body =
-        event.toolName === "bash" ? fullText : thenRunBody(fullText) || fullText;
+      const fusedBody = thenRunBody(fullText);
+      const body = isShellResult(event)
+        ? fullText
+        : fusedBody || fullText;
       if (Buffer.byteLength(body, "utf8") < MIN_BYTES) return;
       if (LIKELY_SECRET.test(body)) return;
 
@@ -314,7 +365,7 @@ export default function (pi: ExtensionAPI) {
       if (Buffer.byteLength(receipt, "utf8") >= archived.bytes) return;
 
       const prefix =
-        event.toolName === "bash"
+        isShellResult(event) && !/\[then_run(?::(?:succeeded|failed))?]/.test(fullText)
           ? receipt
           : `${fullText.slice(0, fullText.length - body.length)}${receipt}`;
       return {

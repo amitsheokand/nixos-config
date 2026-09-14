@@ -19,8 +19,8 @@ Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 | one-grep | hybrid search, absolute `root` | MCP in Pi / Cursor / Muse / Hermes |
 | Headroom | compress tool dumps before they re-enter context | MCP in Pi + Cursor; proxy `:8787` for Claude/Codex |
 | Compactor | session compact at subtask boundaries | `:8091` → Mac `:8081` → iGPU `:8092` |
-| Action Fusion | edit/write `then_run` (no extra model turn) | `pi-extensions/action-fusion.ts` |
-| EPR | diagnostic logs → scout, then local Compactor | `pi-extensions/epr.ts` |
+| Action Fusion | `then_run` on edit/write **and** `gate_edit`/`gate_write` (Cursor bridge; host Edit has no then_run) | `pi-extensions/action-fusion.ts` |
+| EPR | diagnostic logs → scout, then local Compactor. Also Cursor Shell replay (`sourceToolName`) | `pi-extensions/epr.ts` |
 | obs-pack | large tool results → archive + head/tail after 2 sends | `pi-extensions/obs-pack.ts` |
 
 Do **not** install NVIDIA SoL-Pi as a second package. It is a Pi
@@ -29,7 +29,7 @@ ladder:
 
 | SoL-Pi | Ours | Action |
 |--------|------|--------|
-| Action Fusion | none before | **brought over** as `action-fusion.ts` |
+| Action Fusion | none before | **brought over** as `action-fusion.ts` (`edit`/`write` + `gate_*` for Cursor) |
 | ObservationPack | Headroom (Cursor/Claude/Codex) + **obs-pack.ts** on Pi | 10 KiB, 2 full sends, then head/tail; recall via one-grep / sed. Not `obs_recall`. |
 | Online Context Compact | `/compact` + `pi-cc-compact` + `pi-async-compaction` | do not enable OCC (it aborts the run) |
 | Evidence-Preserving Reducer | local scout + `compact/compactor` (12k-token clip) | **brought over** as `epr.ts` (no cloud) |
