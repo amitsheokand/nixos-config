@@ -1,14 +1,13 @@
 # Pi hub — usage ladder
 
-Pi is the coding-agent hub. It runs **inside Herdr worktree panes** on PC /
-M1 / M4 (`herdr server` always on; phone/iPad uses herdr-mobile-relay or
-SSH). Create/open worktrees with **Worktrunk + trunkr**
+Pi is the **cheap** hub inside Herdr panes (overflow, MiniCPM-V, `/compact`,
+obs-pack, EPR). Paid Muse Code and Cursor Agent CLI are **`--kind muse`**
+and **`--kind cursor`** on a linked worktree — not `pi-muse-bridge` /
+`pi-cursor-sdk`. Create/open worktrees with **Worktrunk + trunkr**
 (`prefix+shift+g` / `wt switch --create`), never `git worktree add`. The
-`nixos-config.pi-worktree` plugin cds the pane to the checkout and starts Pi
-on `worktree.opened` as `cursor/composer-2-5:slow` (high). Cursor Ultra
-(`pi-cursor-sdk`) and Muse Code Power (`pi-muse-bridge`,
-`muse-code/muse-spark-1.3`) live **inside Pi**. Do not open a second control
-plane for the same work.
+`nixos-config.pi-worktree` plugin cds the pane and starts `--kind pi`.
+Coordinator `/quit`s and starts the native kind for a paid packet. Do not
+open a second control plane for the same work.
 
 Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 
@@ -43,19 +42,19 @@ file is missing). That writes today's free/cheap pick to
 `~/.pi/agent/overflow.md`. Do not scrape
 [Artificial Analysis](https://artificialanalysis.ai/models) again in the
 session. Free picks are **executors** (OpenRouter, OpenCode Zen, Hermes,
-Command-Code) **US-hosted only**. Reviewers are Cursor Grok and Muse in Pi.
+Command-Code) **US-hosted only**. Reviewers are `--kind muse` or `--kind cursor` (worktree), not overflow.
 
 ## Pick a model (cheap first)
 
 | Need | Where | Notes |
 |------|-------|--------|
-| Coordinator, boards, mechanical | Pi `cursor/composer-2-5:slow` high (Ultra) | Default. Not `:fast`. Not `longctx`. |
+| Coordinator, boards, mechanical | Pi `--kind pi` + overflow / small context | Not Ultra wrap. Not Contributor. |
 | Visual / XAML / capture | Pi `/model minicpm-v-4.5` + `vl-capture.py` | R9700 `:8093`. Do not paste PNGs. |
 | Session compact | `/compact` → `compact/compactor` | Mac `:8081` then iGPU `:8092`. |
 | Free / included cloud executor | today's `~/.pi/agent/overflow.md` | Ranked daily. Skip China-hosted and Contributor. Not a reviewer. |
-| Reviewer (frozen diff) | Muse `muse-code/muse-spark-1.3` (from 14 Sep) or Grok high | Never the free overflow model. Never Contributor. |
-| Bounded PE | until 14 Sep: Composer/Grok **high**; then Muse Power high | Pin Spark 1.3. Effort high, not xhigh daily. |
-| Hard / novel ABI | Cursor Grok 4.6 **high**; xhigh only if labeled Hard | Conserved Ultra. |
+| Reviewer (frozen diff) | `--kind muse` or `--kind cursor` (worktree) | Never the free overflow model. Never Contributor. |
+| Bounded PE | `--kind muse` (Muse Code CLI) | `pi-muse-bridge` wrap |
+| Hard / novel ABI | `--kind cursor` (Agent CLI) **high**; xhigh if labeled Hard | `pi-cursor-sdk` wrap; `--kind grok` |
 | Parked | `longctx` MiniCPM5-2B `:8080`; hipfire 27B | Too slow / Conflicts with MiniCPM-V. |
 
 ## Spawn that model in a Herdr pane
@@ -70,15 +69,14 @@ that name — Hermes memory writes a second copy under
    → path **must** be `~/work/worktrees/…` (not `/mnt/advait-scratch/`).
 2. `herdr worktree open --cwd ~/work/advait --path <wt-path> --label T-<id> --no-focus`
    (always `--cwd` the Advait primary; workspace label can lie).
-3. Plugin starts `--kind pi -- --model cursor/composer-2-5:slow --thinking high`.
-4. For Grok or Muse Code: `/quit` that Pi, then
-   `herdr agent start <name> --kind pi --pane <id> -- --model <id> --thinking <level>`.
-5. Verify `herdr agent get` cwd and `herdr pane process-info` argv. Prompt
-   PACKET **without** `--wait`. Coordinator stays idle.
+3. Plugin starts `--kind pi` (cheap). For a paid packet: `/quit`, then
+   `herdr agent start <name> --kind muse --pane <id>` or `--kind cursor`
+   (worktree only). Never `--kind grok`. Never those kinds on `~/work/advait`.
+4. Verify `herdr agent get` cwd and `.agent`. Prompt PACKET **without**
+   `--wait`. Coordinator stays idle.
 
-`--kind grok` is the xAI `grok` CLI. `--kind muse` is the Muse CLI. Packet
-Grok/Composer/Muse-in-Pi are **`--kind pi` + `--model`**. Nested `pi__Agent`
-blocks the coordinator; user Enter queues (`steeringMode=all`).
+`--kind grok` is the xAI `grok` CLI — never. Nested `pi__Agent` blocks the
+coordinator; user Enter queues (`steeringMode=all`).
 
 ## Privacy
 
