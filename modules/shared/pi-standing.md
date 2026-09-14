@@ -11,12 +11,9 @@
   archives >10 KiB under `~/.pi/agent/obs/`; recall with
   `one-grep rg ~/.pi/agent/obs/<session> -- <literal>`. `/compact` at a
   finished subtask (`:8091`).
-- Gate: `then_run` on `edit`/`write`, or on Cursor models `gate_edit` /
-  `gate_write` (`pi__gate_edit`). PACKET.md Gate is the command. Do not
-  Cursor-Edit then Shell as two turns. EPR reduces cargo/test logs
-  (including Cursor Shell replay). Read `source_artifact` for the full
-  log. Logs stay on LAN. Muse `exec` is nested — still run the Gate;
-  Pi cannot fuse those tools.
+- Gate: Cursor `gate_*` **requires** `then_run` (schema reject). Fusion
+  runs it via `nix develop --command` when `flake.nix` exists. Host Edit
+  = intermediate hunks. EPR clips cargo/test.
 - Durable facts go in git or `memory_*`, not the prompt.
 - Work start: `overflow-assign`. Skip China-hosted and Contributor.
   Reviewers: Muse + Cursor in Pi. Ladder: `~/.pi/agent/stack.md`.
