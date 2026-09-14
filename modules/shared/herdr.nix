@@ -24,6 +24,20 @@ let
     text = builtins.readFile ./herdr-pi-worktree/start-pi.sh;
   };
 
+  startKind = kind: pkgs.writeShellApplication {
+    name = "herdr-start-${kind}-in-pane";
+    runtimeInputs = [ herdr pkgs.jq pkgs.coreutils pkgs.gnugrep pkgs.gawk pkgs.direnv ];
+    text = ''
+      export HERDR_START_KIND=${kind}
+      exec ${lib.getExe startPi}
+    '';
+  };
+
+  startHermes = startKind "hermes";
+  startCmd = startKind "cmd";
+  startMuse = startKind "muse";
+  startCursor = startKind "cursor";
+
   notifyIdle = pkgs.writeShellApplication {
     name = "herdr-notify-agent-idle";
     runtimeInputs = [ herdr pkgs.jq pkgs.coreutils pkgs.gnugrep pkgs.gawk ];
@@ -37,7 +51,7 @@ id = "nixos-config.pi-worktree"
 name = "Pi in worktree"
 version = "0.3.0"
 min_herdr_version = "0.9.0"
-description = "cd to the Git checkout, start Pi without --model (coordinator assigns)"
+description = "cd to the Git checkout, start Pi (or another CLI via actions)"
 platforms = ["linux", "macos"]
 
 [[actions]]
@@ -45,6 +59,30 @@ id = "start"
 title = "Start Pi in pane"
 contexts = ["workspace", "pane"]
 command = ["${lib.getExe startPi}"]
+
+[[actions]]
+id = "start-hermes"
+title = "Start Hermes in pane"
+contexts = ["workspace", "pane"]
+command = ["${lib.getExe startHermes}"]
+
+[[actions]]
+id = "start-cmd"
+title = "Start Command Code in pane"
+contexts = ["workspace", "pane"]
+command = ["${lib.getExe startCmd}"]
+
+[[actions]]
+id = "start-muse"
+title = "Start Muse Code in pane"
+contexts = ["workspace", "pane"]
+command = ["${lib.getExe startMuse}"]
+
+[[actions]]
+id = "start-cursor"
+title = "Start Cursor Agent CLI in pane"
+contexts = ["workspace", "pane"]
+command = ["${lib.getExe startCursor}"]
 
 [[events]]
 on = "worktree.created"

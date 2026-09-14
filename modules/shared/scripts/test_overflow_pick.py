@@ -192,6 +192,7 @@ Available models  ·  4 models
 Open Source
 
 nvidia/nemotron-3.5-lightning-free      FREE NVIDIA
+thinkingmachines/inkling               multimodal MoE reasoning
 meituan/longcat-2.0:free               FREE trillion-parameter agentic coding
 poolside/laguna-s-2.1-free             FREE open-weight agentic coding
 deepseek/deepseek-v4-flash             fast hybrid-attention reasoning (default)
@@ -202,14 +203,16 @@ claude-sonnet-5                        best combo of speed & intelligence
 """
         rows = pick.parse_cmd_list_models(text)
         ids = {r["id"] for r in rows}
+        free_flag = {r["id"]: r["free"] for r in rows}
         self.assertIn("nvidia/nemotron-3.5-lightning-free", ids)
+        self.assertIn("thinkingmachines/inkling", ids)
+        self.assertTrue(free_flag["thinkingmachines/inkling"])
         self.assertNotIn("deepseek/deepseek-v4-flash", ids)
         self.assertNotIn("meituan/longcat-2.0:free", ids)
         self.assertNotIn("poolside/laguna-s-2.1-free", ids)
         self.assertNotIn("claude-sonnet-5", ids)
         tagged = {r["id"]: r["cmd_free_tag"] for r in rows}
         self.assertTrue(tagged["nvidia/nemotron-3.5-lightning-free"])
-        free_flag = {r["id"]: r["free"] for r in rows}
         self.assertTrue(free_flag["nvidia/nemotron-3.5-lightning-free"])
 
     def test_executor_harnesses_and_reviewer_copy(self) -> None:
@@ -281,17 +284,24 @@ claude-sonnet-5                        best combo of speed & intelligence
             ["--kind muse (worktree)", "--kind cursor (worktree)"],
         )
 
-    def test_nous_free_only(self) -> None:
+    def test_nous_account_oss_not_frontier(self) -> None:
         rows = pick.parse_nous({
             "data": [
-                {"id": "anthropic/claude-opus-5"},
+                {"id": "openai/gpt-5.6-luna"},
                 {"id": "thinkingmachines/inkling:free"},
+                {"id": "nvidia/nemotron-3-ultra-550b-a55b"},
                 {"id": "meituan/longcat-2.0:free"},
                 {"id": "poolside/laguna-s-2.1:free"},
             ]
         })
         ids = {r["id"] for r in rows}
-        self.assertEqual(ids, {"thinkingmachines/inkling:free"})
+        self.assertEqual(
+            ids,
+            {
+                "thinkingmachines/inkling:free",
+                "nvidia/nemotron-3-ultra-550b-a55b",
+            },
+        )
 
 
 if __name__ == "__main__":

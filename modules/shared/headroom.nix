@@ -183,18 +183,29 @@ def upsert_json(path, *server_keys):
                 data = loaded
         except json.JSONDecodeError:
             pass
-    for key in server_keys:
+    muse = path.name == "settings.json" and "muse" in str(path)
+    keys = ("mcp_servers",) if muse else server_keys
+    if muse:
+        data.pop("mcpServers", None)
+        settings = data.get("settings")
+        if isinstance(settings, dict) and "toolPrefix" in settings:
+            data.pop("settings", None)
+        entry = {
+            **entry,
+            "transport": "stdio",
+            "enabled": True,
+            "mode": "optional",
+        }
+    for key in keys:
         servers = data.get(key)
         if not isinstance(servers, dict):
             servers = {}
             data[key] = servers
         servers["headroom"] = entry
-    if "mcpServers" in data and "settings" not in data:
-        data.setdefault("settings", {"toolPrefix": "server", "idleTimeout": 10})
     path.write_text(json.dumps(data, indent=2) + "\n")
 
 upsert_json(home / ".pi" / "agent" / "mcp.json", "mcpServers")
-upsert_json(home / ".config" / "muse" / "settings.json", "mcpServers", "mcp_servers")
+upsert_json(home / ".config" / "muse" / "settings.json", "mcp_servers")
 PY
   '';
 } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {

@@ -58,7 +58,8 @@ let
     args = stdioArgs;
   };
 
-  museLegacyEntry = {
+  museStdioEntry = {
+    transport = "stdio";
     inherit command;
     args = stdioArgs;
     enabled = true;
@@ -94,27 +95,24 @@ let
     '';
 
   jqUpsertMuse =
-    relPath: modern: legacy:
+    relPath: entry:
     let
-      modernJson = builtins.toJSON modern;
-      legacyJson = builtins.toJSON legacy;
+      entryJson = builtins.toJSON entry;
     in
     ''
       {
         path=${abs relPath}
         mkdir -p "$(dirname "$path")"
         if [[ -f "$path" ]]; then
-          ${pkgs.jq}/bin/jq \
-            --argjson modern '${modernJson}' \
-            --argjson legacy '${legacyJson}' \
-            '.mcpServers = ((.mcpServers // {})) | .mcpServers["one-grep"] = $modern
-             | .mcp_servers = ((.mcp_servers // {})) | .mcp_servers["one-grep"] = $legacy' \
+          ${pkgs.jq}/bin/jq --argjson entry '${entryJson}' \
+            'del(.mcpServers)
+             | del(.settings)
+             | .mcp_servers = ((.mcp_servers // {}))
+             | .mcp_servers["one-grep"] = $entry' \
             "$path" >"$path.tmp" && mv "$path.tmp" "$path"
         else
-          ${pkgs.jq}/bin/jq -n \
-            --argjson modern '${modernJson}' \
-            --argjson legacy '${legacyJson}' \
-            '{mcpServers: {"one-grep": $modern}, mcp_servers: {"one-grep": $legacy}}' >"$path"
+          ${pkgs.jq}/bin/jq -n --argjson entry '${entryJson}' \
+            '{schema_version: 1, mcp_servers: {"one-grep": $entry}}' >"$path"
         fi
       }
     '';
@@ -197,7 +195,7 @@ let
     )
     ++ lib.optional cfg.mcp.pi.enable (jqUpsert cfg.mcp.pi.path "mcpServers" cursorLikeEntry)
     ++ lib.optional cfg.mcp.muse.enable (
-      jqUpsertMuse cfg.mcp.muse.path cursorLikeEntry museLegacyEntry
+      jqUpsertMuse cfg.mcp.muse.path museStdioEntry
     )
     ++ lib.optional cfg.mcp.hermes.enable ''
       {
@@ -306,7 +304,7 @@ in
         };
       };
       muse = {
-        enable = mkEnableOption "register one-grep in Muse settings (mcpServers + mcp_servers)";
+        enable = mkEnableOption "register one-grep in Muse settings (mcp_servers stdio)";
         path = mkOption {
           type = types.str;
           default = ".config/muse/settings.json";

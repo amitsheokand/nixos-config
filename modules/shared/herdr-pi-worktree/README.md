@@ -8,8 +8,10 @@ root pane to the Git checkout, `direnv allow`s a blocked `.envrc`, then
 (cheap hub: overflow, MiniCPM-V, compact).
 
 Paid Muse Code / Cursor Agent CLI are **not** inside Pi. Coordinator
-`/quit`s that Pi and starts `--kind muse` or `--kind cursor` on a linked
-worktree. Never `--kind grok` (xAI CLI). Never those kinds on a primary
+`/quit`s that Pi and starts `--kind muse`, `--kind cursor`, or
+`--kind hermes` on a linked worktree. Command Code: plugin action
+`nixos-config.pi-worktree.start-cmd` (Herdr has no `--kind cmd`).
+Never `--kind grok` (xAI CLI). Never muse/cursor on a primary
 checkout (`.git/` directory). Never `cursor/muse-spark-1.3@*` (PAYG) or
 `*-contributor*`.
 
