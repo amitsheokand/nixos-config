@@ -4,12 +4,14 @@ Herdr `new_cwd = "follow"` inherits the previous pane directory. Trunkr
 opens checkouts with `herdr worktree open --cwd <repo-root> --path <wt-path>`,
 which emits `worktree.opened` (not `worktree.created`). This plugin cds the
 root pane to the Git checkout, `direnv allow`s a blocked `.envrc`, then
-`herdr agent start --kind pi` (cheap hub: overflow, MiniCPM-V, compact).
+`herdr agent start --kind pi` **without `--model`** (cheap hub: overflow,
+MiniCPM-V, compact).
 
 Paid Muse Code / Cursor Agent CLI are **not** inside Pi. Coordinator
 `/quit`s that Pi and starts `--kind muse` or `--kind cursor` on a linked
 worktree. Never `--kind grok` (xAI CLI). Never those kinds on a primary
-checkout (`.git/` directory).
+checkout (`.git/` directory). Never `cursor/muse-spark-1.3@*` (PAYG) or
+`*-contributor*`.
 
 Do **not** `git worktree add` from a coordinator. Create with Worktrunk
 (`wt switch --create`, or Herdr `prefix+shift+g`) so hooks run, then let

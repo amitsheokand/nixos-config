@@ -107,6 +107,9 @@ if changed:
         f.write("\n")
 PY
     fi
+
+    export ADVAIT_HARNESS_CLIP="${homeDir}/.local/bin/advait-harness-clip"
+    ${pkgs.python313}/bin/python3 ${./scripts/harness-hooks-merge.py} || true
   '';
 
   cursorMcp = {
@@ -151,6 +154,12 @@ in
   # keeps the real Python environment outside ~/.local/bin.
   home.file.".local/bin/headroom" = {
     source = "${headroomWrapped}/bin/headroom";
+    executable = true;
+    force = true;
+  };
+
+  home.file.".local/bin/advait-harness-clip" = {
+    source = ./scripts/harness-clip.py;
     executable = true;
     force = true;
   };

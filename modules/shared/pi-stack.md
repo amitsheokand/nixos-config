@@ -5,9 +5,9 @@ obs-pack, EPR). Paid Muse Code and Cursor Agent CLI are **`--kind muse`**
 and **`--kind cursor`** on a linked worktree — not `pi-muse-bridge` /
 `pi-cursor-sdk`. Create/open worktrees with **Worktrunk + trunkr**
 (`prefix+shift+g` / `wt switch --create`), never `git worktree add`. The
-`nixos-config.pi-worktree` plugin cds the pane and starts `--kind pi`.
-Coordinator `/quit`s and starts the native kind for a paid packet. Do not
-open a second control plane for the same work.
+`nixos-config.pi-worktree` plugin cds the pane and starts `--kind pi`
+**without `--model`**. Coordinator `/quit`s and starts the native kind for
+a paid packet. Do not open a second control plane for the same work.
 
 Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 
@@ -18,9 +18,9 @@ Pipeline that must stay wired (thin harness; do not bloat the system prompt):
 | one-grep | hybrid search, absolute `root` | MCP in Pi / Cursor / Muse / Hermes |
 | Headroom | compress tool dumps before they re-enter context | MCP in Pi + Cursor; proxy `:8787` for Claude/Codex |
 | Compactor | session compact at subtask boundaries | `:8091` → Mac `:8081` → iGPU `:8092` |
-| Action Fusion | `then_run` on edit/write **and** `gate_edit`/`gate_write` (Cursor bridge; host Edit has no then_run) | `pi-extensions/action-fusion.ts` |
-| EPR | diagnostic logs → scout, then local Compactor. Also Cursor Shell replay (`sourceToolName`) | `pi-extensions/epr.ts` |
-| obs-pack | large tool results → archive + head/tail after 2 sends | `pi-extensions/obs-pack.ts` |
+| Action Fusion | `then_run` on edit/write **and** `gate_edit`/`gate_write` (Cursor bridge; host Edit has no then_run) | `pi-extensions/action-fusion.ts` (`--kind pi` only) |
+| EPR | diagnostic logs → scout, then local Compactor. Also Cursor Shell replay (`sourceToolName`) | `pi-extensions/epr.ts` (`--kind pi` only) |
+| obs-pack | large tool results → archive + head/tail after 2 sends | `pi-extensions/obs-pack.ts` (`--kind pi` only) |
 
 Do **not** install NVIDIA SoL-Pi as a second package. It is a Pi
 extension, not a harness, but two of its four mechanisms duplicate this
