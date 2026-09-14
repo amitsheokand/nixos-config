@@ -286,11 +286,13 @@ herdr agent wait <name> --until idle --timeout 3600000   # optional; idle plugin
 
 Do **not** export `META_API_KEY` / `MODEL_API_KEY` in the shell if you want the subscription. Those env vars always win over the account session. Extra keys you create in the [Model API dashboard](https://dev.meta.ai/) are PAYG; the subscription credential is attached during Muse Code account onboarding and is **Muse Code only** ([subscriptions](https://ai.developer.meta.com/docs/muse-code/subscriptions)).
 
-Hipfire/`forge` is parked. Pi default chat is Cursor Composer 2.5 (`:slow`, high).
+Hipfire/`forge` is parked. Pi default chat is OpenCode Zen Nemotron 3 Ultra
+free (`opencode/nemotron-3-ultra-free`, high). Paid Muse/Cursor are native
+Herdr kinds, not Pi wraps.
 
 ```sh
 muse          # /login → Sign in with your browser (not "paste an API key")
-# Pi: /model cursor/composer-2-5:slow — Spark in Pi is PAYG if you use MODEL_API_KEY
+# Pi: /model opencode/nemotron-3-ultra-free — never muse-code/* or cursor/* wraps
 ```
 
 `muse-spark-proxy` (`:8082`) and `~/.config/meta.env` are **PAYG only**. Do not start the proxy or source that file unless you intend token billing. Spark reuses `tool_call_id=call_0`; the proxy exists only for that Chat Completions bug.
@@ -436,27 +438,27 @@ normal `grok` session — that replaces the cloud catalog).
 
 | Host | Grok `/model` | Pi `/model` | API `model` |
 |------|---------------|-------------|-------------|
-| Mac (`ai-mac`) | `longctx` (parked MiniCPM5-2B `:8080`), `gemmacoder` when `mlx-lane gemma` | default **Composer 2.5** (`cursor/composer-2-5:slow`). Compactor `:8081`. `/model minicpm-v-4.5` → PC VL | MiniCPM aliases `longctx`/`minicpm` remain registered. Gemma path on demand. Compact `compactor`. VL `http://nixos.local:8093/v1` |
-| PC (`nixos`) | `minicpm-v-4.5` (visuals); cloud grok-* stay default chat | default **Composer 2.5** (`cursor/composer-2-5:slow`). `/model minicpm-v-4.5` for screenshots/XAML. `longctx` parked | longctx still at `http://ai-mac.local:8080/v1` if you `/model` it; VL at `http://127.0.0.1:8093/v1`. Catalog: `modules/shared/pi-minicpm-v-catalog.nix` |
-| Air (`vaayu`) | `minicpm-v-4.5` (LAN VL) | default Composer 2.5; `/model minicpm-v-4.5` desktop VL; cloud overflow via `~/.pi/agent/overflow.md` (US-host only) | same ids |
+| Mac (`ai-mac`) | `longctx` (parked MiniCPM5-2B `:8080`), `gemmacoder` when `mlx-lane gemma` | default **Zen Nemotron Ultra free**. Compactor `:8081`. `/model minicpm-v-4.5` → PC VL | MiniCPM aliases `longctx`/`minicpm` remain registered. Gemma path on demand. Compact `compactor`. VL `http://nixos.local:8093/v1` |
+| PC (`nixos`) | `minicpm-v-4.5` (visuals); cloud grok-* stay default chat | default **Zen Nemotron Ultra free**. `/model minicpm-v-4.5` for screenshots/XAML. `longctx` parked | longctx still at `http://ai-mac.local:8080/v1` if you `/model` it; VL at `http://127.0.0.1:8093/v1`. Catalog: `modules/shared/pi-minicpm-v-catalog.nix` |
+| Air (`vaayu`) | `minicpm-v-4.5` (LAN VL) | default Zen Nemotron Ultra free; `/model minicpm-v-4.5` desktop VL; cloud overflow via `~/.pi/agent/overflow.md` (US-host only) | same ids |
 
-Resident GPU job on the PC is **MiniCPM-V 4.5** (llama.cpp Vulkan, R9700, `:8093`, ~8 GiB). Visuals for Continue / Zed / Hermes / Grok local picker / Pi go there. Cursor Agent/CLI stays cloud Grok/Composer — use Advait `vl-capture.py`, do not paste PNGs. **Pi** defaults to Cursor Composer 2.5 (`composer-2-5:slow`, high) so opening `pi` does not steal the R9700 and does not sit on MiniCPM5 longctx.
+Resident GPU job on the PC is **MiniCPM-V 4.5** (llama.cpp Vulkan, R9700, `:8093`, ~8 GiB). Visuals for Continue / Zed / Hermes / Grok local picker / Pi go there. Cursor Agent/CLI stays cloud Grok/Composer — use Advait `vl-capture.py`, do not paste PNGs. **Pi** defaults to OpenCode Zen `nemotron-3-ultra-free` so opening `pi` does not wrap paid seats and does not sit on MiniCPM5 longctx.
 
 **hipfire (parked):** `hipfire-serve-local` stays on PATH. Catalog proxy `:8080` / serve `:11435` are **manual** (`systemctl --user start hipfire-serve`) and **Conflicts** with `minicpm-v.service`. Do not enable hipfire's NixOS module (it rebuilds the crate and overwrites `~/.hipfire/config.toml`). Do not autostart hipfire while MiniCPM-V is resident.
 
 ### Shared Pi agent (Mac / PC / vaayu)
 
 Pi is the hub. It runs inside **Herdr worktree panes** (always-on `herdr
-server` on PC / M1 / M4). Cursor (`pi-cursor-sdk`) and Muse Code Power (`pi-muse-bridge`,
-pin `muse-code/muse-spark-1.3`) run **inside Pi**. Usage ladder:
+server` on PC / M1 / M4). Paid Cursor Agent CLI and Muse Code Power run as
+**`--kind cursor` / `--kind muse`**, not Pi npm bridges. Usage ladder:
 `modules/shared/pi-stack.md` → `~/.pi/agent/stack.md`. Grok Bot is not the
 coordinator seat. Rakazo is not packaged.
 
 | Piece | Where |
 |-------|--------|
-| Packages + UI | `modules/shared/pi-agent.nix` (cursor-sdk, muse-bridge 0.3.0, tool-display, statusline, pi-fff, pi-cc-compact, …) |
+| Packages + UI | `modules/shared/pi-agent.nix` (no pi-cursor-sdk / pi-muse-bridge; tool-display, statusline, pi-fff, pi-cc-compact, …) |
 | Compact model | Mac MLX Compactor on `:8081` (login). Fits with MiniCPM `:8080`. `mlx-lane gemma` is exclusive (stops both). PC router `:8091` → Mac `:8081`, then local tiny. `PI_CC_COMPACT_MODEL`. Never hipfire. |
-| Local model defaults | Cursor Composer 2.5 (`composer-2-5:slow`, high). `/model minicpm-v-4.5` for visuals on the PC R9700. MiniCPM5 `longctx` parked. |
+| Local model defaults | OpenCode Zen `nemotron-3-ultra-free` (high). `/model minicpm-v-4.5` for visuals on the PC R9700. MiniCPM5 `longctx` parked. Never `cursor/*` or `muse-code/*` wraps. |
 | Auth keys | machine-local `~/.pi/agent/auth.json` (not in git) |
 
 After `nix run .#build-switch` on each machine, missing `pi install` packages are pulled automatically. On a new host, still run `pi` → `/login` once for Cursor SDK / Codex keys. Pi compaction is on by default (`compaction.reserveTokens=4096`, `keepRecentTokens=12000`, `PI_ASYNC_PREFIX_COMPACTION_START_RATIO=0.6`). Manual `/compact` uses **pi-cc-compact**. Mac talks to Compactor on `:8081` (`mlx-compact/compactor`, thinking off, 16k). The GPU host uses `compact/compactor` via `:8091` (Mac `:8081`, then local 0.8B on iGPU). `PI_ASYNC_PREFIX_COMPACTION=0` on the GPU host so background compact does not share the R9700 (MiniCPM-V). Do not compact on hipfire.

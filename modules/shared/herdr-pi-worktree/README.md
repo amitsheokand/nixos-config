@@ -4,8 +4,8 @@ Herdr `new_cwd = "follow"` inherits the previous pane directory. Trunkr
 opens checkouts with `herdr worktree open --cwd <repo-root> --path <wt-path>`,
 which emits `worktree.opened` (not `worktree.created`). This plugin cds the
 root pane to the Git checkout, `direnv allow`s a blocked `.envrc`, then
-`herdr agent start --kind pi` **without `--model`** (cheap hub: overflow,
-MiniCPM-V, compact).
+`herdr agent start --kind pi` with OpenCode Zen `nemotron-3-ultra-free`
+(cheap hub: overflow, MiniCPM-V, compact).
 
 Paid Muse Code / Cursor Agent CLI are **not** inside Pi. Coordinator
 `/quit`s that Pi and starts `--kind muse` or `--kind cursor` on a linked

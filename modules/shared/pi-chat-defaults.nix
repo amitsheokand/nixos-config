@@ -1,9 +1,10 @@
-# Pi default chat: Cursor Composer 2.5 high, not fast, not longctx.
-# longctx (MiniCPM5-2B) stays registered for rare dumps; it is too slow
-# for herding. Visuals stay MiniCPM-V via `/model minicpm-v-4.5`.
+# Pi default chat: OpenCode Zen Nemotron 3 Ultra free (included).
+# Exact id: opencode/nemotron-3-ultra-free. Paid Muse/Cursor are Herdr
+# `--kind muse` / `--kind cursor`, not Pi wraps. Visuals:
+# `/model minicpm-v-4.5`. longctx stays registered but parked.
 {
-  defaultProvider = "cursor";
-  defaultModel = "composer-2-5:slow";
-  model = "composer-2-5:slow";
+  defaultProvider = "opencode";
+  defaultModel = "nemotron-3-ultra-free";
+  model = "nemotron-3-ultra-free";
   defaultThinkingLevel = "high";
 }

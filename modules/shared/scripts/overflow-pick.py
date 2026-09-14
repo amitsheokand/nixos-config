@@ -7,7 +7,7 @@ that assignment until the next calendar day (or --refresh).
 
 Free catalogs (executors, not reviewers): OpenRouter, OpenCode Zen,
 Hermes (Nous :free + opencode-free), Command-Code GOAT Open Source.
-Reviewers stay Cursor Grok / Muse inside Pi.
+Reviewers stay Herdr `--kind muse` / `--kind cursor` on a worktree.
 """
 from __future__ import annotations
 
@@ -779,10 +779,10 @@ def render_md(payload: dict[str, Any]) -> str:
         "## Roles",
         "",
         "- **Executor:** today's free pick — any of Pi (OpenRouter / OpenCode Zen),",
-        "  `hermes`, or `cmd`. Pi default chat is Cursor Composer 2.5 (`:slow`, high).",
-        "  `longctx` is parked.",
-        "- **Reviewer:** Cursor Grok / Composer and Muse **in Pi**. Do not review",
-        "  with the free overflow model.",
+        "  `hermes`, or `cmd`. Pi default chat is OpenCode Zen",
+        "  `nemotron-3-ultra-free` (high). `longctx` is parked.",
+        "- **Reviewer:** `--kind muse` or `--kind cursor` on a worktree. Do not",
+        "  review with the free overflow model.",
         "",
     ]
     if free:
@@ -800,10 +800,10 @@ def render_md(payload: dict[str, Any]) -> str:
     else:
         lines += ["## Executor (free / included)", "", "No AA-ranked free model was listed today.", ""]
     lines += [
-        "## Reviewer (Pi, not free overflow)",
+        "## Reviewer (native CLI, not free overflow)",
         "",
-        "- Muse: `muse-code/muse-spark-1.3` or subagent `muse-spark`",
-        "- Cursor: `pi-cursor-sdk` (Grok / Composer) or Cursor Ultra in the IDE",
+        "- Muse: `herdr agent start NAME --kind muse --pane ID` (worktree)",
+        "- Cursor: `herdr agent start NAME --kind cursor --pane ID` (worktree)",
         "",
     ]
     if cheap:
@@ -868,7 +868,7 @@ def build_assignment(
             "free_confidential_ok": False,
             "banned_substrings": list(BAN_SUBSTR) + list(CHINA_HOST_MARKERS),
             "executor_catalogs": ["openrouter", "zen", "hermes", "commandcode"],
-            "reviewers": ["pi-cursor-sdk (Grok/Composer)", "muse-code/muse-spark-1.3"],
+            "reviewers": ["--kind muse (worktree)", "--kind cursor (worktree)"],
         },
         "free": free,
         "cheap": cheap,

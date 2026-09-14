@@ -157,12 +157,30 @@ slug="${slug#-}"
 [[ -n "$slug" ]] || slug="pi"
 name="$slug"
 
+# Linked worktree: `.git` is a gitdir file. Primary checkout: `.git/` directory.
+# Paid Cursor/Muse ids must not start inside Pi on a primary tree.
+git_root="${wt_path:-}"
+if [[ -z "$git_root" ]]; then
+  git_root="$(pane_cwd || true)"
+fi
+linked=0
+if [[ -n "$git_root" && -f "$git_root/.git" ]]; then
+  linked=1
+fi
+
 start_args=()
-if [[ -n "${HERDR_PI_MODEL:-}" ]]; then
-  start_args+=(-- --model "$HERDR_PI_MODEL")
+model="${HERDR_PI_MODEL:-}"
+if [[ -n "$model" && "$linked" -ne 1 && ( "$model" == cursor/* || "$model" == muse-code/* ) ]]; then
+  echo "herdr-pi-worktree: skip paid wrap --model on primary (${git_root:-?})" >&2
+  model=""
+fi
+if [[ -n "$model" ]]; then
+  start_args+=(-- --model "$model")
   if [[ -n "${HERDR_PI_THINKING:-}" ]]; then
     start_args+=(--thinking "$HERDR_PI_THINKING")
   fi
+elif [[ -n "${HERDR_PI_THINKING:-}" ]]; then
+  start_args+=(-- --thinking "$HERDR_PI_THINKING")
 fi
 
 started=0

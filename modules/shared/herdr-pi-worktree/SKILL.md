@@ -14,10 +14,10 @@ Worktrees live under **`~/work/worktrees/`** on PC (Worktrunk
 `{{ repo_path }}/../worktrees/{{ branch | sanitize }}`). Not `/mnt/`.
 
 Plugin auto-start (`nixos-config.pi-worktree` on `worktree.opened`): `--kind pi`
-**without `--model`**. Coordinator `/quit`s that Pi and starts `--kind muse`
-or `--kind cursor` for a paid packet. Never those kinds on `~/work/advait`
-or `~/work/herdr-lane` primary (`.git/` directory). Never
-`cursor/muse-spark-1.3@*` or `*-contributor*`.
+with `opencode/nemotron-3-ultra-free`. Coordinator `/quit`s that Pi and
+starts `--kind muse` or `--kind cursor` for a paid packet. Never those
+kinds on `~/work/advait` or `~/work/herdr-lane` primary (`.git/` directory).
+Never `cursor/muse-spark-1.3@*` or `*-contributor*`.
 
 ## Canonical path (one copy)
 
