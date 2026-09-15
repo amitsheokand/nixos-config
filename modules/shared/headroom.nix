@@ -185,12 +185,13 @@ def upsert_json(path, *server_keys):
             pass
     muse = path.name == "settings.json" and "muse" in str(path)
     keys = ("mcp_servers",) if muse else server_keys
+    payload = entry
     if muse:
         data.pop("mcpServers", None)
         settings = data.get("settings")
         if isinstance(settings, dict) and "toolPrefix" in settings:
             data.pop("settings", None)
-        entry = {
+        payload = {
             **entry,
             "transport": "stdio",
             "enabled": True,
@@ -201,7 +202,7 @@ def upsert_json(path, *server_keys):
         if not isinstance(servers, dict):
             servers = {}
             data[key] = servers
-        servers["headroom"] = entry
+        servers["headroom"] = payload
     path.write_text(json.dumps(data, indent=2) + "\n")
 
 upsert_json(home / ".pi" / "agent" / "mcp.json", "mcpServers")
