@@ -8,7 +8,8 @@ description: >-
 
 # Pi compact (off hipfire)
 
-Chat operator is Cursor Composer / Grok / Muse — not hipfire Anvil. Compact is
+Chat operator is Pi with OpenCode Zen `nemotron-3-ultra-free`. Paid
+Cursor / Muse are Herdr `--kind` seats, not hipfire Anvil. Compact is
 a different model on a different port. Headroom MCP shrinks **tool dumps**
 before they enter the prompt; `/compact` rewrites the **session** at a
 subtask boundary. EPR shrinks **diagnostic bash logs** with a regex scout

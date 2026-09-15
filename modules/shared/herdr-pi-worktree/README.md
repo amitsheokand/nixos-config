@@ -9,7 +9,9 @@ root pane to the Git checkout, `direnv allow`s a blocked `.envrc`, then
 
 Paid Muse Code / Cursor Agent CLI are **not** inside Pi. Coordinator
 `/quit`s that Pi and starts `--kind muse`, `--kind cursor`, or
-`--kind hermes` on a linked worktree. Command Code: plugin action
+`--kind hermes` on a linked worktree (`--workspace` = the `wt` path).
+Never a primary checkout. Those seats get Headroom + one-grep (worktree
+`root`) + one shell after edit; Fusion/EPR/obs-pack stay Pi-only.
 `nixos-config.pi-worktree.start-cmd` (Herdr has no `--kind cmd`).
 Never `--kind grok` (xAI CLI). Never muse/cursor on a primary
 checkout (`.git/` directory). Never `cursor/muse-spark-1.3@*` (PAYG) or
@@ -26,6 +28,6 @@ Companion: `nixos-config.agent-idle` (`herdr-agent-idle/`) toasts and prompts
 the idle coordinator when a named implementer settles. Next packet:
 `wt switch --create` / `prefix+shift+g` then this plugin auto-starts Pi.
 Copy-paste + verify: `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md`
-(this directory's `SKILL.md`, installed by `pi-agent.nix`). Docs:
-`advait-docs/agents/herdr-worktrees.md`. Never `skill_manage create`
-`herdr-pi-model-spawn` (duplicate under `pi-hermes-memory/skills/`).
+(this directory's `SKILL.md`, installed by `pi-agent.nix`). That Nix copy
+is the pin. Never `skill_manage create` `herdr-pi-model-spawn` (duplicate
+under `pi-hermes-memory/skills/` — ignore that dir).

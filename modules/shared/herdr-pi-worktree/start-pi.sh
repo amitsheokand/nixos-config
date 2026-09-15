@@ -182,7 +182,7 @@ if [[ "$want_kind" != "pi" ]]; then
   model=""
 fi
 if [[ -n "$model" && "$linked" -ne 1 && ( "$model" == cursor/* || "$model" == muse-code/* ) ]]; then
-  echo "herdr-pi-worktree: skip paid wrap --model on primary (${git_root:-?})" >&2
+  echo "herdr-pi-worktree: refuse paid wrap --model on primary (${git_root:-?})" >&2
   model=""
 fi
 if [[ "$want_kind" == "pi" && -n "$model" ]]; then
@@ -196,6 +196,16 @@ elif [[ "$want_kind" == "hermes" ]]; then
   start_args+=(-- --yolo)
 elif [[ "$want_kind" == "muse" ]]; then
   start_args+=(-- --yolo)
+  if [[ -n "$wt_path" ]]; then
+    start_args+=(--workspace "$wt_path")
+  fi
+elif [[ "$want_kind" == "cursor" ]]; then
+  # --worktree would be Cursor's ~/.cursor/worktrees, not Worktrunk. --workspace
+  # pins Agent CLI to this pane's checkout (never a primary by accident).
+  start_args+=(-- --trust --yolo --approve-mcps)
+  if [[ -n "$wt_path" ]]; then
+    start_args+=(--workspace "$wt_path")
+  fi
 fi
 
 started=0

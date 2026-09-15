@@ -8,6 +8,9 @@ This is my personal Nix configuration for macOS (Apple Silicon) and NixOS (GNOME
 
 It provides a reproducible, declarative development environment focused on **Rust development**.
 
+Coding-agent ladder (Pi = Zen Nemotron free; Muse/Cursor = Herdr `--kind`):
+[`docs/coding-agent-stack.md`](docs/coding-agent-stack.md).
+
 ## What's Different from Upstream
 
 This fork has been customized with:

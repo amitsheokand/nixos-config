@@ -799,7 +799,8 @@ def render_md(payload: dict[str, Any]) -> str:
         "  Hermes Nous ($20) and Command Code GOAT included OSS are extra",
         "  overflow seats (`--kind hermes` / `cmd`). Check usage:",
         "  `hermes insights --days 7`, `cmd status`.",
-        "- **Reviewer:** `--kind muse` or `--kind cursor` on a worktree. Do not",
+        "- **Reviewer:** `--kind muse` or `--kind cursor` on a worktree. Never",
+        "  `/model muse-code/*` or `/model cursor/*` inside Pi. Do not",
         "  review with the free overflow model.",
         "",
     ]
@@ -818,10 +819,11 @@ def render_md(payload: dict[str, Any]) -> str:
     else:
         lines += ["## Executor (free / included)", "", "No AA-ranked free model was listed today.", ""]
     lines += [
-        "## Reviewer (native CLI, not free overflow)",
+        "## Reviewer (native Herdr CLI, not a Pi /model)",
         "",
         "- Muse: `herdr agent start NAME --kind muse --pane ID` (worktree)",
         "- Cursor: `herdr agent start NAME --kind cursor --pane ID` (worktree)",
+        "- Never `pi-muse-bridge` / `pi-cursor-sdk`.",
         "- Hermes quality (not overflow): `--kind hermes` default portal model",
         "",
     ]

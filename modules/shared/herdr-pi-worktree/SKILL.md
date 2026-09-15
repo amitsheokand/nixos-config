@@ -1,14 +1,15 @@
 ---
 name: herdr-pi-model-spawn
-description: Spawn a Herdr pane agent. Pi is the cheap hub; Muse, Cursor, Hermes, and Command Code are native CLIs on a linked worktree. Use when opening a packet seat or when a pane landed on the wrong kind, repo, or /mnt.
+description: Spawn a Herdr pane agent. Pi is the cheap hub (Zen Nemotron free); Muse, Cursor, Hermes, and Command Code are native CLIs on a linked worktree. Use when opening a packet seat or when a pane landed on the wrong kind, repo, or /mnt.
 ---
 
 # Herdr: spawn Pi (cheap) or native CLIs (paid)
 
 Pi is the **cheap** hub (overflow, MiniCPM-V, `/compact`, obs-pack, EPR).
-Paid Muse Code Power and Cursor Agent CLI (Ultra / Grok / Composer) are
-**`--kind muse`** and **`--kind cursor`** — not `pi-muse-bridge` /
-`pi-cursor-sdk`. `--kind grok` is the xAI `grok` CLI; never that.
+Default chat: OpenCode Zen `nemotron-3-ultra-free`. Paid Muse Code Power and
+Cursor Agent CLI are **`--kind muse`** and **`--kind cursor`** — not
+`pi-muse-bridge` / `pi-cursor-sdk`. `--kind grok` is the xAI `grok` CLI;
+never that.
 
 Worktrees live under **`~/work/worktrees/`** on PC (Worktrunk
 `{{ repo_path }}/../worktrees/{{ branch | sanitize }}`). Not `/mnt/`.
@@ -16,19 +17,21 @@ Worktrees live under **`~/work/worktrees/`** on PC (Worktrunk
 Plugin auto-start (`nixos-config.pi-worktree` on `worktree.opened`): `--kind pi`
 with `opencode/nemotron-3-ultra-free`. Coordinator `/quit`s that Pi and
 starts `--kind muse` or `--kind cursor` for a paid packet. Never those
-kinds on `~/work/advait` or `~/work/herdr-lane` primary (`.git/` directory).
-Never `cursor/muse-spark-1.3@*` or `*-contributor*`.
+kinds on a **primary** checkout (`.git/` directory). Never
+`cursor/muse-spark-1.3@*` or `*-contributor*`.
 
 ## Canonical path (one copy)
 
 This skill is **only** `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md`
-(Pi user skills; `auto`). Home Manager installs it from this file
-(`nixos-config/modules/shared/herdr-pi-worktree/SKILL.md`).
+(Pi user skills; `auto`). Home Manager installs it from
+`nixos-config/modules/shared/herdr-pi-worktree/SKILL.md`. **That Nix copy
+is the pin.**
 
 Do **not** `skill_manage create` / `update` this name. That writes a second
 copy under `~/.pi/agent/pi-hermes-memory/skills/`. Pi then warns
-`[Skill conflicts]` and skips the Hermes copy. Patch **this** file, copy
-onto the user-skills path for the current session, then `home-manager switch`.
+`[Skill conflicts]` and skips the Hermes copy. **Ignore the memory-dir
+copy.** Activation deletes it. Patch **this** Nix file, then
+`home-manager switch`.
 
 Pi load order (first wins): `~/.pi/agent/skills/` → packages →
 `pi-hermes-memory/skills/`. Same `name` in two trees is a collision.
@@ -41,7 +44,7 @@ Pi load order (first wins): `~/.pi/agent/skills/` → packages →
 | Hermes Nous ($20 OSS / :free) | `--kind hermes` on a **worktree** | portal GPT-5/Claude as overflow; China-host ids |
 | Command Code GOAT | plugin `start-cmd` (`cmd --yolo --trust`) | Anthropic/OpenAI GOAT rows; Herdr has no `--kind cmd` |
 | Muse Code Power | `--kind muse` on a **worktree** | `pi-muse-bridge`, `/model muse-code/*`, `*-contributor*` |
-| Cursor Agent CLI (Ultra / Grok / Composer) | `--kind cursor` on a **worktree** | `pi-cursor-sdk`, `/model cursor/*` on a primary, `--kind grok` |
+| Cursor Agent CLI (Ultra / Grok / Composer) | `--kind cursor` on a **worktree** | `pi-cursor-sdk`, `/model cursor/*`, `--kind grok` |
 | xAI grok CLI | never | `--kind grok` |
 
 ## Procedure
@@ -55,28 +58,29 @@ herdr workspace list
 ```
 
 `herdr worktree *` without `--cwd` uses this workspace's git source. A pane
-labeled `advait` can still have `checkout_path` = `nixos-config`. Always pass
-`--cwd /home/amitsheokand/work/advait` for Advait trees. A packet seat's
-`checkout_path` should equal the `wt` path.
+label can lie about the repo. Always pass `--cwd` the **primary clone**.
+A packet seat's `checkout_path` should equal the `wt` path.
 
 ### 1. Create the tree (Worktrunk, not git, not herdr create)
 
 ```bash
-code=/home/amitsheokand/work/advait
-packet=tray-island-present   # example
-wt -C "$code" switch --create -y -b main "wt/pc/advait/${packet}"
+code=$HOME/dev/nixos-config   # primary clone of the repo you are packing
+packet=example-packet
+host=pc                       # pc | vaayu | aimac
+repo=$(basename "$code")
+wt -C "$code" switch --create -y -b main "wt/${host}/${repo}/${packet}"
 wt -C "$code" list
 ```
 
-**Pass:** Path is `/home/amitsheokand/work/worktrees/wt-pc-advait-<packet>`.
-**Fail:** Path under `/mnt/advait-scratch/`. Do not keep creating there.
+**Pass:** Path is under `~/work/worktrees/`.
+**Fail:** Path under `/mnt/`. Do not keep creating there.
 
 ### 2. Open in Herdr (fires Pi plugin)
 
 ```bash
-wt_path=/home/amitsheokand/work/worktrees/wt-pc-advait-${packet}
+# paste wt_path from `wt -C "$code" list`
 herdr worktree open \
-  --cwd /home/amitsheokand/work/advait \
+  --cwd "$code" \
   --path "$wt_path" \
   --label "T-${packet}" \
   --no-focus
@@ -106,10 +110,10 @@ herdr agent wait "$name" --until idle --timeout 60000
 herdr agent prompt "$name" "/quit"
 # wait until that name is gone and the pane is a shell
 
-# Paid Muse Code (worktree):
+# Paid Muse Code (worktree; plugin adds --workspace):
 herdr agent start "$name" --kind muse --pane "$pane"
-# Paid Cursor Agent CLI (worktree only — never Advait/herdr-lane primary):
-# herdr agent start "$name" --kind cursor --pane "$pane"
+# Paid Cursor Agent CLI (same pane rules; never a primary):
+herdr agent start "$name" --kind cursor --pane "$pane"
 # Hermes Nous overflow / $20 OSS (worktree):
 # herdr agent start "$name" --kind hermes --pane "$pane" -- --yolo
 # Command Code GOAT (no --kind; plugin or):
@@ -118,8 +122,8 @@ herdr agent start "$name" --kind muse --pane "$pane"
 # herdr agent start "$name" --kind pi --pane "$pane"
 ```
 
-Never `herdr agent start … --kind cursor` on the Advait primary
-(`~/work/advait`). Pi `cursor/*` wrap there is the 56 GiB `node` OOM.
+Never `herdr agent start … --kind cursor` on a primary. Pi `cursor/*` wrap
+there is a multi-tens-of-GiB Node OOM.
 
 ### 5. Verify kind and cwd
 
@@ -131,8 +135,10 @@ herdr agent read "$name" --source visible --lines 20
 
 `.agent` must match the kind you started. Pi fullscreen TUI: prefer
 `--source visible`. Packet proof is a RECEIPT file in the worktree, not a
-nested agent id. Native Cursor/Muse: last hunk+Gate in the same shell;
-Headroom before logs re-enter.
+nested agent id. Native Cursor/Muse: last hunk+Gate in the **same** shell
+(`cargo test -p <crate> --lib` or `cargo xwin test`); Headroom before dumps
+re-enter. one-grep `root` is this worktree under `~/work/worktrees/…`, never
+`~/work`. Fusion/EPR/obs-pack stay `--kind pi` only.
 
 ### 6. Dispatch PACKET, then idle
 
@@ -143,10 +149,9 @@ herdr agent prompt "$name" "$(cat "$wt_path/PACKET.md")"
 
 Coordinator must become **idle**. `nixos-config.agent-idle` toasts on named
 implementer settle and `agent prompt`s only a coordinator in the **same
-repo family** (Advait `wt-pc-advait-*` / `~/work/advait`; herdr-lane
-`wt-pc-lane-*` / `~/work/herdr-lane`; nixos-config). That coordinator
-must already be idle/done (unnamed, or name `coord`/`coordinator`).
-Cross-repo settles are toast-only so they do not pollute Advait context.
+repo family** as the settled pane. That coordinator must already be
+idle/done (unnamed, or name `coord`/`coordinator`). Cross-repo settles are
+toast-only so they do not pollute the wrong context.
 
 ## One mux (PC)
 

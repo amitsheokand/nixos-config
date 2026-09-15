@@ -4,6 +4,9 @@ Local-first hybrid search (ripgrep + BM25 + ONNX embeddings) via stdio MCP
 `one-grep serve --stdio`. No daemon. Every call needs an **absolute `root`**.
 The index lives under `<root>/.one-grep/`.
 
+This is search MCP **on** each harness (Pi, Cursor, Muse, Hermes, Grok, Zed).
+It is not a Cursor/Muse wrap inside Pi.
+
 Tools:
 
 - **search** — hybrid (semantic + BM25). Use for architecture, call chains,
@@ -16,17 +19,16 @@ Both take `root`. Optional `search` fields: `fts` (lexical anchors), `fuse`
 ## Indexed workspaces
 
 Index each tree once (`one-grep index <root>` then `one-grep embed <root>`).
-Do **not** index `~/work` or Advait `third_party/**`.
+Do **not** index `$HOME` or `~/work` as one tree. Skip vendored `third_party/**`.
+Packet seats: `root` is the worktree under `~/work/worktrees/…`.
 
 | Tree | Linux `root` | macOS `root` |
 | --- | --- | --- |
 | Nix / agents config | `/home/amitsheokand/dev/nixos-config` | `/Users/amitsheokand/dev/nixos-config` |
 | hipfire | `/home/amitsheokand/dev/hipfire` | `/Users/amitsheokand/dev/hipfire` |
-| Advait code | `/home/amitsheokand/work/advait` | `/Users/amitsheokand/work/advait` |
-| Advait docs | `/home/amitsheokand/work/advait-docs` | `/Users/amitsheokand/work/advait-docs` |
 
-Advait code and docs are **separate trees**. Do not search docs when the
-question is about crates/tools, and vice versa.
+Code and docs for a product are **separate trees**. Do not search docs when
+the question is about crates/tools, and vice versa.
 
 ## When to use
 
@@ -39,9 +41,6 @@ Cite `path:line` evidence. Open files only when a cited range is insufficient.
 ## Bootstrap
 
 ```sh
-# binary already on the Mac: ~/.local/bin/one-grep
-one-grep index ~/work/advait
-one-grep embed ~/work/advait
-one-grep index ~/work/advait-docs
-one-grep embed ~/work/advait-docs
+one-grep index ~/dev/nixos-config && one-grep embed ~/dev/nixos-config
+one-grep index ~/dev/hipfire && one-grep embed ~/dev/hipfire
 ```

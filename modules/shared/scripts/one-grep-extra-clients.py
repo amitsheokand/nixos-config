@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Register one-grep on Grok + Zed, and drop leftover zvec_grep MCP entries.
 
-Cursor / OpenCode / Pi / Muse / Hermes / Command Code are handled by
-programs.one-grep. This covers the two harnesses that module does not, and
-strips HTTP zvec_grep so agents do not keep calling :7999.
+Cursor / OpenCode / Pi / Muse / Hermes / Command Code get MCP from
+programs.one-grep (stdio on each harness — not a Cursor/Muse wrap inside Pi).
+This covers Grok + Zed, and strips leftover zvec_grep HTTP entries.
 """
 from __future__ import annotations
 

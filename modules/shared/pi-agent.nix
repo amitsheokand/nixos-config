@@ -194,12 +194,13 @@ in
         install -m 0600 ${./pi-stack.md} "$HOME/.pi/agent/stack.md"
       '';
 
-      # User-skills path only. Never skill_manage create this name (Hermes
-      # memory writes ~/.pi/agent/pi-hermes-memory/skills/ → [Skill conflicts]).
+      # User-skills path only. Nix copy is the pin. Never skill_manage create
+      # this name (Hermes memory writes pi-hermes-memory/skills/ → conflicts).
       syncHerdrPiSkill = lib.hm.dag.entryAfter [ "syncPiStack" ] ''
         mkdir -p "$HOME/.pi/agent/skills/herdr-pi-model-spawn"
         install -m 0644 ${./herdr-pi-worktree/SKILL.md} \
           "$HOME/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md"
+        rm -rf "$HOME/.pi/agent/pi-hermes-memory/skills/herdr-pi-model-spawn"
       '';
 
       syncPiExtensions = lib.hm.dag.entryAfter [ "syncPiSettings" ] ''

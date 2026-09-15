@@ -5,7 +5,8 @@
 #
 # Cursor / Agent CLI cannot send Grok/Composer traffic through :8787 (Cursor
 # protocol → api2.cursor.sh). What we *can* persist: MCP tools + RTK hooks +
-# `agent mcp enable headroom`. Do not set CURSOR_API_ENDPOINT to the proxy.
+# `agent mcp enable headroom` and `one-grep`. Do not set CURSOR_API_ENDPOINT
+# to the proxy. Machine-local Cursor rules: ~/.cursor/rules/paid-cli-stack.mdc.
 #
 # Extras: [proxy,mcp,code] — skip [memory] (pulls torch/CUDA).
 #
@@ -84,6 +85,7 @@ let
     fi
     if [[ -n "$agent_bin" ]]; then
       "$agent_bin" mcp enable headroom || true
+      "$agent_bin" mcp enable one-grep || true
     fi
 
     rtk="${homeDir}/.headroom/bin/rtk"
@@ -133,6 +135,25 @@ PY
       LD_LIBRARY_PATH = libPath;
     };
   };
+  paidCliStack = builtins.readFile ./paid-cli-stack.md;
+  cursorPaidRule = ''
+    ---
+    description: Paid CLI stack — Headroom, one-grep worktree root, one shell after edit
+    alwaysApply: true
+    ---
+
+    ${paidCliStack}
+  '';
+  musePaidSkill = ''
+    ---
+    name: paid-cli-stack
+    description: >-
+      Headroom + one-grep worktree root + one shell after edit. Use on every
+      Muse Code packet. Fusion/EPR/obs-pack are Pi-only.
+    ---
+
+    ${paidCliStack}
+  '';
 in
 {
   home.packages = [
@@ -145,8 +166,19 @@ in
   home.sessionPath = [ "${homeDir}/.headroom/bin" ];
 
   # Global Cursor MCP (all workspaces). Project repos may also ship `.cursor/mcp.json`.
+  # Agent CLI (`agent mcp list`) reads this file — not only the IDE.
   home.file.".cursor/mcp.json" = {
     text = builtins.toJSON cursorMcp;
+    force = true;
+  };
+
+  home.file.".cursor/rules/paid-cli-stack.mdc" = {
+    text = cursorPaidRule;
+    force = true;
+  };
+
+  home.file.".config/muse/skills/paid-cli-stack/SKILL.md" = {
+    text = musePaidSkill;
     force = true;
   };
 
@@ -208,6 +240,12 @@ def upsert_json(path, *server_keys):
 upsert_json(home / ".pi" / "agent" / "mcp.json", "mcpServers")
 upsert_json(home / ".config" / "muse" / "settings.json", "mcp_servers")
 PY
+  '';
+
+  # Agent CLI (not only the IDE): approve Headroom + one-grep. Darwin has no
+  # headroom-cursor-wrap unit; activation covers every host.
+  home.activation.wrapCursorAgentMcp = lib.hm.dag.entryAfter [ "oneGrepMcp" "piHeadroomMcp" ] ''
+    ${wrapCursorAgents}
   '';
 } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   systemd.user.services.headroom-install = {

@@ -1,7 +1,7 @@
-// Optional then_run on edit/write, plus gate_edit/gate_write for Cursor.
-// pi-cursor-sdk hides overlapping Pi builtins from the MCP bridge; gate_*
-// stay visible as pi__gate_edit / pi__gate_write. Idea from NVIDIA SoL-Pi
-// (MIT); this is our Pi 0.85 wrapper — not the SoL-Pi package.
+// Optional then_run on edit/write, plus gate_edit/gate_write for packets
+// that require a Gate. `--kind pi` only; paid Cursor/Muse are Herdr kinds,
+// not pi-cursor-sdk. Idea from NVIDIA SoL-Pi (MIT); this is our Pi 0.85
+// wrapper — not the SoL-Pi package.
 //
 // 14 Sep: Cursor called gate_edit 16× but then_run never ran. JSONL kept
 // then_run on the toolCall while execute returned in 2ms — prepareArguments
@@ -144,8 +144,8 @@ function fuse(
       preserveThenRun(bootstrap.prepareArguments, args),
     promptGuidelines: [
       requireThen
-        ? `${name} REQUIRES then_run on every call (PACKET.md Gate). Intermediate edits: host Edit. Last hunk + Gate: this tool. Example: then_run="cargo test -p aikya-com --lib". Calls without then_run are rejected.${cursorHost}`
-        : `After ${name}, if you would immediately bash a test/build/check of that file, pass then_run on the same call instead of a second bash. Example: then_run="cargo test -p aikya-com --lib". PACKET.md Gate is the default command.`,
+        ? `${name} REQUIRES then_run on every call (PACKET.md Gate). Intermediate edits: host Edit. Last hunk + Gate: this tool. Example: then_run="cargo test -p <crate> --lib". Calls without then_run are rejected.${cursorHost}`
+        : `After ${name}, if you would immediately bash a test/build/check of that file, pass then_run on the same call instead of a second bash. Example: then_run="cargo test -p <crate> --lib". PACKET.md Gate is the default command.`,
     ],
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       const { thenRun, rest } = stripThenRun(params);
@@ -195,9 +195,9 @@ export default function (pi: ExtensionAPI) {
     try {
       fuse(pi, "edit", createEditTool);
       fuse(pi, "write", createWriteTool);
-      // Non-overlapping names: pi-cursor-sdk hides edit/write from the
-      // bridge (Cursor already has host Edit/Shell). gate_* stay visible as
-      // pi__gate_edit / pi__gate_write so Cursor models can fuse a Gate.
+      // Extra names so a packet can require a Gate without colliding with
+      // host Edit on native Cursor/Muse seats (those seats are --kind, not a
+      // Pi wrap).
       fuse(pi, "gate_edit", createEditTool);
       fuse(pi, "gate_write", createWriteTool);
     } catch (err) {

@@ -328,8 +328,7 @@ Tools (absolute `root` required; index in `<root>/.one-grep/`):
 
 ```sh
 command -v one-grep
-one-grep index ~/work/advait && one-grep embed ~/work/advait
-one-grep index ~/work/advait-docs && one-grep embed ~/work/advait-docs
+one-grep index ~/dev/nixos-config && one-grep embed ~/dev/nixos-config
 # skip third_party; do not index ~/work as one tree
 ```
 
@@ -398,8 +397,10 @@ Cursor.
 | Packages | `uv`, `python313` (+ NixOS-safe `headroom` wrapper) |
 | NixOS libs | `programs.nix-ld` in `modules/nixos/common.nix` |
 | Proxy | user systemd unit `headroom-proxy` (port `8787`) |
-| Cursor MCP | `~/.cursor/mcp.json` (HM-managed) |
-| Cursor wrap | user systemd unit `headroom-cursor-wrap` (RTK hooks + `agent mcp enable`) |
+| Cursor MCP | `~/.cursor/mcp.json` (HM-managed; Agent CLI **and** IDE) |
+| Cursor wrap | `agent mcp enable headroom` + `one-grep` (activation + Linux `headroom-cursor-wrap`) |
+| Cursor rule | `~/.cursor/rules/paid-cli-stack.mdc` (`alwaysApply`) |
+| Muse skill | `~/.config/muse/skills/paid-cli-stack/` (user scope) |
 
 Install extras: `headroom-ai[proxy,mcp,code]` (skip `[memory]` — pulls torch).
 
@@ -417,9 +418,12 @@ Headroom cannot wrap Cursor-hosted model traffic. Do **not** set
 protocol and will break Agent CLI.
 
 What *is* wired:
-- MCP tools (`headroom_compress` / retrieve) via `~/.cursor/mcp.json`
-- `agent mcp enable headroom` (user systemd `headroom-cursor-wrap`)
+- MCP tools (`headroom_compress` / retrieve **and** one-grep `search`/`rg`) via `~/.cursor/mcp.json`
+- Confirm Agent CLI (not only the IDE): `agent mcp list` → `headroom: ready` and `one-grep: ready`
+- `agent mcp enable headroom` and `agent mcp enable one-grep` (activation + Linux `headroom-cursor-wrap`)
 - RTK shell hooks (`headroom wrap cursor --prepare-only`)
+- Paid-CLI rule: one-grep `root` = this worktree under `~/work/worktrees/…`; one shell after edit (`cargo test -p <crate> --lib` / `cargo xwin test`); Headroom before dumps. Fusion/EPR/obs-pack stay `--kind pi` only.
+- Start `--kind cursor` / `--kind muse` in the **worktree pane** (plugin passes `--workspace`). Never a primary checkout.
 
 OpenAI **BYOK** only: Settings → Models → Override OpenAI Base URL →
 `http://127.0.0.1:8787/v1`. That does not affect Grok/Composer.
@@ -448,7 +452,8 @@ Resident GPU job on the PC is **MiniCPM-V 4.5** (llama.cpp Vulkan, R9700, `:8093
 Pi is the hub. It runs inside **Herdr worktree panes** (always-on `herdr
 server` on PC / M1 / M4). Paid Cursor Agent CLI and Muse Code Power run as
 **`--kind cursor` / `--kind muse`**, not Pi npm bridges. Usage ladder:
-`modules/shared/pi-stack.md` → `~/.pi/agent/stack.md`. Grok Bot is not the
+`modules/shared/pi-stack.md` → `~/.pi/agent/stack.md`. Public writeup:
+`docs/coding-agent-stack.md`. Grok Bot is not the
 coordinator seat. Rakazo is not packaged.
 
 | Piece | Where |
@@ -464,7 +469,7 @@ After `nix run .#build-switch` on each machine, missing `pi install` packages ar
 - hermes-memory is **policy-only** (`modules/shared/pi-hermes-memory-config.json`). Never `legacy-inject`. Recall with `memory_*` tools; compact flushes via `compact/compactor` so it does not steal the R9700 slot.
 - Rewind with `/tree`, do not resume a long leaf. New chat per task.
 - `/compact` at a finished subtask. Compress huge tool dumps with Headroom MCP first. Quote last 20 log lines, not the file.
-- Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (keep under 2000 bytes so every pin injects). Ladder: `~/.pi/agent/stack.md` (always refreshed). Spawn skill: `modules/shared/herdr-pi-worktree/SKILL.md` → `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md` only — never `skill_manage create` that name. Cloud **executor**: `overflow-assign` → `~/.pi/agent/overflow.md` (US-hosted OpenRouter / Zen / Hermes / `cmd`; do not re-rank mid-day; reviewers are Muse + Cursor Grok in Pi).
+- Standing pins: `modules/shared/pi-standing.md` → `~/.pi/agent/pi-hermes-memory/STANDING.md` (keep under 2000 bytes so every pin injects). Ladder: `~/.pi/agent/stack.md` (always refreshed). Spawn skill: Nix copy `modules/shared/herdr-pi-worktree/SKILL.md` → `~/.pi/agent/skills/herdr-pi-model-spawn/SKILL.md` only — never `skill_manage create` that name (ignore `pi-hermes-memory/skills/`). Cloud **executor**: `overflow-assign` → `~/.pi/agent/overflow.md` (US-hosted OpenRouter / Zen / Hermes / `cmd`; do not re-rank mid-day; reviewers are `--kind muse` or `--kind cursor` on a worktree, not a Pi `/model`).
 - One GPU client at a time. Headroom in front of MiniCPM-V `:8093` is optional later, not on this path.
 
 Pi `id` is sent to the server. mlx-lm treats unknown ids as a new checkpoint and can crash. MiniCPM aliases `longctx` / `minicpm` on `:8080`. Do **not** send `gemmacoder` to MiniCPM. Gemma still uses the filesystem path when `mlx-lane gemma` owns `:8080`. `/model minicpm-v-4.5` on Mac/vaayu uses desktop VL at `http://nixos.local:8093/v1`.
