@@ -14,7 +14,7 @@ Source artifacts already mirrored on this host:
 - `~/dev/one-grep/flake.nix` (+ lock)
 - Receipt: `~/dev/one-grep/RECEIPT-T-aimac-onegrep-nix-hm.md`
 
-Wire using existing nixos-config HM patterns (see `modules/nixos/home-manager.nix`, `modules/shared/zvec-grep.nix` style). Prefer flake input + `programs.one-grep` import over copy-paste of private paths.
+Wire using existing nixos-config HM patterns (see `modules/nixos/home-manager.nix`, `modules/shared/one-grep.nix` style). Prefer flake input + `programs.one-grep` import over copy-paste of private paths.
 
 Success: `nix` eval/build of the HM module / package proves green (e.g. `nix build` on one-grep package and/or `home-manager`/`nixos-rebuild` dry check as appropriate to existing repo recipes) — or cropped blocker with exact missing input.
 

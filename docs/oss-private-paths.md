@@ -20,11 +20,8 @@ from a checkout). CI job `oss-leak-fence` in `.github/workflows/lint.yml`.
 | `hosts/nixos/vaayu/default.nix` | Comment: `aikya` ntsync consumer |
 | `modules/shared/herdr.nix` | PC worktree directory under that mount |
 | `modules/shared/packages.nix` | Comment: rustc from the product flake |
-| `modules/shared/zvec-grep.nix` | Index helpers for `~/work/advait{,-docs}` |
-| `modules/shared/scripts/zvec-grep-post-commit.sh` | Same two roots |
 | `modules/shared/grok-prompts/local-helper.md` | Product helper prompt + absolute checkouts |
 | `modules/shared/grok-rules/one-grep.md` | Index tables for those checkouts |
-| `modules/shared/grok-rules/zvec-grep.md` | Same |
 | `AGENTS.md` | Herdr/one-grep agent docs for those paths |
 | `PACKET-T-nixos-odie-config-scrub.md` | Internal packet (product mentioned) |
 | `PACKET-T-nixos-onegrep-hm-build.md` | Internal packet (`ADVAIT_DOCS_ROOT`) |
@@ -43,9 +40,6 @@ hosts/nixos/default.nix
 hosts/nixos/vaayu/default.nix
 modules/shared/grok-prompts/local-helper.md
 modules/shared/grok-rules/one-grep.md
-modules/shared/grok-rules/zvec-grep.md
 modules/shared/herdr.nix
 modules/shared/packages.nix
-modules/shared/scripts/zvec-grep-post-commit.sh
-modules/shared/zvec-grep.nix
 ```

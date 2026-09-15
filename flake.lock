@@ -452,16 +452,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1789057132,
-        "narHash": "sha256-016pE7Vm1mMfncR0GyK+JwrU1XARrynHBeuYab2jasA=",
+        "lastModified": 1789322899,
+        "narHash": "sha256-2lCIDTq/ZgMN5ily2Gi/+3iz3N693+a1WMUBggQ4Bac=",
         "owner": "amitsheokand",
-        "repo": "open-grep",
-        "rev": "b26529b4af9b9f247605a898210a095c39fbbfc5",
+        "repo": "one-grep",
+        "rev": "5b3e2e82286c17e91ac0d707f435cffc79d453d5",
         "type": "github"
       },
       "original": {
         "owner": "amitsheokand",
-        "repo": "open-grep",
+        "repo": "one-grep",
         "type": "github"
       }
     },

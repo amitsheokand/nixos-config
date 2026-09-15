@@ -7,7 +7,6 @@ let
   shared-files = import ../shared/files.nix { inherit config pkgs; };
   headroom = import ../shared/headroom.nix { inherit pkgs lib; };
   commandCode = import ../shared/command-code.nix { inherit pkgs lib; };
-  zvecGrep = import ../shared/zvec-grep.nix { inherit pkgs lib; };
   museSpark = import ../shared/muse-spark.nix { inherit pkgs lib; };
   oneGrep = import ../shared/one-grep.nix {
     inherit config pkgs lib;
@@ -48,12 +47,10 @@ in
       else if hipfireLocal == null then hipfireLan.sessionVariables
       else hipfireLocal.sessionVariables)
       // (piAgent.sessionVariables or {})
-      // (zvecGrep.home.sessionVariables or {})
       // (mtpTorch.home.sessionVariables or {});
     packages = (pkgs.callPackage ./packages.nix { inherit inputs config; })
       ++ (headroom.home.packages or [])
       ++ (commandCode.home.packages or [])
-      ++ (zvecGrep.home.packages or [])
       ++ (museSpark.home.packages or [])
       ++ (piAgent.home.packages or [])
       ++ (herdr.home.packages or [])
@@ -63,7 +60,6 @@ in
     file = shared-files
       // import ./files.nix { inherit user pkgs; }
       // (headroom.home.file or {})
-      // (zvecGrep.home.file or {})
       // (herdr.home.file or {})
       // import ../shared/ai-tools.nix { inherit pkgs lib user; }
       // (lib.optionalAttrs hipfireEnabled {
@@ -74,7 +70,6 @@ in
       });
     activation = (headroom.home.activation or {})
       // (commandCode.home.activation or {})
-      // (zvecGrep.home.activation or {})
       // (museSpark.home.activation or {})
       // piAgent.activation
       // (herdr.home.activation or {})
@@ -83,7 +78,6 @@ in
         mergeMinicpmVClients = lib.hm.dag.entryAfter [ "retireHipfireResident27b" ] minicpmV.clientMergeScript;
       });
     sessionPath = (commandCode.home.sessionPath or [])
-      ++ (zvecGrep.home.sessionPath or [])
       ++ (headroom.home.sessionPath or []);
     stateVersion = "25.11";
   };
@@ -94,7 +88,6 @@ in
     services = lib.mkMerge [
       (headroom.systemd.user.services or {})
       (museSpark.systemdUserServices or {})
-      (zvecGrep.systemdUserServices or {})
       (piAgent.systemdUserServices or {})
       (herdr.systemdUserServices or {})
       (if hipfireLocal == null then {} else hipfireLocal.systemdUserServices)

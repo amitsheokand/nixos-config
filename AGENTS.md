@@ -232,7 +232,6 @@ Claude Code / Codex / prime-agent are **not** installed from `llm-agents.nix`.
 | Muse Code | `muse-code-package.nix` (`muse`) | same |
 | Command Code | HM `modules/shared/command-code.nix` | same |
 | one-grep | flake input `github:amitsheokand/open-grep` (`pkgs.one-grep`) | same |
-| zvec-grep (`zg`) | Linux fallback; Darwin launchd **off** | npm `@zvec/zvec-grep` |
 | Cursor | `pkgs.code-cursor` | nixpkgs / cask ecosystem |
 
 ## Herdr (always-on agent mux)
@@ -338,10 +337,8 @@ Apply: `nix run .#build-switch` locally, `nix run .#deploy-lan` for NixOS
 boxes, `nh darwin switch` on the Mac. Then **restart the agent**. First index
 each workspace once; `search` falls back to BM25 if `embed` has not been run.
 
-## zvec-grep (`zg`, leftover CLI)
-
-npm `@zvec/zvec-grep` remains installed on Linux for the old `zg` CLI. Agent
-MCP is **one-grep**. Darwin does not start launchd `zvec-grep`.
+Activation also uninstalls leftover zvec-grep (`zg` npm CLI, git post-commit
+hooks, `.zvec-grep` indexes). Do not reinstall `@zvec/zvec-grep`.
 
 ## Git clients (all hosts)
 
